@@ -1,0 +1,139 @@
+#!/bin/bash
+SCRIPT_HOME=$(cd $(dirname "$(ls -l $0 | awk '{ print $NF }')") && pwd)
+source $SCRIPT_HOME/common
+
+if [[ -z $config_openvpn_port ]]; then
+    echo "Skipping VPN setup as no VPN configuration found."
+    exit 0
+fi
+
+apt-get -y update
+apt-get install -y whois openvpn easy-rsa libpam-google-authenticator zip
+
+service openvpn stop
+
+echo "export vpn_server=$config_server_dns" > /etc/openvpn/serverinfo
+echo "export vpn_server_port=$config_openvpn_port" >> /etc/openvpn/serverinfo
+echo "export vpn_server_description=\"$config_openvpn_server_description\"" >> /etc/openvpn/serverinfo
+echo "export vpn_server_domain=$config_openvpn_server_domain" >> /etc/openvpn/serverinfo
+echo "export vpn_server_organization=$config_openvpn_server_organization" >> /etc/openvpn/serverinfo
+echo "export vpn_auth_strategy=config_openvpn_auth_strategy" >> /etc/openvpn/serverinfo
+
+mkdir -p /etc/openvpn/easy-rsa/
+pushd /etc/openvpn/easy-rsa/
+
+cp -r /usr/share/easy-rsa/* /etc/openvpn/easy-rsa/
+
+sed -i 's|export KEY_COUNTRY=\".*\"|export KEY_COUNTRY="US"|' vars
+sed -i 's|export KEY_PROVINCE=\".*\"|export KEY_PROVINCE="DE"|' vars
+sed -i 's|export KEY_CITY=\".*\"|export KEY_CITY="Wilmington"|' vars
+sed -i "s|export KEY_ORG=\".*\"|export KEY_ORG=\"${config_openvpn_server_organization}\"|" vars
+sed -i "s|export KEY_EMAIL=\".*\"|export KEY_EMAIL=\"support@${config_openvpn_server_domain}\"|" vars
+sed -i "s|export KEY_CN=\".*\"|export KEY_CN=\"${config_openvpn_server_organization}_AWS_VPN\"|" vars
+sed -i "s|export KEY_NAME=\".*\"|export KEY_NAME=\"${config_openvpn_server_organization}_AWS_VPN\"|" vars
+sed -i "s|export KEY_OU=\".*\"|export KEY_OU=\"${config_openvpn_server_organization}_AWS_VPN\"|" vars
+
+for f in $(ls build*); do sed -i "s|\-\-interact ||" $f; done
+
+source vars
+./clean-all
+./build-ca
+./build-key-server $hn
+./build-dh
+
+cp keys/$hn.crt keys/$hn.key keys/ca.crt keys/dh2048.pem /etc/openvpn/
+
+cp /usr/share/doc/openvpn/examples/sample-config-files/server.conf.gz /etc/openvpn/
+gzip -d /etc/openvpn/server.conf.gz
+
+openvpn --genkey --secret /etc/openvpn/ta.key
+
+vpn_subnet_ip=${config_openvpn_subnet/\/*/}
+
+sed -i "s/^port .*/port $config_openvpn_port/" /etc/openvpn/server.conf
+sed -i "s/^tcp .*/tcp $config_openvpn_protocol/" /etc/openvpn/server.conf
+sed -i "s/^server .*/server $vpn_subnet_ip $config_openvpn_netmask/" /etc/openvpn/server.conf
+sed -i "s/^ca .*\.crt/ca ca.crt/" /etc/openvpn/server.conf
+sed -i "s/^cert .*\.crt/cert $hn.crt/" /etc/openvpn/server.conf
+sed -i "s/^key .*\.key/key $hn.key/" /etc/openvpn/server.conf
+sed -i "s/^dh .*\.pem/dh dh2048.pem/" /etc/openvpn/server.conf
+sed -i "s/^;tls-auth/tls-auth/" /etc/openvpn/server.conf
+sed -i "s/^;cipher AES-128-CBC/cipher AES-256-CBC/" /etc/openvpn/server.conf
+sed -i "s/^;user nobody/user nobody/" /etc/openvpn/server.conf
+sed -i "s/^;group nogroup/group nogroup/" /etc/openvpn/server.conf
+
+if [ "$config_openvpn_tunnel_all_traffic" == "yes" ]; then
+    sed -i "s/^;push \"redirect-gateway def1 bypass-dhcp\"/push \"redirect-gateway def1 bypass-dhcp\"/" /etc/openvpn/server.conf
+    sed -i "s/^;push \"dhcp-option DNS 208.67.222.222\"/push \"dhcp-option DNS 208.67.222.222\"/" /etc/openvpn/server.conf
+    sed -i "s/^;push \"dhcp-option DNS 208.67.220.220\"/push \"dhcp-option DNS 208.67.220.220\"/" /etc/openvpn/server.conf
+fi
+
+echo -e "\n# Internal LAN" >> /etc/openvpn/server.conf
+echo -e "topology subnet" >> /etc/openvpn/server.conf
+
+# Allow established traffic to pass back and forth
+iptables -I FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+
+for n in $(echo $config_openvpn_lan_interfaces | sed "s/,/ /g"); do
+    lan_itf=$(echo $n | awk -F'|' '{print $1}')
+    lan_subnet=$(echo $n | awk -F'|' '{print $2}')
+    lan_subnet_ip=${lan_subnet/\/*/}
+    lan_netmask=$(echo $n | awk -F'|' '{print $3}')
+
+    echo -e "push \"route $lan_subnet_ip $lan_netmask\"" >> /etc/openvpn/server.conf
+
+    # Allow traffic initiated from VPN to access LAN
+    iptables -I FORWARD -i tun0 -o $lan_itf -s $config_openvpn_subnet -d $lan_subnet -m conntrack --ctstate NEW -j ACCEPT
+
+    # Allow traffic initiated from VPN to access "the world"
+    iptables -I FORWARD -i tun0 -o $lan_itf -s $config_openvpn_subnet -m conntrack --ctstate NEW -j ACCEPT
+
+    # Allow traffic initiated from LAN to access "the world"
+    iptables -I FORWARD -i $lan_itf -o $lan_itf -s $lan_subnet -m conntrack --ctstate NEW -j ACCEPT
+
+    # Masquerade traffic from VPN to "the world" -- done in the nat table
+    iptables -t nat -I POSTROUTING -o $lan_itf -s $config_openvpn_subnet -j MASQUERADE
+
+    # Masquerade traffic from LAN to "the world"
+    iptables -t nat -I POSTROUTING -o $lan_itf -s $lan_subnet -j MASQUERADE
+done
+
+echo -e "\n# Enable PAM Authentication" >> /etc/openvpn/server.conf
+echo -e "plugin /usr/lib/openvpn/openvpn-plugin-auth-pam.so openvpn" >> /etc/openvpn/server.conf
+
+echo -e "\n# Prevent re-authorization every 3600 seconds" >> /etc/openvpn/server.conf
+echo -e "reneg-sec 0" >> /etc/openvpn/server.conf
+
+case "$config_openvpn_auth_strategy" in
+    google_mfa)
+        echo -e "# Enable multi-factor authentication with Google authenticator" > /etc/pam.d/openvpn
+        echo -e "auth requisite pam_google_authenticator.so forward_pass" >> /etc/pam.d/openvpn
+        echo -e "auth required pam_unix.so use_first_pass" >> /etc/pam.d/openvpn
+
+        sed -i "s/# PAM configuration for the Secure Shell service/# PAM configuration for the Secure Shell service\n\nauth required \/lib\/security\/pam_google_authenticator.so/" /etc/pam.d/sshd
+        sed -i "s/^ChallengeResponseAuthentication .*/ChallengeResponseAuthentication yes/" /etc/ssh/sshd_config
+        ;;
+    *)
+        echo -e "# Enable local user authentication" > /etc/pam.d/openvpn
+        echo -e "auth required pam_unix.so" >> /etc/pam.d/openvpn
+        ;;
+esac
+
+popd
+
+sed -i "s/^.*net.ipv4.ip_forward=.*/net.ipv4.ip_forward=1/" /etc/sysctl.conf
+sed -i "s/^.*net.ipv6.conf.all.forwarding=.*/net.ipv6.conf.all.forwarding=1/" /etc/sysctl.conf
+sysctl -p
+
+iptables-save > /etc/openvpn/iptables-dump.ipt
+
+password=$(mkpasswd $config_openvpn_ssh_passwd)
+usermod --password $password ubuntu
+
+cat /dev/null > /var/log/syslog
+service openvpn start
+service ssh restart
+
+ln -s $SCRIPT_HOME/create_vpn_user /usr/local/bin/create_vpn_user
+
+touch /root/.openvpn_installed
