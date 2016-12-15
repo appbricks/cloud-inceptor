@@ -29,6 +29,9 @@ do
     custom_headers="${custom_headers}\nrequest_header_access $h allow all"
 done
 
+sed -i 's|^acl SSL_ports port 443|#acl SSL_ports port 443|' /etc/squid/squid.conf
+sed -i 's|^http_access deny CONNECT !SSL_ports|#http_access deny CONNECT !SSL_ports|' /etc/squid/squid.conf
+
 sed -i "s|^acl CONNECT method CONNECT$|acl CONNECT method CONNECT$network_acl|" /etc/squid/squid.conf
 sed -i "s|^http_access allow localhost$|http_access allow localhost\nhttp_access allow client|" /etc/squid/squid.conf
 sed -i "s|^# forwarded_for on$|# forwarded_for on\nforwarded_for off|" /etc/squid/squid.conf

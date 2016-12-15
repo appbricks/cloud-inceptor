@@ -44,10 +44,7 @@ fi
 INSTALL
 
 rm -fr /home/$ssh_user/bastion-install-scripts
-
-# Need to restart open-vpn as it 
-# does shuts down after first start
-service openvpn start
+sudo reboot
 
 EOF
 
