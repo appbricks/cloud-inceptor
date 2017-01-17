@@ -64,8 +64,11 @@ sed -i "s/^;group nogroup/group nogroup/" /etc/openvpn/server.conf
 
 if [ "$config_openvpn_tunnel_all_traffic" == "yes" ]; then
     sed -i "s/^;push \"redirect-gateway def1 bypass-dhcp\"/push \"redirect-gateway def1 bypass-dhcp\"/" /etc/openvpn/server.conf
-    sed -i "s/^;push \"dhcp-option DNS 208.67.222.222\"/push \"dhcp-option DNS 208.67.222.222\"/" /etc/openvpn/server.conf
-    sed -i "s/^;push \"dhcp-option DNS 208.67.220.220\"/push \"dhcp-option DNS 208.67.220.220\"/" /etc/openvpn/server.conf
+fi
+
+if [ -n "$config_openvpn_dns_servers" ]; then
+    dns_servers=$(for ip in $(echo -e "$config_openvpn_dns_servers" | sed 's/,/ /g'); do echo -n "push \\\"dhcp-option DNS $ip\\\"\\n"; done)
+    sed -i "s/^;push \"dhcp-option DNS 208.67.220.220\"/;push \"dhcp-option DNS 208.67.220.220\"\n$dns_servers/" /etc/openvpn/server.conf
 fi
 
 echo -e "\n# Internal LAN" >> /etc/openvpn/server.conf
