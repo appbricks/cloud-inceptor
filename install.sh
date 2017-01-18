@@ -33,8 +33,8 @@ sudo -s -- << INSTALL
 
 rm -fr /root/.bin
 mkdir -p /root/.bin
+mv -f /home/$ssh_user/bastion-install-scripts/bin/rc.local /etc/rc.local
 cp -fr /home/$ssh_user/bastion-install-scripts/bin/* /root/.bin
-cp -f /home/$ssh_user/bastion-install-scripts/bin/rc.local /etc/rc.local
 
 if [[ "$4" == "install" ]]; then
     cd /root
