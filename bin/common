@@ -63,8 +63,8 @@ fi
 # fi
 
 # Load configuration
-[ -e "config.yml" ] || wget http://169.254.169.254/latest/user-data -O config.yml 
-eval $(parse_yaml config.yml "config_")
+[ -e "/root/config.yml" ] || wget http://169.254.169.254/latest/user-data -O /root/config.yml 
+eval $(parse_yaml /root/config.yml "config_")
 
 hn=$(hostname)
 cat /etc/hosts | grep "127.0.1.1" > /dev/null 2>&1
