@@ -28,8 +28,9 @@ sync ./* $ssh_host:~/bastion-install-scripts
 # **** BEGIN INSTALL ****
 
 s $ssh_host << EOF
-
 sudo -s -- << INSTALL
+set -x
+set -e
 
 rm -fr /root/.bin
 mkdir -p /root/.bin
