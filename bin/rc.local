@@ -11,8 +11,8 @@
 #
 # By default this script does nothing.
 
-[ -e /root/.openvpn_installed ] || /root/.bin/install_openvpn.sh
-[ -e /root/.squidproxy_installed ] || /root/.bin/install_squidproxy.sh
+[ -e /root/.openvpn_installed ] || /root/.bin/install_openvpn
+[ -e /root/.squidproxy_installed ] || /root/.bin/install_squidproxy
 [ -e /etc/openvpn/iptables-dump.ipt ] && iptables-restore < /etc/openvpn/iptables-dump.ipt
 
 exit 0
