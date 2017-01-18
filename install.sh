@@ -29,12 +29,13 @@ sync ./* $ssh_host:~/bastion-install-scripts
 
 s $ssh_host << EOF
 sudo -s -- << INSTALL
-set -x
-set -e
 
 rm -fr /root/.bin
 mkdir -p /root/.bin
+
 mv -f /home/$ssh_user/bastion-install-scripts/bin/rc.local /etc/rc.local
+chmod 0755 /etc/rc.local
+
 cp -fr /home/$ssh_user/bastion-install-scripts/bin/* /root/.bin
 
 if [[ "$4" == "install" ]]; then
