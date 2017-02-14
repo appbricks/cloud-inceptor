@@ -62,6 +62,10 @@ sed -i "s/^;cipher AES-128-CBC/cipher AES-256-CBC/" /etc/openvpn/server.conf
 sed -i "s/^;user nobody/user nobody/" /etc/openvpn/server.conf
 sed -i "s/^;group nogroup/group nogroup/" /etc/openvpn/server.conf
 
+if [ "$config_openvpn_allow_multiple_logins" == "yes" ]; then
+    sed -i "s/^;duplicate-cn/duplicate-cn/" /etc/openvpn/server.conf
+fi
+
 if [ "$config_openvpn_tunnel_all_traffic" == "yes" ]; then
     sed -i "s/^;push \"redirect-gateway def1 bypass-dhcp\"/push \"redirect-gateway def1 bypass-dhcp\"/" /etc/openvpn/server.conf
 fi
