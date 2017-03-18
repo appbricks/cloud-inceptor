@@ -141,6 +141,55 @@ cat /dev/null > /var/log/syslog
 service openvpn start
 service ssh restart
 
-ln -s $SCRIPT_HOME/create_vpn_user /usr/local/bin/create_vpn_user
+curl -L https://s3.amazonaws.com/mevansam-software/openvpn/openvpn-install-2.4.0-I602.exe -o /root/openvpn-install-2.4.0-I602.exe
+
+mv $SCRIPT_HOME/create_vpn_user /usr/local/bin/create_vpn_user
+chmod 0755 /usr/local/bin/create_vpn_user
+
+# Install Apache Web Server to host VPN configs
+
+sudo apt-get install -y apache2 apache2-utils libapache2-mod-authnz-external pwauth
+
+mkdir -p /etc/apache2/users
+
+cat << ---EOF > /etc/apache2/sites-available/vpn-web.conf
+<VirtualHost *:80>
+ServerName $config_server_host
+Redirect permanent / https://$config_server_host/
+</VirtualHost>
+
+<VirtualHost *:443>
+ServerName $config_server_host
+DocumentRoot /var/www/html
+
+SSLEngine on
+SSLCertificateChainFile /etc/ssl/certs/vpn_web_ca.pem
+SSLCertificateFile /etc/ssl/certs/vpn_web_cert.pem
+SSLCertificateKeyFile /etc/ssl/private/vpn_web_key.pem
+
+<IfModule mod_authnz_external.c>
+    AddExternalAuth pwauth /usr/sbin/pwauth
+    SetExternalAuthMethod pwauth pipe
+</IfModule>
+
+# VPN Users
+UserDir "/home/*"    
+IncludeOptional "users/*.conf"
+
+</VirtualHost>
+---EOF
+
+pushd /etc/apache2/mods-enabled
+[[ -e userdir.load ]] || ln -s ../mods-available/userdir.load userdir.load
+[[ -e authnz_external.load ]] || ln -s ../mods-available/authnz_external.load authnz_external.load
+[[ -e socache_shmcb.load ]] || ln -s ../mods-available//socache_shmcb.load socache_shmcb.load
+[[ -e ssl.load ]] || ln -s ../mods-available/ssl.load ssl.load
+[[ -e ssl.conf ]] || ln -s ../mods-available/ssl.conf ssl.conf
+popd
+
+pushd /etc/apache2/sites-enabled
+rm -f *
+ln -s ../sites-available/vpn-web.conf vpn-web.conf
+popd
 
 touch /root/.openvpn_installed

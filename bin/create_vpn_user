@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 if [ -z "$1" ] || [ -z "$2" ]; then
     echo -e "\nUsage: create_user.sh user password\n"
     exit 1
@@ -12,7 +14,8 @@ fi
 
 user=$1
 
-dest_dir=/home/ubuntu/${user}/tunnelblick
+rm -fr /home/ubuntu/ovpn/${user}
+dest_dir=/home/ubuntu/ovpn/${user}/client
 mkdir -p "$dest_dir"
 
 pushd /etc/openvpn/easy-rsa/
@@ -43,18 +46,26 @@ echo -e "reneg-sec 0" >> "$dest_dir/client.conf"
 
 popd
 
-if [ ! -d /home/ubuntu/vpnconfigs ]; then
-    mkdir -p /home/ubuntu/vpnconfigs
-    chown ubuntu:ubuntu /home/ubuntu/vpnconfigs
-fi
+pushd /home/ubuntu/ovpn/${user}
 
-pushd /home/ubuntu/${user}
-mv tunnelblick "$vpn_server_description.tblk"
-zip -r /home/ubuntu/vpnconfigs/$user.tblk.zip "$vpn_server_description.tblk"
-chown ubuntu:ubuntu /home/ubuntu/vpnconfigs/$user.tblk.zip
+# Create Tunnelblick configuration for OSX
+mv client "$vpn_server_description.tblk"
+zip -r /home/ubuntu/ovpn/${user}/openvpn.tunnelblick.zip "$vpn_server_description.tblk"
+
+# Create OpenVPN client configuration for windows
+mv "$vpn_server_description.tblk" "$vpn_server_description"
+mv "$vpn_server_description/client.conf" "$vpn_server_description/$vpn_server_description.ovpn"
+zip -r /home/ubuntu/ovpn/${user}/openvpn.client.zip "$vpn_server_description"
+
+rm -fr "$vpn_server_description"
+
+chown -R ubuntu:ubuntu /home/ubuntu/ovpn/
 popd
 
+set +e
 userdel $user > /dev/null 2>&1
+set -e
+
 rm -fr /home/ubuntu/${user}
 rm -fr /home/$user
 
@@ -65,12 +76,30 @@ mkdir -p /home/$user
 case "$config_openvpn_auth_strategy" in
     google_mfa)
         google-authenticator -f -t -d -r 3 -R 30 -w 8 -l "${user}@${vpn_server_domain}" -s /home/$user/.google_authenticator
-        cp /home/$user/.google_authenticator /home/ubuntu/vpnconfigs/$user.secret
-        chown ubuntu:ubuntu /home/ubuntu/vpnconfigs/$user.secret
+        cp /home/$user/.google_authenticator /home/ubuntu/ovpn/${user}/gauth.secret
+        chown ubuntu:ubuntu /home/ubuntu/ovpn/${user}/gauth.secret
         ;;
     *)
         ;;
 esac
 
-cp /home/ubuntu/vpnconfigs/$user.tblk.zip /home/$user
+cp /home/ubuntu/ovpn/${user}/*.zip /home/$user
+cp /root/openvpn-install-2.4.0-I602.exe /home/$user
 chown -R $user:$user /home/$user
+
+if [[ -e /etc/apache2 ]]; then
+
+    mkdir -p /etc/apache2/users
+    cat << ---EOF > /etc/apache2/users/$user.conf
+<Directory /home/$user>
+    AuthType Basic
+    AuthName "Restricted Area"
+    AuthBasicProvider external
+    AuthExternal pwauth
+    Require user $user
+    Options +Indexes
+</Directory>
+---EOF
+fi
+
+set +e
