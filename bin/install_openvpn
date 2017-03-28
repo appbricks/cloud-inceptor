@@ -51,7 +51,7 @@ openvpn --genkey --secret /etc/openvpn/ta.key
 vpn_subnet_ip=${config_openvpn_subnet/\/*/}
 
 sed -i "s/^port .*/port $config_openvpn_port/" /etc/openvpn/server.conf
-sed -i "s/^tcp .*/tcp $config_openvpn_protocol/" /etc/openvpn/server.conf
+sed -i "s/^proto .*/proto $config_openvpn_protocol/" /etc/openvpn/server.conf
 sed -i "s/^server .*/server $vpn_subnet_ip $config_openvpn_netmask/" /etc/openvpn/server.conf
 sed -i "s/^ca .*\.crt/ca ca.crt/" /etc/openvpn/server.conf
 sed -i "s/^cert .*\.crt/cert $hn.crt/" /etc/openvpn/server.conf
