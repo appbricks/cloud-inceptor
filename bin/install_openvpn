@@ -14,6 +14,7 @@ service openvpn stop
 
 echo "export vpn_server=$config_server_host" > /etc/openvpn/serverinfo
 echo "export vpn_server_port=$config_openvpn_port" >> /etc/openvpn/serverinfo
+echo "export vpn_server_proto=$config_openvpn_protocol" >> /etc/openvpn/serverinfo
 echo "export vpn_server_description=\"$config_openvpn_server_description\"" >> /etc/openvpn/serverinfo
 echo "export vpn_server_domain=$config_openvpn_server_domain" >> /etc/openvpn/serverinfo
 echo "export vpn_server_organization=$config_openvpn_server_organization" >> /etc/openvpn/serverinfo

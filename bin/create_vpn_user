@@ -29,6 +29,7 @@ cp /etc/openvpn/ca.crt /etc/openvpn/ta.key "$dest_dir"
 cp /usr/share/doc/openvpn/examples/sample-config-files/client.conf "$dest_dir/client.conf"
 
 sed -i "s/^remote .*/remote $vpn_server $vpn_server_port/" "$dest_dir/client.conf"
+sed -i "s/^proto .*/proto $vpn_server_proto/" "$dest_dir/client.conf"
 sed -i "s/^ca .*\.crt/ca ca.crt/" "$dest_dir/client.conf"
 sed -i "s/^cert .*\.crt/cert $user.crt/" "$dest_dir/client.conf"
 sed -i "s/^key .*\.key/key $user.key/" "$dest_dir/client.conf"
