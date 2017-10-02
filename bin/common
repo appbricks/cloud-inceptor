@@ -23,45 +23,6 @@ if [[ `whoami` != "root" ]]; then
     exit 1
 fi
 
-# Install RVM
-# if [ ! -e /usr/local/rvm ]; then
-#     curl -sSL https://rvm.io/mpapis.asc | gpg --import -
-#     curl -sSL https://get.rvm.io | bash -s stable
-# fi
-# export PATH="$PATH:/usr/local/rvm/bin" # Add RVM to PATH for scripting
-# source "/usr/local/rvm/scripts/rvm" # Load RVM into a shell session *as a function*
-
-# Instal Ruby
-# ruby=$(which ruby)
-# if [ "$ruby" == "/usr/bin/ruby" ] || [ -z "$ruby" ]; then
-  
-#     if [ -d /etc/apt/ ]; then
-#         sudo apt-get -y install build-essential ruby ruby-dev libxml2-dev \
-#             libsqlite3-dev libxslt1-dev libpq-dev libmysqlclient-dev zlib1g-dev zip
-#     elif [ -d /etc/yum/ ]; then
-#         sudo yum -y install gcc ruby ruby-devel mysql-devel postgresql-devel \
-#             postgresql-libs sqlite-devel libxslt-devel libxml2-devel yajl-ruby
-#     fi
-
-#     rvm install 2.2
-#     rvm --default use 2.2
-# fi
-
-# Install Python
-# python=$(which python3)
-# if [ "$python" == "/usr/bin/python3" ] || [ -z "$python" ]; then
-
-#     if [ -d /etc/apt/ ]; then
-#         sudo apt-get install python3 python3-dev
-#     elif [ -d /etc/yum/ ]; then
-#         echo "fedora/suse linux not supported"
-#         exit 1
-#     fi
-
-#     rm -f /usr/local/bin/python
-#     ln -s $(which python3) /usr/local/bin/python
-# fi
-
 # Load configuration
 [ -e "/root/config.yml" ] || wget http://169.254.169.254/latest/user-data -O /root/config.yml 
 eval $(parse_yaml /root/config.yml "config_")

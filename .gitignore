@@ -2,3 +2,4 @@
 .vagrant
 config.yml
 *.log
+tmp/

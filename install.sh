@@ -22,8 +22,8 @@ function sync() {
     rsync -avz -e "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i $ssh_key" --progress $@
 }
 
-s $ssh_host "mkdir -p ~/bastion-install-scripts"
-sync ./* $ssh_host:~/bastion-install-scripts
+s $ssh_host "mkdir -p /tmp/install-scripts"
+sync ./* $ssh_host:/tmp/install-scripts
 
 # **** BEGIN INSTALL ****
 
@@ -33,19 +33,21 @@ sudo -s -- << INSTALL
 rm -fr /root/.bin
 mkdir -p /root/.bin
 
-mv -f /home/$ssh_user/bastion-install-scripts/bin/rc.local /etc/rc.local
+mv -f /tmp/install-scripts/bin/rc.local /etc/rc.local
 chmod 0755 /etc/rc.local
 
-cp -fr /home/$ssh_user/bastion-install-scripts/bin/* /root/.bin
+cp -fr /tmp/install-scripts/bin/* /root/.bin
 
 if [[ "$4" == "install" ]]; then
     cd /root
-    /root/.bin/install_openvpn
-    /root/.bin/install_squidproxy    
+    /root/.bin/install_common
+    /root/.bin/configure_openvpn
+    /root/.bin/configure_squidproxy
+    /root/.bin/configure_concourse
 fi
 INSTALL
 
-rm -fr /home/$ssh_user/bastion-install-scripts
+rm -fr /tmp/install-scripts
 sudo reboot
 
 EOF

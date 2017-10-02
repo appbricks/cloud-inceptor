@@ -3,7 +3,8 @@
         "aws_access_key": "{{env `AWS_ACCESS_KEY`}}",
         "aws_secret_key": "{{env `AWS_SECRET_KEY`}}",
         "region": "",
-        "ami": ""
+        "ami": "",
+        "name": ""
     },
     "builders": [
         {
@@ -14,24 +15,26 @@
             "source_ami": "{{user `ami`}}",
             "instance_type": "t2.micro",
             "ssh_username": "ubuntu",
-            "ami_name": "OpenVPN {{timestamp}}"
+            "ami_name": "{{user `name`}}"
         }
     ],
     "provisioners": [
         {
           "type": "file",
-          "source": "bin/",
+          "source": "bin",
           "destination": "/tmp"
         },
         {
             "type": "shell",
             "inline": [
+                "sudo chmod 0755 /tmp/bin/*",
                 "sudo mkdir -p /root/.bin",
-                "sudo cp -f /tmp/bin/* /root/.bin",
-                "sudo chmod 0744 /root/bin/*",
-                "sudo mv /etc/rc.local /etc/rc.local.orig",
-                "sudo ln -s /root/.bin/rc.local /etc/rc.local",
-                "sudo ln -s /root/.bin/create_vpn_user /usr/local/bin/create_vpn_user"
+                "sudo mv /tmp/bin/common /root/.bin",
+                "sudo mv /tmp/bin/install_* /root/.bin",
+                "sudo mv /tmp/bin/rc.local /etc/rc.local",
+                "sudo mv /tmp/bin/create_vpn_user /usr/local/bin/create_vpn_user",
+                "sudo rm -fr /tmp/*",
+                "sudo /root/.bin/install_packages"
             ]
         }
     ]

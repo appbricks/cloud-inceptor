@@ -7,11 +7,6 @@ if [[ -z $config_openvpn_port ]]; then
     exit 0
 fi
 
-apt-get -y update
-apt-get install -y whois openvpn easy-rsa libpam-google-authenticator zip
-
-service openvpn stop
-
 echo "export vpn_server=$config_server_host" > /etc/openvpn/serverinfo
 echo "export vpn_server_port=$config_openvpn_port" >> /etc/openvpn/serverinfo
 echo "export vpn_server_proto=$config_openvpn_protocol" >> /etc/openvpn/serverinfo
@@ -139,8 +134,8 @@ password=$(mkpasswd $config_openvpn_ssh_passwd)
 usermod --password $password ubuntu
 
 cat /dev/null > /var/log/syslog
-service openvpn start
-service ssh restart
+systemctl enable openvpn
+systemctl start openvpn
 
 curl -L https://s3.amazonaws.com/mevansam-software/openvpn/openvpn-install-2.4.0-I602.exe -o /root/openvpn-install-2.4.0-I602.exe
 
@@ -149,48 +144,52 @@ chmod 0755 /usr/local/bin/create_vpn_user
 
 # Install Apache Web Server to host VPN configs
 
-sudo apt-get install -y apache2 apache2-utils libapache2-mod-authnz-external pwauth
+if [[ -e /etc/ssl/certs/vpn_web_ca.pem ]]; then
 
-mkdir -p /etc/apache2/users
+    mkdir -p /etc/apache2/users
 
-cat << ---EOF > /etc/apache2/sites-available/vpn-web.conf
-<VirtualHost *:80>
-ServerName $config_server_host
-Redirect permanent / https://$config_server_host/
-</VirtualHost>
+    cat << ---EOF > /etc/apache2/sites-available/vpn-web.conf
+    <VirtualHost *:80>
+    ServerName $config_server_host
+    Redirect permanent / https://$config_server_host/
+    </VirtualHost>
 
-<VirtualHost *:443>
-ServerName $config_server_host
-DocumentRoot /var/www/html
+    <VirtualHost *:443>
+    ServerName $config_server_host
+    DocumentRoot /var/www/html
 
-SSLEngine on
-SSLCertificateChainFile /etc/ssl/certs/vpn_web_ca.pem
-SSLCertificateFile /etc/ssl/certs/vpn_web_cert.pem
-SSLCertificateKeyFile /etc/ssl/private/vpn_web_key.pem
+    SSLEngine on
+    SSLCertificateChainFile /etc/ssl/certs/vpn_web_ca.pem
+    SSLCertificateFile /etc/ssl/certs/vpn_web_cert.pem
+    SSLCertificateKeyFile /etc/ssl/private/vpn_web_key.pem
 
-<IfModule mod_authnz_external.c>
-    AddExternalAuth pwauth /usr/sbin/pwauth
-    SetExternalAuthMethod pwauth pipe
-</IfModule>
+    <IfModule mod_authnz_external.c>
+        AddExternalAuth pwauth /usr/sbin/pwauth
+        SetExternalAuthMethod pwauth pipe
+    </IfModule>
 
-# VPN Users
-UserDir "/home/*"    
-IncludeOptional "users/*.conf"
+    # VPN Users
+    UserDir "/home/*"    
+    IncludeOptional "users/*.conf"
 
-</VirtualHost>
----EOF
+    </VirtualHost>
+    ---EOF
 
-pushd /etc/apache2/mods-enabled
-[[ -e userdir.load ]] || ln -s ../mods-available/userdir.load userdir.load
-[[ -e authnz_external.load ]] || ln -s ../mods-available/authnz_external.load authnz_external.load
-[[ -e socache_shmcb.load ]] || ln -s ../mods-available//socache_shmcb.load socache_shmcb.load
-[[ -e ssl.load ]] || ln -s ../mods-available/ssl.load ssl.load
-[[ -e ssl.conf ]] || ln -s ../mods-available/ssl.conf ssl.conf
-popd
+    pushd /etc/apache2/mods-enabled
+    [[ -e userdir.load ]] || ln -s ../mods-available/userdir.load userdir.load
+    [[ -e authnz_external.load ]] || ln -s ../mods-available/authnz_external.load authnz_external.load
+    [[ -e socache_shmcb.load ]] || ln -s ../mods-available//socache_shmcb.load socache_shmcb.load
+    [[ -e ssl.load ]] || ln -s ../mods-available/ssl.load ssl.load
+    [[ -e ssl.conf ]] || ln -s ../mods-available/ssl.conf ssl.conf
+    popd
 
-pushd /etc/apache2/sites-enabled
-rm -f *
-ln -s ../sites-available/vpn-web.conf vpn-web.conf
-popd
+    pushd /etc/apache2/sites-enabled
+    rm -f *
+    ln -s ../sites-available/vpn-web.conf vpn-web.conf
+    popd
+
+    systemctl enable apache2
+    systemctl start apache2
+fi
 
 touch /root/.openvpn_installed

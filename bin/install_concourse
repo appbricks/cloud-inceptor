@@ -1,0 +1,82 @@
+#!/bin/bash
+SCRIPT_HOME=$(cd $(dirname "$(ls -l $0 | awk '{ print $NF }')") && pwd)
+source $SCRIPT_HOME/common
+
+if [[ -z $config_concourse_port ]]; then
+    echo "Skipping Concourse setup as no Concourse configuration found."
+    exit 0
+fi
+
+CONCOURSE_HOME=/opt/concourse
+
+rm -fr $CONCOURSE_HOME
+userdel concourse >/dev/null 2>&1
+useradd concourse -p $(openssl rand -base64 32) -d /opt/concourse -G docker
+
+mkdir -p \
+    $CONCOURSE_HOME/docker \
+    $CONCOURSE_HOME/keys/web \
+    $CONCOURSE_HOME/keys/worker
+
+cat << ---EOF > $CONCOURSE_HOME/docker/docker-compose.yml
+---
+concourse-db:
+  image: postgres:9.5
+  environment:
+    POSTGRES_DB: concourse
+    POSTGRES_USER: concourse
+    POSTGRES_PASSWORD: changeme
+    PGDATA: /database
+
+concourse-web:
+  image: concourse/concourse
+  links: [concourse-db]
+  command: web
+  ports: ["$config_concourse_port:8080"]
+  volumes: ["$CONCOURSE_HOME/keys/web:/concourse-keys"]
+  environment:
+    CONCOURSE_BASIC_AUTH_USERNAME: admin
+    CONCOURSE_BASIC_AUTH_PASSWORD: $config_concourse_password
+    CONCOURSE_EXTERNAL_URL: "\${CONCOURSE_EXTERNAL_URL}"
+    CONCOURSE_POSTGRES_DATA_SOURCE: |-
+      postgres://concourse:changeme@concourse-db:5432/concourse?sslmode=disable
+
+concourse-worker:
+  image: concourse/concourse
+  privileged: true
+  links: [concourse-web]
+  command: worker
+  volumes: ["$CONCOURSE_HOME/keys/worker:/concourse-keys"]
+  environment:
+    CONCOURSE_TSA_HOST: concourse-web
+---EOF
+
+ssh-keygen -t rsa -f $CONCOURSE_HOME/keys/web/tsa_host_key -N ''
+ssh-keygen -t rsa -f $CONCOURSE_HOME/keys/web/session_signing_key -N ''
+
+ssh-keygen -t rsa -f $CONCOURSE_HOME/keys/worker/worker_key -N ''
+
+cp $CONCOURSE_HOME/keys/worker/worker_key.pub $CONCOURSE_HOME/keys/web/authorized_worker_keys
+cp $CONCOURSE_HOME/keys/web/tsa_host_key.pub $CONCOURSE_HOME/keys/worker
+
+chown -R concourse:docker $CONCOURSE_HOME
+
+systemctl enable docker
+systemctl start docker
+
+CONCOURSE_URL=http://$config_server_host:8080
+
+sudo -S -u concourse /bin/sh -l <<EOF
+cd $CONCOURSE_HOME/docker
+export CONCOURSE_EXTERNAL_URL=$CONCOURSE_URL
+docker-compose up -d
+EOF
+
+curl -L "$CONCOURSE_URL/api/v1/cli?arch=amd64&platform=linux" -o /usr/local/bin/fly
+fly --target default login --insecure \
+    --concourse-url $CONCOURSE_URL \
+    --username=admin \
+    --password=$config_concourse_password \
+    --team-name=main
+
+touch /root/.concourse_installed
