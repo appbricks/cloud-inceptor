@@ -7,12 +7,12 @@ if [[ -z $config_openvpn_port ]]; then
     exit 0
 fi
 
-echo "export vpn_server=$config_server_host" > /etc/openvpn/serverinfo
-echo "export vpn_server_port=$config_openvpn_port" >> /etc/openvpn/serverinfo
-echo "export vpn_server_proto=$config_openvpn_protocol" >> /etc/openvpn/serverinfo
+echo "export vpn_server=\"$config_server_host\"" > /etc/openvpn/serverinfo
+echo "export vpn_server_port=\"$config_openvpn_port\"" >> /etc/openvpn/serverinfo
+echo "export vpn_server_proto=\"$config_openvpn_protocol\"" >> /etc/openvpn/serverinfo
 echo "export vpn_server_description=\"$config_openvpn_server_description\"" >> /etc/openvpn/serverinfo
-echo "export vpn_server_domain=$config_openvpn_server_domain" >> /etc/openvpn/serverinfo
-echo "export vpn_server_organization=$config_openvpn_server_organization" >> /etc/openvpn/serverinfo
+echo "export vpn_server_domain=\"$config_openvpn_server_domain\"" >> /etc/openvpn/serverinfo
+echo "export vpn_server_organization=\"$config_openvpn_vpn_cert_org\"" >> /etc/openvpn/serverinfo
 echo "export vpn_auth_strategy=config_openvpn_auth_strategy" >> /etc/openvpn/serverinfo
 
 mkdir -p /etc/openvpn/easy-rsa/
@@ -20,14 +20,13 @@ pushd /etc/openvpn/easy-rsa/
 
 cp -r /usr/share/easy-rsa/* /etc/openvpn/easy-rsa/
 
-sed -i 's|export KEY_COUNTRY=\".*\"|export KEY_COUNTRY="US"|' vars
-sed -i 's|export KEY_PROVINCE=\".*\"|export KEY_PROVINCE="DE"|' vars
-sed -i 's|export KEY_CITY=\".*\"|export KEY_CITY="Wilmington"|' vars
-sed -i "s|export KEY_ORG=\".*\"|export KEY_ORG=\"${config_openvpn_server_organization}\"|" vars
-sed -i "s|export KEY_EMAIL=\".*\"|export KEY_EMAIL=\"support@${config_openvpn_server_domain}\"|" vars
-sed -i "s|export KEY_CN=\".*\"|export KEY_CN=\"${config_openvpn_server_organization}_AWS_VPN\"|" vars
-sed -i "s|export KEY_NAME=\".*\"|export KEY_NAME=\"${config_openvpn_server_organization}_AWS_VPN\"|" vars
-sed -i "s|export KEY_OU=\".*\"|export KEY_OU=\"${config_openvpn_server_organization}_AWS_VPN\"|" vars
+sed -i "s|export KEY_NAME=\".*\"|export KEY_NAME=\"${config_openvpn_vpn_cert_name:-AppBricks_VPN}\"|" vars
+sed -i "s|export KEY_EMAIL=\".*\"|export KEY_EMAIL=\"${config_openvpn_vpn_cert_email:-}\"|" vars
+sed -i "s|export KEY_COUNTRY=\".*\"|export KEY_COUNTRY=\"${config_openvpn_vpn_cert_country:-US}\"|" vars
+sed -i "s|export KEY_PROVINCE=\".*\"|export KEY_PROVINCE=\"${config_openvpn_vpn_cert_province:-MA}\"|" vars
+sed -i "s|export KEY_CITY=\".*\"|export KEY_CITY=\"${config_openvpn_vpn_cert_city:-Boston}\"|" vars
+sed -i "s|export KEY_ORG=\".*\"|export KEY_ORG=\"${config_openvpn_vpn_cert_org:-AppBricks}\"|" vars
+sed -i "s|export KEY_OU=\".*\"|export KEY_OU=\"${config_openvpn_vpn_cert_ou:-Development}\"|" vars
 
 for f in $(ls build*); do sed -i "s|\-\-interact ||" $f; done
 
@@ -137,59 +136,99 @@ cat /dev/null > /var/log/syslog
 systemctl enable openvpn
 systemctl start openvpn
 
-curl -L https://s3.amazonaws.com/mevansam-software/openvpn/openvpn-install-2.4.0-I602.exe -o /root/openvpn-install-2.4.0-I602.exe
-
 mv $SCRIPT_HOME/create_vpn_user /usr/local/bin/create_vpn_user
 chmod 0755 /usr/local/bin/create_vpn_user
 
 # Install Apache Web Server to host VPN configs
 
-if [[ -e /etc/ssl/certs/vpn_web_ca.pem ]]; then
+mkdir -p /etc/apache2/users
 
-    mkdir -p /etc/apache2/users
+if [[ ! -e /etc/ssl/certs/vpn_web_ca.pem ]]; then
+
+    openssl req -x509 -nodes -days 3650 \
+        -newkey rsa:4096 -keyout /etc/ssl/private/vpn_web_key.pem \
+        -out /etc/ssl/certs/vpn_web_cert.pem \
+        -subj "/C=${KEY_COUNTRY}/ST=${KEY_PROVINCE}/L=${KEY_CITY}/O=${KEY_ORG}/CN=${config_openvpn_vpn_cert_cn:-vpn.appbricks.org}"
 
     cat << ---EOF > /etc/apache2/sites-available/vpn-web.conf
-    <VirtualHost *:80>
-    ServerName $config_server_host
-    Redirect permanent / https://$config_server_host/
-    </VirtualHost>
+<VirtualHost *:80>
+ServerName $config_server_host
+Redirect permanent / https://$config_server_host/
+</VirtualHost>
 
-    <VirtualHost *:443>
-    ServerName $config_server_host
-    DocumentRoot /var/www/html
+<VirtualHost *:443>
+ServerName $config_server_host
+DocumentRoot /var/www/html
 
-    SSLEngine on
-    SSLCertificateChainFile /etc/ssl/certs/vpn_web_ca.pem
-    SSLCertificateFile /etc/ssl/certs/vpn_web_cert.pem
-    SSLCertificateKeyFile /etc/ssl/private/vpn_web_key.pem
+SSLEngine on
+SSLCertificateFile /etc/ssl/certs/vpn_web_cert.pem
+SSLCertificateKeyFile /etc/ssl/private/vpn_web_key.pem
 
-    <IfModule mod_authnz_external.c>
-        AddExternalAuth pwauth /usr/sbin/pwauth
-        SetExternalAuthMethod pwauth pipe
-    </IfModule>
+<IfModule mod_authnz_external.c>
+    AddExternalAuth pwauth /usr/sbin/pwauth
+    SetExternalAuthMethod pwauth pipe
+</IfModule>
 
-    # VPN Users
-    UserDir "/home/*"    
-    IncludeOptional "users/*.conf"
+# VPN Users
+UserDir "/home/*"    
+IncludeOptional "users/*.conf"
 
-    </VirtualHost>
-    ---EOF
+</VirtualHost>
+---EOF
 
-    pushd /etc/apache2/mods-enabled
-    [[ -e userdir.load ]] || ln -s ../mods-available/userdir.load userdir.load
-    [[ -e authnz_external.load ]] || ln -s ../mods-available/authnz_external.load authnz_external.load
-    [[ -e socache_shmcb.load ]] || ln -s ../mods-available//socache_shmcb.load socache_shmcb.load
-    [[ -e ssl.load ]] || ln -s ../mods-available/ssl.load ssl.load
-    [[ -e ssl.conf ]] || ln -s ../mods-available/ssl.conf ssl.conf
-    popd
+else
 
-    pushd /etc/apache2/sites-enabled
-    rm -f *
-    ln -s ../sites-available/vpn-web.conf vpn-web.conf
-    popd
+    cat << ---EOF > /etc/apache2/sites-available/vpn-web.conf
+<VirtualHost *:80>
+ServerName $config_server_host
+Redirect permanent / https://$config_server_host/
+</VirtualHost>
 
-    systemctl enable apache2
-    systemctl start apache2
+<VirtualHost *:443>
+ServerName $config_server_host
+DocumentRoot /var/www/html
+
+SSLEngine on
+SSLCertificateChainFile /etc/ssl/certs/vpn_web_ca.pem
+SSLCertificateFile /etc/ssl/certs/vpn_web_cert.pem
+SSLCertificateKeyFile /etc/ssl/private/vpn_web_key.pem
+
+<IfModule mod_authnz_external.c>
+    AddExternalAuth pwauth /usr/sbin/pwauth
+    SetExternalAuthMethod pwauth pipe
+</IfModule>
+
+# VPN Users
+UserDir "/home/*"    
+IncludeOptional "users/*.conf"
+
+</VirtualHost>
+---EOF
+
 fi
+
+pushd /etc/apache2/mods-enabled
+[[ -e userdir.load ]] || ln -s ../mods-available/userdir.load userdir.load
+[[ -e authnz_external.load ]] || ln -s ../mods-available/authnz_external.load authnz_external.load
+[[ -e socache_shmcb.load ]] || ln -s ../mods-available//socache_shmcb.load socache_shmcb.load
+[[ -e ssl.load ]] || ln -s ../mods-available/ssl.load ssl.load
+[[ -e ssl.conf ]] || ln -s ../mods-available/ssl.conf ssl.conf
+popd
+
+pushd /etc/apache2/sites-enabled
+rm -f *
+ln -s ../sites-available/vpn-web.conf vpn-web.conf
+popd
+
+systemctl enable apache2
+systemctl start apache2
+
+# Create users
+
+for n in $(echo $config_openvpn_users | sed "s/,/ /g"); do
+    user=$(echo $n | awk -F'|' '{print $1}')
+    passwd=$(echo $n | awk -F'|' '{print $2}')
+    create_vpn_user $user $passwd
+done
 
 touch /root/.openvpn_installed

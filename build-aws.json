@@ -28,13 +28,13 @@
             "type": "shell",
             "inline": [
                 "sudo chmod 0755 /tmp/bin/*",
+                "sudo /tmp/bin/install_packages",
+                "sudo mv /tmp/bin/rc.local /etc/rc.local",
                 "sudo mkdir -p /root/.bin",
                 "sudo mv /tmp/bin/common /root/.bin",
-                "sudo mv /tmp/bin/install_* /root/.bin",
-                "sudo mv /tmp/bin/rc.local /etc/rc.local",
+                "sudo mv /tmp/bin/configure_* /root/.bin",
                 "sudo mv /tmp/bin/create_vpn_user /usr/local/bin/create_vpn_user",
-                "sudo rm -fr /tmp/*",
-                "sudo /root/.bin/install_packages"
+                "sudo rm -fr /tmp/*"
             ]
         }
     ]

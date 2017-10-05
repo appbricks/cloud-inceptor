@@ -11,9 +11,13 @@
 #
 # By default this script does nothing.
 
-[ -e /root/.openvpn_installed ] || /root/.bin/install_openvpn
-[ -e /root/.squidproxy_installed ] || /root/.bin/install_squidproxy
-[ -e /root/.concourse_installed ] || /root/.bin/install_concourse
+[ -e /root/.openvpn_installed ] \
+    || /root/.bin/configure_openvpn 2>&1 | tee -a /var/log/configure_openvpn.log
+[ -e /root/.squidproxy_installed ] \
+    || /root/.bin/configure_squidproxy 2>&1 | tee -a /var/log/configure_squidproxy.log
+[ -e /root/.concourse_installed ] \
+    || /root/.bin/configure_concourse 2>&1 | tee -a /var/log/configure_concourse.log
+
 [ -e /etc/openvpn/iptables-dump.ipt ] && iptables-restore < /etc/openvpn/iptables-dump.ipt
 
 exit 0

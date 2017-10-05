@@ -33,6 +33,8 @@ apt-get install -y whois openvpn easy-rsa libpam-google-authenticator zip
 systemctl stop openvpn
 systemctl disable openvpn
 
+curl -L https://s3.amazonaws.com/mevansam-software/openvpn/openvpn-install-2.4.0-I602.exe -o /etc/openvpn/openvpn-install-2.4.0-I602.exe
+
 # Squid Proxy
 apt-get install -y squid3
 systemctl stop squid

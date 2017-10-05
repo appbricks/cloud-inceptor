@@ -44,11 +44,21 @@ openvpn:
   ssh_passwd: <SSH PASSWORD FOR THE 'ubuntu' USER>
   lan_interfaces: <COMMA SEPARATED LIST OF 'interface|cidr|netmask'>
   dns_servers: <COMMA SEPARATE LIST OF DNS SERVERS TO CONFIGURE ON THE VPN CLIENTS>
-  server_domain: <DOMAIN TO USE WHEN CREATING THE VPN KEYS>
-  server_organization: <ORGANIZATION TO USE WHEN CREATING THE VPN KEYS>
-  server_description: <DESCRIPTION TO USE WHEN CREATING THE VPN KEYS>
+  server_domain: <VPN SERVER DOMAIN>
   tunnel_all_traffic: [yes|no]
+  vpn_cert:
+    name: <IDENTIFYING NAME>
+    org: <COMPANY NAME>
+    email: <ADMIN EMAIL>
+    city: <CITY>
+    province: <STATE/PROVINCE>
+    country: <ISO COUNTRY CODE>
+    ou: <ORGANIZATION UNIT>
+    cn: <COMMON NAME for VPN server>
+  users: <COMMA SEPARATED LIST OF 'user|passwd'>
 ```
+
+>> For the cert fields `country`,`org`,`cn`,`ou`,`email` and name are mandatory.
 
 ### SquidProxy
 
