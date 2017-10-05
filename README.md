@@ -15,9 +15,13 @@ It installs the following packages.
 
 * Build an image using [packer](http://packer.io/): 
 
-```
-$ build.sh [aws|openstack|vsphere]
-```
+  - Build an AWS AMI
+    
+  ```
+  $ ./build-aws-image.sh us-west-1
+  ```
+
+  > If region is not provided an AMI will be built for each region.
 
 ## Configuring Services
 
@@ -59,6 +63,47 @@ openvpn:
 ```
 
 >> For the cert fields `country`,`org`,`cn`,`ou`,`email` and name are mandatory.
+
+If you are deploying to AWS and would like to provide the `config.yml` as user data then pre-allocate and elastic IP and associate it with the instance once it has launched. An example config.yml would be:
+
+```
+---
+server:
+  host: <Your Elastic IP>
+
+openvpn:
+  port: 1194
+  protocol: udp
+  subnet: 192.168.111.0/24
+  netmask: 255.255.255.0
+  ssh_passwd: 1234
+  lan_interfaces: 'eth0|172.31.0.0/16|255.255.0.0'
+  dns_servers: '8.8.8.8'
+  server_domain: acme.io
+  server_description: Acme-VPN
+  tunnel_all_traffic: yes
+  vpn_cert:
+    name: acme-vpn
+    org: Acme, Inc.
+    email: admin@acme.org
+    city: New York
+    province: NY
+    country: UD
+    ou: Dev
+    cn: acme.org
+  users: 'user1|passw0rd1,user2|passw0rd2'
+
+squidproxy:
+  port: 0.0.0.0:8888
+  networks: '172.31.0.0/16'
+  custom_headers_allowed: 'X-Auth-Token'
+```
+
+You can also configure OpenVPN after the instance has been launched by creating the `config.yml` under the root home directory. Additional users can be added by running the following script.
+
+```
+create_vpn_user <USER> <PASSWORD>
+```
 
 ### SquidProxy
 
