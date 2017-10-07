@@ -25,9 +25,9 @@ It installs the following packages.
 
 ## Configuring Services
 
-Packages are configured by placing a YAML file named `config.yml` with the configuration parameters for the respective package within the root users home folder. If packages have not be installed by explicitely calling the `<ROOT USER HOME>/bin/install_*` script the install will run on boot if `config.yml` is present and the package configuration is available.
+Packages are configured by placing a YAML file named `config.yml` within the root users home folder with the configuration parameters for the respective package. If packages have not be configured by explicitely calling the `<ROOT USER HOME>/bin/configure_*` script they will configured on boot if `config.yml` is present and the package configuration is available.
 
-The following configuration value must be provided by default.
+The following configuration value should be the externally accessible IP of the inception instance.
 
 ```
 ---
@@ -62,7 +62,7 @@ openvpn:
   users: <COMMA SEPARATED LIST OF 'user|passwd'>
 ```
 
->> For the cert fields `country`,`org`,`cn`,`ou`,`email` and name are mandatory.
+> For the cert fields `country`,`org`,`cn`,`ou`,`email` and name are mandatory.
 
 If you are deploying to AWS and would like to provide the `config.yml` as user data, then pre-allocate an elastic IP and associate it with the instance once it has launched. An example config.yml would be:
 
