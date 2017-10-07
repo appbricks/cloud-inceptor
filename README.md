@@ -64,7 +64,7 @@ openvpn:
 
 >> For the cert fields `country`,`org`,`cn`,`ou`,`email` and name are mandatory.
 
-If you are deploying to AWS and would like to provide the `config.yml` as user data then pre-allocate and elastic IP and associate it with the instance once it has launched. An example config.yml would be:
+If you are deploying to AWS and would like to provide the `config.yml` as user data, then pre-allocate an elastic IP and associate it with the instance once it has launched. An example config.yml would be:
 
 ```
 ---
@@ -99,7 +99,7 @@ squidproxy:
   custom_headers_allowed: 'X-Auth-Token'
 ```
 
-You can also configure OpenVPN after the instance has been launched by creating the `config.yml` under the root home directory. Additional users can be added by running the following script.
+You can also configure OpenVPN after the instance has been launched by creating the `config.yml` under the root home directory and rebooting the instance. Additional users can be added by running the following script.
 
 ```
 create_vpn_user <USER> <PASSWORD>
