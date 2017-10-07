@@ -13,10 +13,10 @@ It installs the following packages.
 
 ## Building
 
-* Build an image using [packer](http://packer.io/): 
+The images are built using [packer](http://packer.io/): 
 
-  - Build an AWS AMI
-    
+* To build an AWS AMI
+
   ```
   $ ./build-aws-image.sh us-west-1
   ```
