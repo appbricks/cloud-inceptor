@@ -1,0 +1,47 @@
+#!/bin/bash
+
+SCRIPT_HOME=$(cd $(dirname "$(ls -l $0 | awk '{ print $NF }')") && pwd)
+source $SCRIPT_HOME/common
+
+vpn_itf=$(ip a \
+    | grep -B 5 "$config_server_private_ip" \
+    | awk '/^[0-9]: (eth|en)[0-9]:/{ print substr($2,0,length($2)-1) }')
+
+i=51
+for n in $(echo $config_server_lan_interfaces | sed "s/,/ /g"); do
+
+    itf=$(echo $n | awk -F'|' '{print $1}')
+    ip=$(echo $n | awk -F'|' '{print $2}')
+    netmask=$(echo $n | awk -F'|' '{print $3}')    
+    lan_subnet=$(echo $n | awk -F'|' '{print $4}')
+    lan_netmask=$(echo $n | awk -F'|' '{print $5}')
+    gateway=$(echo $n | awk -F'|' '{print $6}')
+
+    [[ -n $lan_netmask ]] || lan_netmask=$netmask
+    lan_subnet_ip=${lan_subnet/\/*/}
+
+    if [[ $itf != $vpn_itf ]]; then
+
+        cat << ---EOF > /etc/network/interfaces.d/$i-$itf.cfg
+auto $itf
+iface $itf inet static
+    address $ip
+    netmask $netmask
+---EOF
+        if [[ -n $gateway ]]; then
+
+cat << ---EOF >> /etc/network/interfaces.d/$i-$itf.cfg
+    post-up /sbin/route add -net $lan_subnet netmask $lan_netmask gw $gateway
+    post-down /sbin/route del -net $lan_subnet netmask $lan_netmask
+---EOF
+        fi
+
+        ifup $itf
+        i=$(($i+1))
+    fi
+done
+
+systemctl enable docker
+systemctl start docker
+
+touch /root/.network_installed

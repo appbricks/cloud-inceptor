@@ -34,6 +34,7 @@
                 "sudo mv /tmp/bin/common /root/.bin",
                 "sudo mv /tmp/bin/configure_* /root/.bin",
                 "sudo mv /tmp/bin/create_vpn_user /usr/local/bin/create_vpn_user",
+                "sudo rm -rf /var/lib/apt/lists/*",
                 "sudo rm -fr /tmp/*"
             ]
         }

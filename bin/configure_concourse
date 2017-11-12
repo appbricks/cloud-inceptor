@@ -61,9 +61,6 @@ cp $CONCOURSE_HOME/keys/web/tsa_host_key.pub $CONCOURSE_HOME/keys/worker
 
 chown -R concourse:docker $CONCOURSE_HOME
 
-systemctl enable docker
-systemctl start docker
-
 CONCOURSE_URL=http://$config_server_host:8080
 
 sudo -S -u concourse /bin/sh -l <<EOF

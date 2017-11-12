@@ -76,28 +76,32 @@ echo -e "topology subnet" >> /etc/openvpn/server.conf
 # Allow established traffic to pass back and forth
 iptables -I FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
 
-for n in $(echo $config_openvpn_lan_interfaces | sed "s/,/ /g"); do
-    lan_itf=$(echo $n | awk -F'|' '{print $1}')
-    lan_subnet=$(echo $n | awk -F'|' '{print $2}')
+for n in $(echo $config_server_lan_interfaces | sed "s/,/ /g"); do
+
+    itf=$(echo $n | awk -F'|' '{print $1}')
+    netmask=$(echo $n | awk -F'|' '{print $3}')    
+    lan_subnet=$(echo $n | awk -F'|' '{print $4}')
+    lan_netmask=$(echo $n | awk -F'|' '{print $5}')
+
+    [[ -n $lan_netmask ]] || lan_netmask=$netmask
     lan_subnet_ip=${lan_subnet/\/*/}
-    lan_netmask=$(echo $n | awk -F'|' '{print $3}')
 
     echo -e "push \"route $lan_subnet_ip $lan_netmask\"" >> /etc/openvpn/server.conf
 
     # Allow traffic initiated from VPN to access LAN
-    iptables -I FORWARD -i tun0 -o $lan_itf -s $config_openvpn_subnet -d $lan_subnet -m conntrack --ctstate NEW -j ACCEPT
+    iptables -I FORWARD -i tun0 -o $itf -s $config_openvpn_subnet -d $lan_subnet -m conntrack --ctstate NEW -j ACCEPT
 
     # Allow traffic initiated from VPN to access "the world"
-    iptables -I FORWARD -i tun0 -o $lan_itf -s $config_openvpn_subnet -m conntrack --ctstate NEW -j ACCEPT
+    iptables -I FORWARD -i tun0 -o $itf -s $config_openvpn_subnet -m conntrack --ctstate NEW -j ACCEPT
 
     # Allow traffic initiated from LAN to access "the world"
-    iptables -I FORWARD -i $lan_itf -o $lan_itf -s $lan_subnet -m conntrack --ctstate NEW -j ACCEPT
+    iptables -I FORWARD -i $itf -o $itf -s $lan_subnet -m conntrack --ctstate NEW -j ACCEPT
 
     # Masquerade traffic from VPN to "the world" -- done in the nat table
-    iptables -t nat -I POSTROUTING -o $lan_itf -s $config_openvpn_subnet -j MASQUERADE
+    iptables -t nat -I POSTROUTING -o $itf -s $config_openvpn_subnet -j MASQUERADE
 
     # Masquerade traffic from LAN to "the world"
-    iptables -t nat -I POSTROUTING -o $lan_itf -s $lan_subnet -j MASQUERADE
+    iptables -t nat -I POSTROUTING -o $itf -s $lan_subnet -j MASQUERADE
 done
 
 echo -e "\n# Enable PAM Authentication" >> /etc/openvpn/server.conf

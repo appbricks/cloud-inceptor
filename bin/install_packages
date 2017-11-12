@@ -40,4 +40,15 @@ apt-get install -y squid3
 systemctl stop squid
 systemctl disable squid
 
+# Install git crypt
+apt-get install -y make g++ libssl-dev openssl
+
+git clone https://github.com/AGWA/git-crypt /tmp/git-crypt
+cd /tmp/git-crypt
+
+make
+make install PREFIX=/usr/local
+
+cd ~
+
 set +xe
