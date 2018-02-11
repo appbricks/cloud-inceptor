@@ -1,4 +1,13 @@
-.envrc
+.*
 *.log
+
+*.tfstate
+*.tfstate.backup
+
+*.key
+*-key.*
+*_key.*
+
 config.yml
+
 tmp/
