@@ -2,8 +2,8 @@
 
 set -e
 
-if [ -z "$1" ] || [ -z "$2" ]; then
-    echo -e "\nUsage: create_user.sh user password\n"
+if [[ -z "$1" ]] || [[ -z "$2" ]]; then
+    echo -e "\nUsage: create_vpn_user user password\n"
     exit 1
 fi
 
@@ -14,8 +14,8 @@ fi
 
 user=$1
 
-rm -fr /home/ubuntu/ovpn/${user}
-dest_dir=/home/ubuntu/ovpn/${user}/client
+rm -fr /etc/openvpn/users/${user}
+dest_dir=/etc/openvpn/users/${user}/client
 mkdir -p "$dest_dir"
 
 pushd /etc/openvpn/easy-rsa/
@@ -47,44 +47,40 @@ echo -e "reneg-sec 0" >> "$dest_dir/client.conf"
 
 popd
 
-pushd /home/ubuntu/ovpn/${user}
+pushd /etc/openvpn/users/${user}
 
 # Create Tunnelblick configuration for OSX
 mv client "$vpn_server_description.tblk"
-zip -r /home/ubuntu/ovpn/${user}/openvpn.tunnelblick.zip "$vpn_server_description.tblk"
+zip -r /etc/openvpn/users/${user}/openvpn-config.tunnelblick.zip "$vpn_server_description.tblk"
 
 # Create OpenVPN client configuration for windows
 mv "$vpn_server_description.tblk" "$vpn_server_description"
 mv "$vpn_server_description/client.conf" "$vpn_server_description/$vpn_server_description.ovpn"
-zip -r /home/ubuntu/ovpn/${user}/openvpn.client.zip "$vpn_server_description"
+zip -r /etc/openvpn/users/${user}/openvpn-config.client.zip "$vpn_server_description"
 
 rm -fr "$vpn_server_description"
 
-chown -R ubuntu:ubuntu /home/ubuntu/ovpn/
 popd
 
 set +e
 userdel $user > /dev/null 2>&1
 set -e
-
-rm -fr /home/ubuntu/${user}
 rm -fr /home/$user
 
 password=$(mkpasswd $2)
-useradd $user -p $password
-mkdir -p /home/$user
+useradd $user -p $password -m -d /home/$user -s /bin/bash
 
 case "$config_openvpn_auth_strategy" in
     google_mfa)
         google-authenticator -f -t -d -r 3 -R 30 -w 8 -l "${user}@${vpn_server_domain}" -s /home/$user/.google_authenticator
-        cp /home/$user/.google_authenticator /home/ubuntu/ovpn/${user}/gauth.secret
-        chown ubuntu:ubuntu /home/ubuntu/ovpn/${user}/gauth.secret
+        cp /home/$user/.google_authenticator /etc/openvpn/users/${user}/gauth.secret
+        chown ubuntu:ubuntu /etc/openvpn/users/${user}/gauth.secret
         ;;
     *)
         ;;
 esac
 
-cp /home/ubuntu/ovpn/${user}/*.zip /home/$user
+cp /etc/openvpn/users/${user}/*.zip /home/$user
 cp /etc/openvpn/openvpn-install-2.4.0-I602.exe /home/$user
 chown -R $user:$user /home/$user
 

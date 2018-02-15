@@ -61,7 +61,11 @@ cp $CONCOURSE_HOME/keys/web/tsa_host_key.pub $CONCOURSE_HOME/keys/worker
 
 chown -R concourse:docker $CONCOURSE_HOME
 
-CONCOURSE_URL=http://$config_server_host:8080
+if [[ $(echo "$config_concourse_port" | sed -e 's|^[0-9]*|xx|') == xx ]]; then
+    CONCOURSE_URL=http://127.0.0.1:$config_concourse_port
+else
+    CONCOURSE_URL=http://$config_concourse_port
+fi
 
 sudo -S -u concourse /bin/sh -l <<EOF
 cd $CONCOURSE_HOME/docker
@@ -69,7 +73,23 @@ export CONCOURSE_EXTERNAL_URL=$CONCOURSE_URL
 docker-compose up -d
 EOF
 
-curl -L "$CONCOURSE_URL/api/v1/cli?arch=amd64&platform=linux" -o /usr/local/bin/fly
+i=0
+curl -f -L "$CONCOURSE_URL/api/v1/cli?arch=amd64&platform=linux" \
+    -o /usr/local/bin/fly >/dev/null 2>&1
+while [[ $? -ne 0 ]] && [[ $i -lt 12 ]]; do
+    
+    i=$(($i+1))
+    echo "Waiting for Concourse to startup..."
+
+    sleep 5
+    curl -f -L "$CONCOURSE_URL/api/v1/cli?arch=amd64&platform=linux" \
+        -o /usr/local/bin/fly >/dev/null 2>&1
+done
+if [[ $? -ne 0 ]]; then 
+    echo "ERROR! Concourse is still not running after 60 seconds."
+    exit 1
+fi
+
 fly --target default login --insecure \
     --concourse-url $CONCOURSE_URL \
     --username=admin \

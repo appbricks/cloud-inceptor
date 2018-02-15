@@ -1,0 +1,75 @@
+#!/bin/bash
+
+set -xe
+
+echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
+
+# Update and upgrade the distribution
+apt-get update
+apt-get -y \
+    --allow-downgrades --allow-remove-essential --allow-change-held-packages \
+    dist-upgrade
+
+# Docker
+curl -fsSL https://get.docker.com/gpg | sudo apt-key add -
+curl -fsSL https://get.docker.com/ | sh
+
+usermod -aG docker ubuntu
+
+systemctl stop docker
+systemctl disable docker
+
+# OpenVPN
+apt-get install -y whois openvpn easy-rsa libpam-google-authenticator zip
+systemctl stop openvpn
+systemctl disable openvpn
+
+# Apache Web Server
+apt-get install -y apache2 apache2-utils libapache2-mod-authnz-external pwauth
+systemctl stop apache2
+systemctl disable apache2
+
+# Squid Proxy
+apt-get install -y squid3
+systemctl stop squid
+systemctl disable squid
+
+curl -L https://s3.amazonaws.com/mevansam-software/openvpn/openvpn-install-2.4.0-I602.exe \
+    -o /etc/openvpn/openvpn-install-2.4.0-I602.exe
+
+# Docker Compose CLI
+curl -L https://github.com/docker/compose/releases/download/1.12.0/docker-compose-`uname -s`-`uname -m` \
+    > /usr/local/bin/docker-compose
+chmod +x /usr/local/bin/docker-compose
+
+# Install packages necessary to compile git-crypt and lastpass cli
+apt-get install -y \
+    pkg-config cmake build-essential \
+    openssl libcurl4-openssl-dev libssl-dev \
+    libxml2 libxml2-dev \
+    pinentry-curses xclip 
+
+# Install git crypt
+git clone https://github.com/AGWA/git-crypt /tmp/git-crypt
+cd /tmp/git-crypt
+
+make
+make install PREFIX=/usr/local
+
+cd -
+
+# Install lastpass cli
+git clone https://github.com/lastpass/lastpass-cli.git /tmp/lastpass-cli
+cd /tmp/lastpass-cli
+
+# Checkout the latest tag
+git fetch --tags
+latestTag=$(git describe --tags `git rev-list --tags --max-count=1`)
+git checkout $latestTag
+
+make
+make install PREFIX=/usr/local
+
+cd -
+
+set +xe

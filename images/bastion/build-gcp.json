@@ -1,0 +1,41 @@
+{
+    "variables": {
+        "gcp_acct_file": "{{env `GCP_ACCT_FILE`}}",
+        "gcp_project_id": "{{env `GCP_PROJECT_ID`}}",
+        "gcp_zone": "{{env `GCP_ZONE`}}"
+    },
+    "builders": [
+        {
+            "type": "googlecompute",
+            "account_file": "{{user `gcp_acct_file`}}",
+            "project_id": "{{user `gcp_project_id`}}",
+            "zone": "{{user `gcp_zone`}}",
+            "source_image_family": "ubuntu-1604-lts",
+            "ssh_username": "ubuntu",
+            "image_family": "ab-inception",
+            "image_name": "ab-inception-v1-{{timestamp}}",
+            "image_description": "Appbricks inception instance base image"
+        }
+    ],
+    "provisioners": [
+        {
+            "type": "file",
+            "source": "bin",
+            "destination": "/tmp"
+        },
+        {
+            "type": "shell",
+            "inline": [
+                "sudo chmod 0755 /tmp/bin/*",
+                "sudo /tmp/bin/install_packages",
+                "sudo mv /tmp/bin/rc.local /etc/rc.local",
+                "sudo mkdir -p /root/.bin",
+                "sudo mv /tmp/bin/common /root/.bin",
+                "sudo mv /tmp/bin/configure_* /root/.bin",
+                "sudo mv /tmp/bin/create_vpn_user /usr/local/bin/create_vpn_user",
+                "sudo rm -rf /var/lib/apt/lists/*",
+                "sudo rm -fr /tmp/*"
+            ]
+        }
+    ]
+}

@@ -7,6 +7,11 @@ if [[ -z $config_openvpn_port ]]; then
     exit 0
 fi
 
+# Use the fully qualified name
+# of the host instead of host ip.
+[[ $config_server_use_fqdn == "true" ]] && \
+    config_server_host=$config_server_fqdn
+
 echo "export vpn_server=\"$config_server_host\"" > /etc/openvpn/serverinfo
 echo "export vpn_server_port=\"$config_openvpn_port\"" >> /etc/openvpn/serverinfo
 echo "export vpn_server_proto=\"$config_openvpn_protocol\"" >> /etc/openvpn/serverinfo
@@ -45,6 +50,7 @@ openvpn --genkey --secret /etc/openvpn/ta.key
 
 vpn_subnet_ip=${config_openvpn_subnet/\/*/}
 
+sed -i "s/^;local a.b.c.d/local $config_server_private_ip/" /etc/openvpn/server.conf
 sed -i "s/^port .*/port $config_openvpn_port/" /etc/openvpn/server.conf
 sed -i "s/^proto .*/proto $config_openvpn_protocol/" /etc/openvpn/server.conf
 sed -i "s/^server .*/server $vpn_subnet_ip $config_openvpn_netmask/" /etc/openvpn/server.conf
@@ -133,25 +139,24 @@ sysctl -p
 
 iptables-save > /etc/openvpn/iptables-dump.ipt
 
-password=$(mkpasswd $config_openvpn_ssh_passwd)
-usermod --password $password ubuntu
-
 cat /dev/null > /var/log/syslog
 systemctl enable openvpn
 systemctl start openvpn
 
 mv $SCRIPT_HOME/create_vpn_user /usr/local/bin/create_vpn_user
-chmod 0755 /usr/local/bin/create_vpn_user
+chmod +x /usr/local/bin/create_vpn_user
+mv $SCRIPT_HOME/delete_vpn_user /usr/local/bin/delete_vpn_user
+chmod +x /usr/local/bin/delete_vpn_user
 
 # Install Apache Web Server to host VPN configs
 
 mkdir -p /etc/apache2/users
 
-if [[ ! -e /etc/ssl/certs/vpn_web_ca.pem ]]; then
+if [[ ! -e /etc/ssl/certs/bastion_web_ca.pem ]]; then
 
     openssl req -x509 -nodes -days 3650 \
-        -newkey rsa:4096 -keyout /etc/ssl/private/vpn_web_key.pem \
-        -out /etc/ssl/certs/vpn_web_cert.pem \
+        -newkey rsa:4096 -keyout /etc/ssl/private/bastion_web_key.pem \
+        -out /etc/ssl/certs/bastion_web_cert.pem \
         -subj "/C=${KEY_COUNTRY}/ST=${KEY_PROVINCE}/L=${KEY_CITY}/O=${KEY_ORG}/CN=${config_openvpn_vpn_cert_cn:-vpn.appbricks.org}"
 
     cat << ---EOF > /etc/apache2/sites-available/vpn-web.conf
@@ -165,8 +170,8 @@ ServerName $config_server_host
 DocumentRoot /var/www/html
 
 SSLEngine on
-SSLCertificateFile /etc/ssl/certs/vpn_web_cert.pem
-SSLCertificateKeyFile /etc/ssl/private/vpn_web_key.pem
+SSLCertificateFile /etc/ssl/certs/bastion_web_cert.pem
+SSLCertificateKeyFile /etc/ssl/private/bastion_web_key.pem
 
 <IfModule mod_authnz_external.c>
     AddExternalAuth pwauth /usr/sbin/pwauth
@@ -174,7 +179,7 @@ SSLCertificateKeyFile /etc/ssl/private/vpn_web_key.pem
 </IfModule>
 
 # VPN Users
-UserDir "/home/*"    
+UserDir "/home/*"
 IncludeOptional "users/*.conf"
 
 </VirtualHost>
@@ -193,9 +198,9 @@ ServerName $config_server_host
 DocumentRoot /var/www/html
 
 SSLEngine on
-SSLCertificateChainFile /etc/ssl/certs/vpn_web_ca.pem
-SSLCertificateFile /etc/ssl/certs/vpn_web_cert.pem
-SSLCertificateKeyFile /etc/ssl/private/vpn_web_key.pem
+SSLCertificateChainFile /etc/ssl/certs/bastion_web_ca.pem
+SSLCertificateFile /etc/ssl/certs/bastion_web_cert.pem
+SSLCertificateKeyFile /etc/ssl/private/bastion_web_key.pem
 
 <IfModule mod_authnz_external.c>
     AddExternalAuth pwauth /usr/sbin/pwauth
@@ -228,6 +233,19 @@ systemctl enable apache2
 systemctl start apache2
 
 # Create users
+
+if [[ -n $config_openvpn_admin_passwd ]]; then
+
+    create_vpn_user vpn_admin $config_openvpn_admin_passwd
+    adduser vpn_admin sudo
+
+    mkdir -p /home/vpn_admin/.ssh
+    cp /home/ubuntu/.ssh/authorized_keys /home/vpn_admin/.ssh
+    chown -R vpn_admin:vpn_admin /home/vpn_admin/.ssh
+
+    echo -e "\nAllowUsers vpn_admin" >> /etc/ssh/sshd_config
+    service sshd restart
+fi
 
 for n in $(echo $config_openvpn_users | sed "s/,/ /g"); do
     user=$(echo $n | awk -F'|' '{print $1}')

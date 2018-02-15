@@ -1,42 +1,5 @@
 #
-# External variables
-#
-
-variable "vpc_name" {
-  default = "inception-test"
-}
-
-variable "vpc_cidr" {
-  default = "10.0.0.0/16"
-}
-
-variable "max_azs" {
-  default = 3
-}
-
-variable "subnet_start" {
-  default = 200
-}
-
-variable "subnet_bits" {
-  default = 8
-}
-
-#
-# AWS Virtual Private Cloud
-#
-
-resource "aws_vpc" "main" {
-  cidr_block           = "${var.vpc_cidr}"
-  enable_dns_hostnames = true
-
-  tags {
-    Name = "${var.vpc_name}"
-  }
-}
-
-#
-# Subnets
+# VPC subnets
 #
 
 resource "aws_subnet" "dmz" {
@@ -44,7 +7,9 @@ resource "aws_subnet" "dmz" {
 
   vpc_id            = "${aws_vpc.main.id}"
   availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
-  cidr_block        = "${cidrsubnet(var.vpc_cidr, var.subnet_bits, var.subnet_start + count.index)}"
+
+  # Distinct x.x.x.x/24 network for each AZ from subnet start
+  cidr_block = "${cidrsubnet(var.vpc_cidr, 8, var.subnet_start + count.index)}"
 
   tags {
     Name = "${var.vpc_name}: dmz subnet ${count.index}"
@@ -56,7 +21,10 @@ resource "aws_subnet" "engineering" {
 
   vpc_id            = "${aws_vpc.main.id}"
   availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
-  cidr_block        = "${cidrsubnet(var.vpc_cidr, var.subnet_bits, var.subnet_start + aws_subnet.dmz.count + count.index)}"
+
+  # Distinct x.x.x.x/24 for each AZ after allowing space 
+  # for all possible DMZ subnets across all AZs of region
+  cidr_block = "${cidrsubnet(var.vpc_cidr, 8, var.subnet_start + length(data.aws_availability_zones.available.names) + count.index)}"
 
   tags {
     Name = "${var.vpc_name}: engineering subnet ${count.index}"

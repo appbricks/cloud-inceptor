@@ -40,11 +40,13 @@ function aws::build_ami() {
     local ami=$(echo "$base_amis" | grep "|$region|" | sort -r | head -1 | awk -F'|' '{ print $3 }')
 
     echo -e "\nBuilding AMI image '$image_name' in region $region using base AMI $ami..."
+    cd $(dirname $packer_manifest)
     packer build \
         -var "region=$region" \
         -var "ami=$ami" \
         -var "name=$image_name" \
-        $packer_manifest
+        $(basename $packer_manifest)
+    cd -
 }
 
 pids=()
@@ -56,12 +58,12 @@ base_amis=$(curl -sL https://cloud-images.ubuntu.com/query/$UBUNTU_RELEASE/serve
 for r in $(echo "$regions"); do
     echo "Building AMI for region $r."
     aws::build_ami "Inception VM for Automated Deployments" \
-        "$r" "$base_amis" "build-aws.json" >build_aws_$r.log 2>&1 &
+        "$r" "$base_amis" "bastion/build-aws.json" >build_aws_$r.log 2>&1 &
     pids+=$!
 done
 
 # Wait for all parallel jobs to finish
 echo "Waiting for build jobs to finish."
-for p in "${pids[@]}"; do
+for p in ${pids[@]}; do
     wait $p
 done

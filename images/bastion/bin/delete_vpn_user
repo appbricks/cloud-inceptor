@@ -1,0 +1,25 @@
+#!/bin/bash
+
+set -e
+
+if [[ -z "$1" ]]; then
+    echo -e "\nUsage: delete_vpn_user user\n"
+    exit 1
+fi
+
+if [[ `whoami` != "root" ]]; then 
+    echo -e "\nThis script needs to be run as root.\n"
+    exit 1
+fi
+
+user=$1
+userdel $user > /dev/null 2>&1
+rm -fr /home/$user
+
+if [[ -e /etc/apache2 ]]; then
+    rm -f /etc/apache2/users/$user.conf
+    systemctl restart apache2
+fi
+
+set +e
+
