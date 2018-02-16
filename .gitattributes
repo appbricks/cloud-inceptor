@@ -1,1 +1,0 @@
-tests/**/params.yml filter=git-crypt diff=git-crypt
