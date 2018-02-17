@@ -53,7 +53,7 @@ If the `ip` is empty then it will be assumed that the NIC is auto configured and
 
 ### OpenVPN
 
-OpenVPN is configured via the `bin\install_openvpn` script. It will execute if the `port` configuration value is present.
+OpenVPN is configured via the `bin\configure_openvpn` script. It will execute if the `port` configuration value is present.
 
 ```
 openvpn:
@@ -124,7 +124,7 @@ create_vpn_user <USER> <PASSWORD>
 
 ### SquidProxy
 
-SquidProxy is configured via the `bin\install_squidproxy` script. It will execute if the `port` configuration value is present.
+SquidProxy is configured via the `bin\configure_squidproxy` script. It will execute if the `port` configuration value is present.
 
 ```
 squidproxy:
@@ -135,44 +135,22 @@ squidproxy:
 
 ### Concourse
 
-Concourse is configured via the `bin\install_concourse` script. As with the other scripts it will execute only if the `port` configuration value is present. It is recommended to configure Concourse to listen on port 127.0.0.1 and access concourse via a tunnel or VPN for security reasons, especially if you plan to use Concourse to automate infrastructure and software configuration.
+Concourse is configured via the `bin\configure_concourse` script. As with the other scripts it will execute only if the `port` configuration value is present. It is recommended to configure Concourse to listen on port 127.0.0.1 and access concourse via a tunnel or VPN for security reasons, especially if you plan to use Concourse to automate infrastructure and software configuration.
 
 ```
 concourse:
   port: <IP:PORT TO LISTEN ON - if IP is not provided concourse will listen on all interfaces>
   password: <PASSWORD FOR BASIC AUTH TO DEFAULT TEAM>
-  pipeline-repo: <GIT REPO - repo containing the initial set of pipelines>
-  pipeline-repo-branch: <GIT REPO BRANCH - (optional) branch of repo containing the initial set of pipelines>
-  pipeline-repo-tag-filter: <GIT REPO TAG FILTER - (optional) tag to match when retrieving latest pipelines>
-  pipeline-folder: <PIPELINE FOLDER - folder container pipeline configurations>
-  pipeline-var-folder: <PIPELINE VARIABLE FOLDER - folder containing pipeline variables>
-  environment-key: <ENVIRONMENT KEY - key identifying pipeline environment>
 ```
 
-Although not required, the pipeline repo variables should be encrypted using [git-crypt](https://github.com/AGWA/git-crypt). GPG encrypted repos may be unencrypted using one of the following methods.
+Follow the steps below to set-up a bootstrap pipeline once concourse has been installed.
 
-1. Upload the GPG public key of the user to use for decryption as `<ROOT USER HOME>/git-crypt-user.pem`.
+1. Upload the bootstrap pipeline YAML to `/root/bootstrap.yml`.
+2. Upload the external configuration for the pipeline to `/root/bootstrap-vars.yml`
 
-  Export your GPG as follows and base64 encode it. 
+The `bin\configure_concourse` script will look for the existance of these files within the `/root` folder and set the pipeline in local Concourse and unpause it. In addition to the the variables you provide the following will be added as pipeline variables.
 
-  ```
-  gpg --export-secret-key -a msamaratunga@appbricks.net | base64
-  ```
-
-  Copy the output as the content for the cloud-config configuration file saved to `<ROOT USER HOME>/git-crypt-user.pem` as follows.
-
-  ```
-  #cloud-config
-
-  write_files:
-    content: !!binary |
-      <BASE64 encoded key file>
-    path: /root/git-crypt-user.pem
-    permissions: '0600'
-  ```
-
-2. Upload a symmetric key for decryption as `<ROOT USER HOME>/git-crypt-key.pem`. As above the exported key needs to be base64 encoded and passed as file content in the cloud-config configuration file.
-
-The `environment-key` may be used to pick a folder within the `pipeline-var-folder` containing the environment specific variables. If it is not provided then the `params.yml` file at the root of the `pipeline-var-folder` will be selected to interpolate the pipeline the configuration.
-
-The Concourse configuration will setup a bootstrap pipeline that create pipelines using pipeline definitions found in `pipeline-repo-branch\pipeline-folder`. You should use the `pipeline-repo` to setup pipelines that install, upgrade and operate the system that you wish to build.
+* `environment` - The name of the VPC.
+* `concourse_url` - The Concourse URL to access the installed Concourse instance from within a job.
+* `concourse_user` - The Concourse user name for the `main` team.
+* `concourse_password` -  The password for the user.
