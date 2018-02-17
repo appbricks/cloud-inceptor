@@ -1,0 +1,27 @@
+---
+jobs:
+- name: bootstrap
+  public: false
+  plan:
+  - task: hello 
+    config:
+      platform: linux
+      image_resource:
+        type: docker-image
+        source: {repository: alpine}
+      run:
+        path: echo
+        args: [hello world one - ((environment))]
+  - task: show-env 
+    config:
+      platform: linux
+      image_resource:
+        type: docker-image
+        source: {repository: alpine}
+      run:
+        path: env
+      params:
+        ENVIRONMENT: ((concourse_password))
+        CONCOURSE_URL: ((concourse_url))
+        CONCOURSE_USER: ((concourse_user))
+        CONCOURSE_PASSWORD: ((concourse_password))

@@ -13,3 +13,15 @@ variable "vpc_name" {}
 
 # VPC DNS zone
 variable "dns_zone_name" {}
+
+#
+# Concourse bootstrap pipeline
+#
+
+variable "bootstrap_pipeline_file" {
+  default = ""
+}
+
+variable "bootstrap_var_file" {
+  default = ""
+}

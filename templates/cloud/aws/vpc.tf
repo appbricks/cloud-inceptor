@@ -13,6 +13,9 @@ module "vpc" {
   locality          = "${var.locality}"
   province          = "${var.province}"
   country           = "${var.country}"
+
+  bootstrap_pipeline_file = "${var.bootstrap_pipeline_file}"
+  bootstrap_var_file      = "${var.bootstrap_var_file}"
 }
 
 resource "aws_route53_record" "bastion-public" {

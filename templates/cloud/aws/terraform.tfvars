@@ -17,3 +17,8 @@ country = "US"
 vpc_name = "inceptor"
 
 dns_zone_name = "test.appbricks.io"
+
+#
+# Bootstrap pipeline
+#
+bootstrap_pipeline_file = "../../../tests/bootstrap-pipeline/pipeline.yml"

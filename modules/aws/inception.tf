@@ -58,6 +58,16 @@ write_files:
   path: /var/www/html/index.html
   permissions: '0644'
 
+# Bootstrap Pipeline
+- encoding: b64
+  content: ${base64encode(file(length(var.bootstrap_pipeline_file) == 0 ? "${path.module}/_placeholder_" : var.bootstrap_pipeline_file))}
+  path: /root/bootstrap.yml
+  permissions: '0644'
+- encoding: b64
+  content: ${base64encode(data.template_file.bootstrap-pipeline-vars.rendered)}
+  path: /root/bootstrap-vars.yml
+  permissions: '0644'
+
 USER_DATA
   }
 }
@@ -105,6 +115,15 @@ data "template_file" "www-static-index" {
   vars {
     environment = "${var.vpc_name}"
   }
+}
+
+data "template_file" "bootstrap-pipeline-vars" {
+  template = <<PIPELINE_VARS
+---
+${file(length(var.bootstrap_var_file) == 0 ? "${path.module}/_placeholder_" : var.bootstrap_var_file)}
+
+environment: ${var.vpc_name}
+PIPELINE_VARS
 }
 
 resource "random_string" "vpn-admin-password" {

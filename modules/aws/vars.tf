@@ -60,6 +60,14 @@ variable "concourse_admin_password" {
   default = "Passw0rd"
 }
 
+variable "bootstrap_pipeline_file" {
+  default = ""
+}
+
+variable "bootstrap_var_file" {
+  default = ""
+}
+
 #
 # VPN configuration variables
 #

@@ -89,11 +89,30 @@ if [[ $? -ne 0 ]]; then
     echo "ERROR! Concourse is still not running after 60 seconds."
     exit 1
 fi
+chmod +x /usr/local/bin/fly
 
-fly --target default login --insecure \
+docker_worker_cid=$(docker ps -a \
+    | awk '/docker_concourse-worker/{ print $1 }')
+concourse_web_ip=$(docker exec -i $docker_worker_cid /bin/bash -c env \
+    | awk -F'=' '/^CONCOURSE_WEB_PORT_8080_TCP_ADDR/{ print $2 }' \
+    | tr -d '[:space:]')
+internal_concourse_url="http://$concourse_web_ip:8080"
+
+echo -e "\nconcourse_url: $internal_concourse_url" >> /root/bootstrap-vars.yml
+echo -e "concourse_user: admin" >> /root/bootstrap-vars.yml
+echo -e "concourse_password: $config_concourse_password" >> /root/bootstrap-vars.yml
+
+sudo -i -- fly --target default login --insecure \
     --concourse-url $CONCOURSE_URL \
     --username=admin \
     --password=$config_concourse_password \
     --team-name=main
+
+s=$(head -1 /root/bootstrap.yml)
+if [[ $s != "---" ]]; then
+    sudo -i -- fly --target default set-pipeline -n -p bootstrap \
+        -c /root/bootstrap.yml -l /root/bootstrap-vars.yml
+    sudo -i -- fly --target default unpause-pipeline -p bootstrap
+fi
 
 touch /root/.concourse_installed
