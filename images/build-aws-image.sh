@@ -22,7 +22,7 @@ function aws::build_ami() {
     local base_amis=$3
     local packer_manifest=$4
 
-    echo  -e "\nDeleting images with name '$image_name' in region $region..."
+    echo -e "\nDeleting images with name '$image_name' in region $region..."
     local images=$(aws ec2 describe-images --region $region --owner self --filters "Name=name,Values=$image_name")
     for i in $(echo "$images" | jq -r '.Images[].ImageId'); do
         s=$(echo -e "$images" | jq -r  '.Images[] | select(.ImageId=="'$i'") | .BlockDeviceMappings[0].Ebs.SnapshotId')
