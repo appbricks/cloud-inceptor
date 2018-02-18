@@ -1,6 +1,7 @@
 #!/bin/bash
 
 UBUNTU_RELEASE=xenial
+IMAGE_NAME="@ppBricks-Inceptor-Bastion"
 
 which aws >/dev/null 2>&1
 if [[ $? -ne 0 ]]; then
@@ -57,13 +58,13 @@ base_amis=$(curl -sL https://cloud-images.ubuntu.com/query/$UBUNTU_RELEASE/serve
 
 for r in $(echo "$regions"); do
     echo "Building AMI for region $r."
-    aws::build_ami "Inception VM for Automated Deployments" \
+    aws::build_ami "$IMAGE_NAME" \
         "$r" "$base_amis" "bastion/build-aws.json" >build_aws_$r.log 2>&1 &
     pids+=$!
 done
 
 # Wait for all parallel jobs to finish
 echo "Waiting for build jobs to finish."
-for p in ${pids[@]}; do
+for p in "${pids[@]}"; do
     wait $p
 done

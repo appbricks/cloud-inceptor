@@ -32,6 +32,10 @@ variable "subnet_start" {
 # Bastion inception instance variables
 #
 
+variable "bastion_image_name" {
+  default = "@ppBricks-Inceptor-Bastion"
+}
+
 variable "bastion_host_name" {
   default = ""
 }

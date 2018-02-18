@@ -140,7 +140,7 @@ data "aws_ami" "inception" {
 
   filter {
     name   = "name"
-    values = ["Inception VM for Automated Deployments"]
+    values = ["${var.bastion_image_name}"]
   }
 
   filter {

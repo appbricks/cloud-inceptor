@@ -93,7 +93,7 @@ chmod +x /usr/local/bin/fly
 
 docker_worker_cid=$(docker ps -a \
     | awk '/docker_concourse-worker/{ print $1 }')
-concourse_web_ip=$(docker exec -i $docker_worker_cid /bin/bash -c env \
+concourse_web_ip=$(docker exec $docker_worker_cid /bin/bash -c env \
     | awk -F'=' '/^CONCOURSE_WEB_PORT_8080_TCP_ADDR/{ print $2 }' \
     | tr -d '[:space:]')
 internal_concourse_url="http://$concourse_web_ip:8080"
@@ -109,7 +109,7 @@ sudo -i -- fly --target default login --insecure \
     --team-name=main
 
 s=$(head -1 /root/bootstrap.yml)
-if [[ $s != "---" ]]; then
+if [[ $s == "---" ]]; then
     sudo -i -- fly --target default set-pipeline -n -p bootstrap \
         -c /root/bootstrap.yml -l /root/bootstrap-vars.yml
     sudo -i -- fly --target default unpause-pipeline -p bootstrap
