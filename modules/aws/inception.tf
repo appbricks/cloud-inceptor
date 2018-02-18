@@ -309,9 +309,9 @@ output "vpn-admin-password" {
 }
 
 output "bastion-private-ip" {
-  value = "${aws_instance.inception.private_ip}"
+  value = "${aws_network_interface.inception-private.private_ips[0]}"
 }
 
 output "bastion-public-ip" {
-  value = "${aws_instance.inception.public_ip}"
+  value = "${aws_eip.inception.public_ip}"
 }
