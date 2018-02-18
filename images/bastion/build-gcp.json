@@ -1,8 +1,10 @@
 {
     "variables": {
-        "gcp_acct_file": "{{env `GCP_ACCT_FILE`}}",
-        "gcp_project_id": "{{env `GCP_PROJECT_ID`}}",
-        "gcp_zone": "{{env `GCP_ZONE`}}"
+        "gcp_acct_file": "{{env `GOOGLE_CREDENTIALS`}}",
+        "gcp_project_id": "{{env `GOOGLE_PROJECT`}}",
+        "gcp_zone": "{{env `GOOGLE_ZONE`}}",
+        "source_image_family": "",
+        "image_name": ""
     },
     "builders": [
         {
@@ -10,11 +12,11 @@
             "account_file": "{{user `gcp_acct_file`}}",
             "project_id": "{{user `gcp_project_id`}}",
             "zone": "{{user `gcp_zone`}}",
-            "source_image_family": "ubuntu-1604-lts",
+            "source_image_family": "{{user `source_image_family`}}",
             "ssh_username": "ubuntu",
-            "image_family": "ab-inception",
-            "image_name": "ab-inception-v1-{{timestamp}}",
-            "image_description": "Appbricks inception instance base image"
+            "image_family": "appbricks-bastion",
+            "image_name": "{{user `image_name`}}",
+            "image_description": "Appbricks bastion instance base image"
         }
     ],
     "provisioners": [
@@ -33,6 +35,7 @@
                 "sudo mv /tmp/bin/common /root/.bin",
                 "sudo mv /tmp/bin/configure_* /root/.bin",
                 "sudo mv /tmp/bin/create_vpn_user /usr/local/bin/create_vpn_user",
+                "sudo mv /tmp/bin/delete_vpn_user /usr/local/bin/delete_vpn_user",
                 "sudo rm -rf /var/lib/apt/lists/*",
                 "sudo rm -fr /tmp/*"
             ]
