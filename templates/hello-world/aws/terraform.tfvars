@@ -16,7 +16,7 @@ country = "US"
 #
 vpc_name = "inceptor"
 
-dns_zone_name = "test.appbricks.io"
+dns_zone_name = "aws.test.appbricks.cloud"
 
 #
 # Bootstrap pipeline
