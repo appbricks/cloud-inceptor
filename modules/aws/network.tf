@@ -106,3 +106,15 @@ resource "aws_route_table_association" "engineering" {
   subnet_id      = "${element(aws_subnet.engineering.*.id, count.index)}"
   route_table_id = "${element(aws_route_table.nat.*.id, count.index)}"
 }
+
+#
+# Outputs
+#
+
+output dmz_subnets {
+  value = "${aws_subnet.dmz.*.id}"
+}
+
+output engineering_subnets {
+  value = "${aws_subnet.engineering.*.id}"
+}

@@ -49,7 +49,7 @@ variable "bastion_use_fqdn" {
 }
 
 variable "ssh_key_file_path" {
-  default = "ssh-key.pem"
+  default = "vpn-admin-ssh-key.pem"
 }
 
 variable "squidproxy_server_port" {
