@@ -1,30 +1,34 @@
 #
-# Inception VM
+# Inception Bastion VM
 #
 
-resource "aws_instance" "inception" {
+resource "aws_instance" "bastion" {
   instance_type = "${var.bastion_instance_type}"
-  ami           = "${data.aws_ami.inception.id}"
-  key_name      = "${aws_key_pair.inception.key_name}"
+  ami           = "${data.aws_ami.bastion.id}"
+  key_name      = "${aws_key_pair.bastion.key_name}"
 
   tags {
     Name = "${var.vpc_name}: bastion"
   }
 
   network_interface {
-    network_interface_id = "${aws_network_interface.inception-public.id}"
+    network_interface_id = "${aws_network_interface.bastion-public.id}"
     device_index         = 0
   }
 
   network_interface {
-    network_interface_id = "${aws_network_interface.inception-private.id}"
+    network_interface_id = "${aws_network_interface.bastion-private.id}"
     device_index         = 1
   }
 
-  user_data_base64 = "${data.template_cloudinit_config.inceptor-cloudinit.rendered}"
+  user_data_base64 = "${data.template_cloudinit_config.bastion-cloudinit.rendered}"
 }
 
-data "template_cloudinit_config" "inceptor-cloudinit" {
+#
+# Bastion configuration templates
+#
+
+data "template_cloudinit_config" "bastion-cloudinit" {
   gzip          = true
   base64_encode = true
 
@@ -34,7 +38,7 @@ data "template_cloudinit_config" "inceptor-cloudinit" {
 
 write_files:
 - encoding: b64
-  content: ${base64encode(data.template_file.inceptor-config.rendered)}
+  content: ${base64encode(data.template_file.bastion-config.rendered)}
   path: /root/config.yml
   permissions: '0744'
 
@@ -72,15 +76,15 @@ USER_DATA
   }
 }
 
-data "template_file" "inceptor-config" {
+data "template_file" "bastion-config" {
   template = <<CONFIG
 ---
 server:
-  host: ${aws_eip.inception.public_ip}
+  host: ${aws_eip.bastion.public_ip}
   fqdn: ${length(var.bastion_host_name) == 0 ? var.vpc_name : var.bastion_host_name}.${var.vpc_dns_zone}
   use_fqdn: ${var.bastion_use_fqdn}
-  private_ip: ${aws_network_interface.inception-public.private_ips[0]}
-  lan_interfaces: 'eth0|${aws_network_interface.inception-public.private_ips[0]}|${cidrnetmask(aws_subnet.dmz.0.cidr_block)}|${aws_subnet.dmz.0.cidr_block}|||,eth1|${aws_network_interface.inception-private.private_ips[0]}|${cidrnetmask(aws_subnet.engineering.0.cidr_block)}|${var.vpc_cidr}|${cidrnetmask(var.vpc_cidr)}||'
+  private_ip: ${aws_network_interface.bastion-public.private_ips[0]}
+  lan_interfaces: 'eth0|${aws_network_interface.bastion-public.private_ips[0]}|${cidrnetmask(aws_subnet.dmz.0.cidr_block)}|${aws_subnet.dmz.0.cidr_block}|||,eth1|${aws_network_interface.bastion-private.private_ips[0]}|${cidrnetmask(aws_subnet.engineering.0.cidr_block)}|${var.vpc_cidr}|${cidrnetmask(var.vpc_cidr)}||'
 
 openvpn:
   port: ${var.vpn_server_port}
@@ -135,7 +139,7 @@ resource "random_string" "vpn-admin-password" {
 # AMI
 #
 
-data "aws_ami" "inception" {
+data "aws_ami" "bastion" {
   most_recent = true
 
   filter {
@@ -155,32 +159,32 @@ data "aws_ami" "inception" {
 # Networking
 #
 
-resource "aws_network_interface" "inception-public" {
+resource "aws_network_interface" "bastion-public" {
   subnet_id       = "${aws_subnet.dmz.0.id}"
   private_ips     = ["${cidrhost(aws_subnet.dmz.0.cidr_block, -2)}"]
-  security_groups = ["${aws_security_group.inception-public.id}"]
+  security_groups = ["${aws_security_group.bastion-public.id}"]
 
   tags {
-    Name = "${var.vpc_name}: inception-public"
+    Name = "${var.vpc_name}: bastion-public"
   }
 }
 
-resource "aws_network_interface" "inception-private" {
+resource "aws_network_interface" "bastion-private" {
   subnet_id       = "${aws_subnet.engineering.0.id}"
   private_ips     = ["${cidrhost(aws_subnet.engineering.0.cidr_block, -2)}"]
-  security_groups = ["${aws_security_group.inception-private.id}"]
+  security_groups = ["${aws_security_group.bastion-private.id}"]
 
   tags {
-    Name = "${var.vpc_name}: inception-private"
+    Name = "${var.vpc_name}: bastion-private"
   }
 }
 
-resource "aws_eip_association" "inception" {
-  network_interface_id = "${aws_network_interface.inception-public.id}"
-  allocation_id        = "${aws_eip.inception.id}"
+resource "aws_eip_association" "bastion" {
+  network_interface_id = "${aws_network_interface.bastion-public.id}"
+  allocation_id        = "${aws_eip.bastion.id}"
 }
 
-resource "aws_eip" "inception" {
+resource "aws_eip" "bastion" {
   vpc = true
 }
 
@@ -188,9 +192,9 @@ resource "aws_eip" "inception" {
 # Security 
 #
 
-resource "aws_security_group" "inception-public" {
-  name        = "${var.vpc_name}: inception rules public"
-  description = "Rules for ingress and egress of network traffic to inception instance."
+resource "aws_security_group" "bastion-public" {
+  name        = "${var.vpc_name}: bastion rules public"
+  description = "Rules for ingress and egress of network traffic to bastion instance."
   vpc_id      = "${aws_vpc.main.id}"
 
   ingress {
@@ -236,9 +240,9 @@ resource "aws_security_group" "inception-public" {
   }
 }
 
-resource "aws_security_group" "inception-private" {
-  name        = "${var.vpc_name}: inception rules private"
-  description = "Rules for ingress and egress of network traffic to inception instance."
+resource "aws_security_group" "bastion-private" {
+  name        = "${var.vpc_name}: bastion rules private"
+  description = "Rules for ingress and egress of network traffic to bastion instance."
   vpc_id      = "${aws_vpc.main.id}"
 
   ingress {
@@ -259,21 +263,21 @@ resource "aws_security_group" "inception-private" {
     from_port   = 0
     to_port     = 65535
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["${var.vpc_cidr}"]
   }
 
   egress {
     from_port   = 0
     to_port     = 65535
     protocol    = "udp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["${var.vpc_cidr}"]
   }
 
   egress {
     from_port   = -1
     to_port     = -1
     protocol    = "icmp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["${var.vpc_cidr}"]
   }
 }
 
@@ -281,13 +285,13 @@ resource "aws_security_group" "inception-private" {
 # SSH Key
 #
 
-resource "tls_private_key" "inception-ssh-key" {
+resource "tls_private_key" "bastion-ssh-key" {
   algorithm = "RSA"
   rsa_bits  = "4096"
 }
 
-resource "local_file" "inception-ssh-key" {
-  content  = "${tls_private_key.inception-ssh-key.private_key_pem}"
+resource "local_file" "bastion-ssh-key" {
+  content  = "${tls_private_key.bastion-ssh-key.private_key_pem}"
   filename = "${var.ssh_key_file_path}"
 
   provisioner "local-exec" {
@@ -295,9 +299,9 @@ resource "local_file" "inception-ssh-key" {
   }
 }
 
-resource "aws_key_pair" "inception" {
-  key_name   = "inception"
-  public_key = "${tls_private_key.inception-ssh-key.public_key_openssh}"
+resource "aws_key_pair" "bastion" {
+  key_name   = "bastion"
+  public_key = "${tls_private_key.bastion-ssh-key.public_key_openssh}"
 }
 
 #
@@ -309,9 +313,9 @@ output "vpn_admin_password" {
 }
 
 output "bastion_private_ip" {
-  value = "${aws_network_interface.inception-private.private_ips[0]}"
+  value = "${aws_network_interface.bastion-private.private_ips[0]}"
 }
 
 output "bastion_public_ip" {
-  value = "${aws_eip.inception.public_ip}"
+  value = "${aws_eip.bastion.public_ip}"
 }
