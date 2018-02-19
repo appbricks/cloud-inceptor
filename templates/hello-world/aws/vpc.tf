@@ -23,7 +23,7 @@ resource "aws_route53_record" "bastion-public" {
   name    = "${var.vpc_name}.${aws_route53_zone.vpc-public.name}"
   type    = "A"
   ttl     = "300"
-  records = ["${module.vpc.bastion-public-ip}"]
+  records = ["${module.vpc.bastion_public_ip}"]
 }
 
 resource "aws_route53_record" "bastion-private" {
@@ -31,7 +31,7 @@ resource "aws_route53_record" "bastion-private" {
   name    = "${var.vpc_name}.${aws_route53_zone.vpc-private.name}"
   type    = "A"
   ttl     = "300"
-  records = ["${module.vpc.bastion-private-ip}"]
+  records = ["${module.vpc.bastion_private_ip}"]
 }
 
 output "bastion-fqdn" {
@@ -39,5 +39,5 @@ output "bastion-fqdn" {
 }
 
 output "vpn-admin-password" {
-  value = "${module.vpc.vpn-admin-password}"
+  value = "${module.vpc.vpn_admin_password}"
 }

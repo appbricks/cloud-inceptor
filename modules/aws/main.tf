@@ -21,15 +21,15 @@ data "aws_availability_zones" "available" {}
 # Outputs
 #
 
-output "vpc-id" {
+output "vpc_id" {
   value = "${aws_vpc.main.id}"
 }
 
-output "vpc-cidr" {
+output "vpc_cidr" {
   value = "${aws_vpc.main.cidr_block}"
 }
 
-output "vpc-available-subnet" {
+output "vpc_available_subnet" {
   # This module creates 2 subnets for each  AZs
   value = "${var.subnet_start + (length(data.aws_availability_zones.available.names)*2)}"
 }

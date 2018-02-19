@@ -36,7 +36,7 @@ resource "aws_route53_record" "vpc-public" {
 #
 resource "aws_route53_zone" "vpc-private" {
   name   = "${var.dns_zone_name}"
-  vpc_id = "${module.vpc.vpc-id}"
+  vpc_id = "${module.vpc.vpc_id}"
 
   tags {
     Name = "${var.vpc_name}"
