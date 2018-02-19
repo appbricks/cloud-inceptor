@@ -3,12 +3,12 @@
 #
 
 resource "aws_instance" "inception" {
-  instance_type = "t2.micro"
+  instance_type = "${var.bastion_instance_type}"
   ami           = "${data.aws_ami.inception.id}"
   key_name      = "${aws_key_pair.inception.key_name}"
 
   tags {
-    Name = "${var.vpc_name}: inception"
+    Name = "${var.vpc_name}: bastion"
   }
 
   network_interface {
@@ -185,7 +185,7 @@ resource "aws_eip" "inception" {
 }
 
 #
-# Security group 
+# Security 
 #
 
 resource "aws_security_group" "inception-public" {

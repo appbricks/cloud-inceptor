@@ -1,7 +1,7 @@
 #!/bin/bash
 
 UBUNTU_RELEASE=xenial
-IMAGE_NAME="@ppBricks-Inceptor-Bastion"
+IMAGE_NAME="appbricks-inceptor-bastion"
 
 which aws >/dev/null 2>&1
 if [[ $? -ne 0 ]]; then

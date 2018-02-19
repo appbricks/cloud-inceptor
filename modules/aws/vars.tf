@@ -32,8 +32,12 @@ variable "subnet_start" {
 # Bastion inception instance variables
 #
 
+variable "bastion_instance_type" {
+  default = "t2.micro"
+}
+
 variable "bastion_image_name" {
-  default = "@ppBricks-Inceptor-Bastion"
+  default = "appbricks-inceptor-bastion"
 }
 
 variable "bastion_host_name" {
