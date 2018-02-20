@@ -3,10 +3,11 @@
 # 
 
 module "vpc" {
-  source = "../../../modules/aws"
+  source = "../../../modules/iaas/aws"
 
   vpc_name     = "${var.vpc_name}"
-  vpc_dns_zone = "${var.dns_zone_name}"
+  vpc_dns_zone = "${var.vpc_dns_zone}"
+  vpc_cidr     = "${var.vpc_cidr}"
 
   company_name      = "${var.company_name}"
   organization_name = "${var.organization_name}"
@@ -14,13 +15,20 @@ module "vpc" {
   province          = "${var.province}"
   country           = "${var.country}"
 
+  vpn_server_port        = "${var.vpn_server_port}"
+  vpn_protocol           = "${var.vpn_protocol}"
+  vpn_network            = "${var.vpn_network}"
+  vpn_network_dns        = "${var.vpn_network_dns}"
+  vpn_tunnel_all_traffic = "${var.vpn_tunnel_all_traffic}"
+  vpn_users              = "${var.vpn_users}"
+
   bootstrap_pipeline_file = "${var.bootstrap_pipeline_file}"
   bootstrap_var_file      = "${var.bootstrap_var_file}"
 }
 
 resource "aws_route53_record" "bastion-public" {
   zone_id = "${aws_route53_zone.vpc-public.zone_id}"
-  name    = "${var.vpc_name}.${aws_route53_zone.vpc-public.name}"
+  name    = "${module.vpc.bastion_fqdn}"
   type    = "A"
   ttl     = "300"
   records = ["${module.vpc.bastion_public_ip}"]
@@ -28,7 +36,7 @@ resource "aws_route53_record" "bastion-public" {
 
 resource "aws_route53_record" "bastion-private" {
   zone_id = "${aws_route53_zone.vpc-private.zone_id}"
-  name    = "${var.vpc_name}.${aws_route53_zone.vpc-private.name}"
+  name    = "${module.vpc.bastion_fqdn}"
   type    = "A"
   ttl     = "300"
   records = ["${module.vpc.bastion_private_ip}"]

@@ -41,7 +41,7 @@ resource "tls_cert_request" "bastion-web" {
   private_key_pem = "${tls_private_key.bastion-web.private_key_pem}"
 
   subject {
-    common_name         = "${length(var.bastion_host_name) == 0 ? var.vpc_name : var.bastion_host_name}.${var.vpc_dns_zone}"
+    common_name         = "${var.bastion_fqdn}"
     organization        = "${var.company_name}"
     organizational_unit = "${var.organization_name}"
     locality            = "${var.locality}"

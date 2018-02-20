@@ -7,6 +7,8 @@ if [[ -z $config_openvpn_port ]]; then
     exit 0
 fi
 
+set -ex
+
 # Use the fully qualified name
 # of the host instead of host ip.
 [[ $config_server_use_fqdn == "true" ]] && \
@@ -44,7 +46,7 @@ source vars
 cp keys/$hn.crt keys/$hn.key keys/ca.crt keys/dh2048.pem /etc/openvpn/
 
 cp /usr/share/doc/openvpn/examples/sample-config-files/server.conf.gz /etc/openvpn/
-gzip -d /etc/openvpn/server.conf.gz
+gzip -f -d /etc/openvpn/server.conf.gz
 
 openvpn --genkey --secret /etc/openvpn/ta.key
 
@@ -82,12 +84,17 @@ echo -e "topology subnet" >> /etc/openvpn/server.conf
 # Allow established traffic to pass back and forth
 iptables -I FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
 
+itfs=( $(ip a | grep "^[0-9]*:" | awk '{ print substr($2,0,length($2)-1) }') )
+i=0
+
 for n in $(echo $config_server_lan_interfaces | sed "s/,/ /g"); do
 
-    itf=$(echo $n | awk -F'|' '{print $1}')
-    netmask=$(echo $n | awk -F'|' '{print $3}')    
-    lan_subnet=$(echo $n | awk -F'|' '{print $4}')
-    lan_netmask=$(echo $n | awk -F'|' '{print $5}')
+    i=$(($i+1))
+    itf=${itfs[$i]}
+
+    netmask=$(echo $n | awk -F'|' '{print $2}')
+    lan_subnet=$(echo $n | awk -F'|' '{print $3}')
+    lan_netmask=$(echo $n | awk -F'|' '{print $4}')
 
     [[ -n $lan_netmask ]] || lan_netmask=$netmask
     lan_subnet_ip=${lan_subnet/\/*/}
@@ -231,6 +238,8 @@ popd
 
 systemctl enable apache2
 systemctl start apache2
+
+set +ex
 
 # Create users
 

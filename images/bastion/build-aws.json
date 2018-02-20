@@ -33,8 +33,8 @@
                 "sudo mkdir -p /root/.bin",
                 "sudo mv /tmp/bin/common /root/.bin",
                 "sudo mv /tmp/bin/configure_* /root/.bin",
-                "sudo mv /tmp/bin/create_vpn_user /usr/local/bin/create_vpn_user",
-                "sudo mv /tmp/bin/delete_vpn_user /usr/local/bin/delete_vpn_user",
+                "sudo mv /tmp/bin/*_vpn_user /root/.bin",
+                "sudo mv /tmp/bin/restart_nics /root/.bin",
                 "sudo rm -rf /var/lib/apt/lists/*",
                 "sudo rm -fr /tmp/*"
             ]

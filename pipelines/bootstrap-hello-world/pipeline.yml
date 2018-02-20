@@ -21,7 +21,7 @@ jobs:
       run:
         path: env
       params:
-        ENVIRONMENT: ((concourse_password))
+        ENVIRONMENT: ((environment))
         CONCOURSE_URL: ((concourse_url))
         CONCOURSE_USER: ((concourse_user))
         CONCOURSE_PASSWORD: ((concourse_password))

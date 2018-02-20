@@ -3,45 +3,70 @@
 SCRIPT_HOME=$(cd $(dirname "$(ls -l $0 | awk '{ print $NF }')") && pwd)
 source $SCRIPT_HOME/common
 
+echo -e "\n============================= Network Interfaces =============================="
+ip a
+echo -e "=================================== Routes ===================================="
+route -n
+echo -e "===============================================================================\n"
+
+set -ex
+
 vpn_itf=$(ip a \
     | grep -B 5 "$config_server_private_ip" \
-    | awk '/^[0-9]: (eth|en)[0-9]:/{ print substr($2,0,length($2)-1) }')
+    | awk '/^[0-9]*: (eth|ens?)[0-9]:/{ print substr($2,0,length($2)-1) }')
 
-i=51
+itfs=( $(ip a | grep "^[0-9]*: " | awk '{ print substr($2,0,length($2)-1) }') )
+i=0
+j=51
+
 for n in $(echo $config_server_lan_interfaces | sed "s/,/ /g"); do
 
-    itf=$(echo $n | awk -F'|' '{print $1}')
-    ip=$(echo $n | awk -F'|' '{print $2}')
-    netmask=$(echo $n | awk -F'|' '{print $3}')    
-    lan_subnet=$(echo $n | awk -F'|' '{print $4}')
-    lan_netmask=$(echo $n | awk -F'|' '{print $5}')
-    gateway=$(echo $n | awk -F'|' '{print $6}')
+    i=$(($i+1))
+    itf=${itfs[$i]}
+    
+    ip=$(echo $n | awk -F'|' '{print $1}')
+    [[ -n $ip ]] || continue
 
-    [[ -n $lan_netmask ]] || lan_netmask=$netmask
-    lan_subnet_ip=${lan_subnet/\/*/}
+    netmask=$(echo $n | awk -F'|' '{print $2}')
+    lan_subnet=$(echo $n | awk -F'|' '{print $3}')
+    lan_netmask=$(echo $n | awk -F'|' '{print $4}')
+    lan_gateway=$(echo $n | awk -F'|' '{print $5}')
 
     if [[ $itf != $vpn_itf ]]; then
 
-        cat << ---EOF > /etc/network/interfaces.d/$i-$itf.cfg
+        set +e
+
+        if [[ -n $lan_gateway ]]; then
+
+        cat << ---EOF > /etc/network/interfaces.d/$j-$itf.cfg
+auto $itf
+iface $itf inet static
+    address $ip
+    post-up /sbin/route add -net $lan_subnet gw $lan_gateway
+    post-down /sbin/route del -net $lan_subnet
+---EOF
+        else
+        
+        cat << ---EOF > /etc/network/interfaces.d/$j-$itf.cfg
 auto $itf
 iface $itf inet static
     address $ip
     netmask $netmask
 ---EOF
-        if [[ -n $gateway ]]; then
 
-cat << ---EOF >> /etc/network/interfaces.d/$i-$itf.cfg
-    post-up /sbin/route add -net $lan_subnet netmask $lan_netmask gw $gateway
-    post-down /sbin/route del -net $lan_subnet netmask $lan_netmask
----EOF
         fi
 
+        ifdown $itf
         ifup $itf
-        i=$(($i+1))
+        set -e
+        
+        j=$(($j+1))
     fi
 done
 
 systemctl enable docker
 systemctl start docker
+
+set +ex
 
 touch /root/.network_installed

@@ -1,0 +1,48 @@
+#
+# Jumpbox
+#
+
+resource "google_compute_instance" "jumpbox" {
+  name         = "${var.vpc_name}-jumpbox"
+  machine_type = "g1-small"
+  zone         = "${data.google_compute_zones.available.names[0]}"
+
+  tags = [
+    "allow-all-vpc",
+  ]
+
+  boot_disk {
+    initialize_params {
+      image = "${data.google_compute_image.ubuntu.self_link}"
+    }
+  }
+
+  network_interface {
+    subnetwork = "${data.google_compute_subnetwork.engineering.self_link}"
+  }
+
+  metadata {
+    ssh-keys = "ubuntu:${tls_private_key.default-ssh-key.public_key_openssh} ubuntu"
+  }
+}
+
+#
+# Jumpbox DNS
+#
+
+resource "google_dns_record_set" "jumpbox" {
+  name         = "jumpbox.${google_dns_managed_zone.vpc.dns_name}"
+  managed_zone = "${google_dns_managed_zone.vpc.name}"
+
+  type    = "A"
+  ttl     = "300"
+  rrdatas = ["${google_compute_instance.jumpbox.network_interface.0.address}"]
+}
+
+#
+# Output
+#
+
+output "jumpbox-fqdn" {
+  value = "${google_dns_record_set.jumpbox.name}"
+}

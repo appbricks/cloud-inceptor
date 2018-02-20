@@ -1,3 +1,5 @@
+dev_mode = true
+
 #
 # Company information used in certificate creation
 #
@@ -16,9 +18,9 @@ country = "US"
 #
 vpc_name = "inceptor"
 
-dns_zone_name = "aws.test.appbricks.cloud"
+vpc_dns_zone = "test.aws.appbricks.cloud"
 
 #
 # Bootstrap pipeline
 #
-bootstrap_pipeline_file = "../../../tests/bootstrap-pipeline/pipeline.yml"
+bootstrap_pipeline_file = "../../../pipelines/bootstrap-hello-world/pipeline.yml"
