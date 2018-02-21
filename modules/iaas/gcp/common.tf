@@ -28,14 +28,14 @@ module "common" {
   bastion_nic2_netmask     = "${cidrnetmask(google_compute_subnetwork.engineering.ip_cidr_range)}"
   bastion_nic2_lan_cidr    = "${var.vpc_cidr}"
   bastion_nic2_lan_netmask = "${cidrnetmask(var.vpc_cidr)}"
-  bastion_nic2_lan_gateway = "${cidrhost(google_compute_subnetwork.engineering.ip_cidr_range, 1)}"
+  bastion_nic2_lan_gateway = "${google_compute_subnetwork.engineering.gateway_address}"
 
   squidproxy_server_port = "${var.squidproxy_server_port}"
 
   vpn_server_port        = "${var.vpn_server_port}"
   vpn_protocol           = "${var.vpn_protocol}"
   vpn_network            = "${var.vpn_network}"
-  vpn_network_dns        = "${length(var.vpn_network_dns) == 0 ? cidrhost(google_compute_subnetwork.engineering.ip_cidr_range, 1): var.vpn_network_dns}"
+  vpn_network_dns        = "${length(var.vpn_network_dns) == 0 ? google_compute_subnetwork.engineering.gateway_address: var.vpn_network_dns}"
   vpn_tunnel_all_traffic = "${var.vpn_tunnel_all_traffic}"
   vpn_users              = "${var.vpn_users}"
 
