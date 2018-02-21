@@ -48,6 +48,18 @@ variable "vpc_cidr" {
   default = "10.0.0.0/16"
 }
 
+variable "vpc_subnet_bits" {
+  default = 8
+}
+
+variable "subnet_start" {
+  default = 200
+}
+
+variable "max_azs" {
+  default = 1
+}
+
 #
 # Open VPN configuration
 #

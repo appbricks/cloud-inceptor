@@ -59,12 +59,16 @@ variable "vpc_cidr" {
   type = "string"
 }
 
-variable "max_azs" {
-  default = 1
+variable "vpc_subnet_bits" {
+  type = "string"
 }
 
 variable "subnet_start" {
-  default = 200
+  type = "string"
+}
+
+variable "max_azs" {
+  type = "string"
 }
 
 #

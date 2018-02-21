@@ -7,9 +7,12 @@ module "vpc" {
 
   region = "${var.region}"
 
-  vpc_name     = "${var.vpc_name}"
-  vpc_dns_zone = "${var.vpc_dns_zone}"
-  vpc_cidr     = "${var.vpc_cidr}"
+  vpc_name        = "${var.vpc_name}"
+  vpc_dns_zone    = "${var.vpc_dns_zone}"
+  vpc_cidr        = "${var.vpc_cidr}"
+  vpc_subnet_bits = "${var.vpc_subnet_bits}"
+  subnet_start    = "${var.subnet_start}"
+  max_azs         = "${var.max_azs}"
 
   company_name      = "${var.company_name}"
   organization_name = "${var.organization_name}"
