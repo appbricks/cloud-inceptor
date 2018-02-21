@@ -14,6 +14,12 @@ terraform {
 }
 
 #
+# Availability Zones in current region
+#
+
+data "aws_availability_zones" "available" {}
+
+#
 # Ubuntu AMI
 #
 
