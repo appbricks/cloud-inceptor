@@ -3,7 +3,7 @@
 # 
 
 module "vpc" {
-  source = "../../../modules/iaas/aws"
+  source = "../../../modules/network/aws"
 
   vpc_name     = "${var.vpc_name}"
   vpc_dns_zone = "${var.vpc_dns_zone}"

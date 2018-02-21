@@ -3,7 +3,7 @@
 # 
 
 module "vpc" {
-  source = "../../../modules/iaas/gcp"
+  source = "../../../modules/network/gcp"
 
   region = "${var.region}"
 
