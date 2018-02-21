@@ -129,15 +129,3 @@ resource "google_compute_firewall" "bastion-proxy" {
   source_ranges = ["${var.vpn_network}", "${var.vpc_cidr}"]
   target_tags   = ["bastion-proxy"]
 }
-
-#
-# Outputs
-#
-
-output "bastion-private-ip" {
-  value = "${google_compute_address.bastion-engineering.address}"
-}
-
-output "bastion-public-ip" {
-  value = "${google_compute_address.bastion-public.address}"
-}

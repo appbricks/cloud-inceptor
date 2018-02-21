@@ -123,23 +123,3 @@ resource "google_compute_firewall" "engineering-allow-int-ssh" {
   source_ranges = ["${var.vpc_cidr}"]
   target_tags   = ["allow-int-ssh"]
 }
-
-#
-# Outputs
-#
-
-output "dmz_network_name" {
-  value = "${google_compute_network.dmz.name}"
-}
-
-output "dmz_subnetwork_name" {
-  value = "${google_compute_subnetwork.dmz.name}"
-}
-
-output "engineering_network_name" {
-  value = "${google_compute_network.engineering.name}"
-}
-
-output "engineering_subnetwork_name" {
-  value = "${google_compute_subnetwork.engineering.name}"
-}

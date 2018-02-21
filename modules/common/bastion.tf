@@ -129,19 +129,3 @@ resource "random_string" "vpn-admin-password" {
   length  = 16
   special = true
 }
-
-#
-# Output
-#
-
-output "bastion_openssh_public_key" {
-  value = "${tls_private_key.bastion-ssh-key.public_key_openssh}"
-}
-
-output "bastion_cloud_init_config" {
-  value = "${data.template_cloudinit_config.bastion-cloudinit.rendered}"
-}
-
-output "vpn_admin_password" {
-  value = "${random_string.vpn-admin-password.result}"
-}

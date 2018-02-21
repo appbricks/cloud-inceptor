@@ -44,11 +44,3 @@ module "common" {
   bootstrap_pipeline_file  = "${var.bootstrap_pipeline_file}"
   bootstrap_var_file       = "${var.bootstrap_var_file}"
 }
-
-output "bastion_fqdn" {
-  value = "${length(var.bastion_host_name) == 0 ? var.vpc_name : var.bastion_host_name}.${var.vpc_dns_zone}"
-}
-
-output "vpn_admin_password" {
-  value = "${module.common.vpn_admin_password}"
-}
