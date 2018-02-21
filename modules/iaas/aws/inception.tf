@@ -11,6 +11,10 @@ resource "aws_instance" "bastion" {
     Name = "${var.vpc_name}: bastion"
   }
 
+  root_block_device {
+    volume_size = "160"
+  }
+
   network_interface {
     network_interface_id = "${aws_network_interface.bastion-public.id}"
     device_index         = 0
