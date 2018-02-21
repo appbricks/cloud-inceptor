@@ -8,12 +8,14 @@ resource "google_compute_instance" "jumpbox" {
   zone         = "${data.google_compute_zones.available.names[0]}"
 
   tags = [
-    "allow-all-vpc",
+    "nat-${var.vpc_name}-${var.region}",
+    "allow-int-ssh",
   ]
 
   boot_disk {
     initialize_params {
       image = "${data.google_compute_image.ubuntu.self_link}"
+      size  = "160"
     }
   }
 

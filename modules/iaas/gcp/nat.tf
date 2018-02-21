@@ -1,24 +1,26 @@
 #
-# NAT instances and routing
+# NAT instances and routing for resources 
+# within the engineering network. Resources
+# that require NATing should be tagged with
+# the label 'nat-<VPC_NAME>-<REGION>.
 #
 
-resource "google_compute_instance" "nat-gateway" {
+resource "google_compute_instance" "nat-gateway-engineering" {
   count = "${min(var.max_azs, length(data.google_compute_zones.available.names))}"
 
-  name           = "${var.vpc_name}-nat-gateway-${count.index}"
-  machine_type   = "n1-standard-2"
+  name           = "${var.vpc_name}-nat-gateway-engineering-${count.index}"
+  machine_type   = "n1-standard-1"
   zone           = "${data.google_compute_zones.available.names[count.index]}"
   can_ip_forward = true
-  tags           = ["${compact(concat(list("nat-${var.vpc_name}-${var.region}"), var.tags_nat))}"]
 
   boot_disk {
     initialize_params {
-      image = "${data.google_compute_image.ubuntu.self_link}"
+      image = "debian-cloud/debian-8"
     }
   }
 
   network_interface {
-    subnetwork = "${google_compute_subnetwork.dmz.self_link}"
+    subnetwork = "${google_compute_subnetwork.engineering.self_link}"
 
     access_config {
       // Ephemeral
@@ -32,30 +34,15 @@ sudo iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
 EOF
 }
 
-resource "google_compute_route" "nat-gateway" {
+resource "google_compute_route" "nat-route-engineering" {
   count = "${min(var.max_azs, length(data.google_compute_zones.available.names))}"
 
-  name                   = "${var.vpc_name}-nat-route-${count.index}"
+  name                   = "${var.vpc_name}-nat-route-engineering-${count.index}"
   dest_range             = "0.0.0.0/0"
-  network                = "${google_compute_network.dmz.name}"
-  next_hop_instance      = "${google_compute_instance.nat-gateway.name}"
+  network                = "${google_compute_network.engineering.name}"
+  next_hop_instance      = "${google_compute_instance.nat-gateway-engineering.name}"
   next_hop_instance_zone = "${data.google_compute_zones.available.names[count.index]}"
   priority               = 800
-  tags                   = ["${compact(concat(list("${var.vpc_name}-${var.region}"), var.tags_common))}"]
-}
 
-#
-# Network firewall rule to allow all traffic
-#
-
-resource "google_compute_firewall" "nat-gateway" {
-  name    = "${var.vpc_name}-nat-allow-all"
-  network = "${google_compute_network.dmz.name}"
-
-  allow {
-    protocol = "all"
-  }
-
-  source_tags = ["${compact(concat(list("nat-${var.vpc_name}-${var.region}"), var.tags_common))}"]
-  target_tags = ["${compact(concat(list("nat-${var.vpc_name}-${var.region}"), var.tags_common))}"]
+  tags = ["nat-${var.vpc_name}-${var.region}"]
 }
