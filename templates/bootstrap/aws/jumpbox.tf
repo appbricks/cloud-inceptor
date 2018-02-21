@@ -7,12 +7,28 @@ resource "aws_instance" "jumpbox" {
   ami           = "${data.aws_ami.ubuntu.id}"
   key_name      = "${aws_key_pair.default.key_name}"
 
-  subnet_id              = "${module.vpc.engineering_subnets[0]}"
+  subnet_id         = "${module.vpc.engineering_subnets[0]}"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+
   vpc_security_group_ids = ["${aws_security_group.internal.id}"]
 
   tags {
     Name = "${var.vpc_name}: jumpbox"
   }
+}
+
+#
+# Persistant disk for data storage
+#
+resource "aws_ebs_volume" "jumpbox-data" {
+  size              = 160
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+}
+
+resource "aws_volume_attachment" "jumpbox-data" {
+  device_name = "/dev/sdb"
+  volume_id   = "${aws_ebs_volume.jumpbox-data.id}"
+  instance_id = "${aws_instance.jumpbox.id}"
 }
 
 #
