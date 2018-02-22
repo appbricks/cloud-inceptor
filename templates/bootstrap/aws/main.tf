@@ -14,6 +14,19 @@ terraform {
 }
 
 #
+# AWS Virtual Private Cloud
+#
+
+resource "aws_vpc" "main" {
+  cidr_block           = "${var.vpc_cidr}"
+  enable_dns_hostnames = true
+
+  tags {
+    Name = "${var.vpc_name}"
+  }
+}
+
+#
 # Availability Zones in current region
 #
 
@@ -47,7 +60,7 @@ data "aws_ami" "ubuntu" {
 resource "aws_security_group" "internal" {
   name        = "${var.vpc_name}: internal"
   description = "Rules for ingress and egress of network traffic within VPC."
-  vpc_id      = "${module.vpc.vpc_id}"
+  vpc_id      = "${aws_vpc.main.vpc_id}"
 
   ingress {
     from_port = 0

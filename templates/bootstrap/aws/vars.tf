@@ -36,7 +36,7 @@ variable "vpc_cidr" {
   default = "10.0.0.0/16"
 }
 
-variable "vpc_subnet_bits" {
+variable "subnet_bits" {
   default = 8
 }
 

@@ -5,12 +5,13 @@
 module "vpc" {
   source = "../../../modules/network/aws"
 
+  vpc_id       = "${aws_vpc.main.id}"
   vpc_name     = "${var.vpc_name}"
   vpc_dns_zone = "${var.vpc_dns_zone}"
   vpc_cidr     = "${var.vpc_cidr}"
-  vpc_subnet_bits = "${var.vpc_subnet_bits}"
-  subnet_start    = "${var.subnet_start}"
-  max_azs         = "${var.max_azs}"
+  subnet_bits  = "${var.subnet_bits}"
+  subnet_start = "${var.subnet_start}"
+  max_azs      = "${var.max_azs}"
 
   company_name      = "${var.company_name}"
   organization_name = "${var.organization_name}"

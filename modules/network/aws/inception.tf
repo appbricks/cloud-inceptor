@@ -11,7 +11,7 @@ module "inception" {
   province          = "${var.province}"
   country           = "${var.country}"
 
-  vpc_id       = "${aws_vpc.main.id}"
+  vpc_id       = "${data.aws_vpc.main.id}"
   vpc_name     = "${var.vpc_name}"
   vpc_dns_zone = "${var.vpc_dns_zone}"
   vpc_cidr     = "${var.vpc_cidr}"

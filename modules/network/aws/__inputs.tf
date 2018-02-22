@@ -22,8 +22,12 @@ variable "country" {
 }
 
 #
-# VPC and network variables
+# VPC
 #
+variable "vpc_id" {
+  type = "string"
+}
+
 variable "vpc_name" {
   type = "string"
 }
@@ -32,15 +36,22 @@ variable "vpc_dns_zone" {
   type = "string"
 }
 
-variable "vpc_cidr" {
-  type = "string"
-}
-
 variable "max_azs" {
   default = 1
 }
 
-variable "vpc_subnet_bits" {
+#
+# Networks
+#
+
+variable "vpc_cidr" {
+  type = "string"
+}
+
+# Subnet segments will be calculated based 
+# on the number of AZs, however only 'max_azs' 
+# segments will be assigned per network.
+variable "subnet_bits" {
   type = "string"
 }
 
