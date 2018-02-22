@@ -28,9 +28,10 @@ if [[ -n $device ]]; then
 
   # Mount data volume
   sudo mkdir -p ${mount_directory}
-  sudo chmod -R 0777 ${mount_directory}
   sudo su - -c "echo -e \"\\n$device\\t${mount_directory}\\text4\\tdefaults\\t0 1\" >> /etc/fstab"
   sudo mount -a
+
+  sudo chmod a+rwx /data ${mount_directory}
 else
   echo "WARNING! Timed out waiting for data volume. Proceeding as a new install."
 fi
