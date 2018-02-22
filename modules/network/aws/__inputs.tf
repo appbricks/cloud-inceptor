@@ -43,7 +43,6 @@ variable "max_azs" {
 #
 # Networks
 #
-
 variable "vpc_cidr" {
   type = "string"
 }

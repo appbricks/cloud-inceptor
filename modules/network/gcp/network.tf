@@ -9,7 +9,7 @@ resource "google_compute_network" "dmz" {
 
 resource "google_compute_subnetwork" "dmz" {
   name          = "${var.vpc_name}-dmz-subnet"
-  ip_cidr_range = "${cidrsubnet(var.vpc_cidr, 8, var.subnet_start)}"
+  ip_cidr_range = "${cidrsubnet(var.vpc_cidr, var.subnet_bits, var.subnet_start)}"
   network       = "${google_compute_network.dmz.self_link}"
 }
 
@@ -20,7 +20,7 @@ resource "google_compute_network" "engineering" {
 
 resource "google_compute_subnetwork" "engineering" {
   name          = "${var.vpc_name}-engineering-subnet"
-  ip_cidr_range = "${cidrsubnet(var.vpc_cidr, 8, var.subnet_start + 1)}"
+  ip_cidr_range = "${cidrsubnet(var.vpc_cidr, var.subnet_bits, var.subnet_start + 1)}"
   network       = "${google_compute_network.engineering.self_link}"
 }
 

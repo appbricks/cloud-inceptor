@@ -39,19 +39,22 @@ variable "vpc_dns_zone" {
   type = "string"
 }
 
+variable "max_azs" {
+  type = "string"
+}
+
+#
+# Networks
+#
 variable "vpc_cidr" {
   type = "string"
 }
 
-variable "vpc_subnet_bits" {
+variable "subnet_bits" {
   type = "string"
 }
 
 variable "subnet_start" {
-  type = "string"
-}
-
-variable "max_azs" {
   type = "string"
 }
 
