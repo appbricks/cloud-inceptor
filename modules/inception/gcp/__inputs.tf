@@ -1,4 +1,11 @@
 #
+# Google Cloud Region
+#
+variable "region" {
+  type = "string"
+}
+
+#
 # Certificate Subject data for certificate creation
 #
 variable "company_name" {
@@ -36,16 +43,20 @@ variable "vpc_cidr" {
   type = "string"
 }
 
-variable "max_azs" {
-  default = 1
-}
-
-variable "vpc_subnet_bits" {
+variable "dmz_network" {
   type = "string"
 }
 
-variable "subnet_start" {
-  default = 200
+variable "dmz_subnetwork" {
+  type = "string"
+}
+
+variable "engineering_network" {
+  type = "string"
+}
+
+variable "engineering_subnetwork" {
+  type = "string"
 }
 
 #
@@ -59,7 +70,7 @@ variable "ssh_key_file_path" {
 # Bastion inception instance variables
 #
 variable "bastion_instance_type" {
-  default = "t2.micro"
+  default = "n1-standard-1"
 }
 
 variable "bastion_image_name" {

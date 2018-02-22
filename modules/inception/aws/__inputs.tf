@@ -24,6 +24,10 @@ variable "country" {
 #
 # VPC and network variables
 #
+variable "vpc_id" {
+  type = "string"
+}
+
 variable "vpc_name" {
   type = "string"
 }
@@ -36,16 +40,20 @@ variable "vpc_cidr" {
   type = "string"
 }
 
-variable "max_azs" {
-  default = 1
+variable "dmz_subnet_ids" {
+  type = "list"
 }
 
-variable "vpc_subnet_bits" {
-  type = "string"
+variable "dmz_subnet_cidrs" {
+  type = "list"
 }
 
-variable "subnet_start" {
-  default = 200
+variable "engineering_subnet_ids" {
+  type = "list"
+}
+
+variable "engineering_subnet_cidrs" {
+  type = "list"
 }
 
 #

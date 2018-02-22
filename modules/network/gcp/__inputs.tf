@@ -6,22 +6,6 @@ variable "region" {
 }
 
 #
-# Additiona tags to apply to Google cloud resources
-#
-
-variable "tags_common" {
-  default = []
-}
-
-variable "tags_nat" {
-  default = []
-}
-
-variable "tags_bastion" {
-  default = []
-}
-
-#
 # Certificate Subject data for certificate creation
 #
 variable "company_name" {
@@ -69,13 +53,6 @@ variable "subnet_start" {
 
 variable "max_azs" {
   type = "string"
-}
-
-#
-# Local file path to write SSH private key for bastion instance
-#
-variable "ssh_key_file_path" {
-  default = "vpn-admin-ssh-key.pem"
 }
 
 #

@@ -31,29 +31,29 @@ module "vpc" {
   bootstrap_var_file      = "${var.bootstrap_var_file}"
 }
 
-resource "google_dns_record_set" "bastion-public" {
-  name         = "${module.vpc.bastion_fqdn}."
-  managed_zone = "${google_dns_managed_zone.vpc.name}"
-
-  type    = "A"
-  ttl     = "300"
-  rrdatas = ["${module.vpc.bastion-public-ip}"]
-}
-
 resource "google_dns_record_set" "bastion-private" {
   name         = "admin-${module.vpc.bastion_fqdn}."
   managed_zone = "${google_dns_managed_zone.vpc.name}"
 
   type    = "A"
   ttl     = "300"
-  rrdatas = ["${module.vpc.bastion-private-ip}"]
+  rrdatas = ["${module.vpc.bastion_private_ip}"]
 }
 
-output "bastion-fqdn" {
+resource "google_dns_record_set" "bastion-public" {
+  name         = "${module.vpc.bastion_fqdn}."
+  managed_zone = "${google_dns_managed_zone.vpc.name}"
+
+  type    = "A"
+  ttl     = "300"
+  rrdatas = ["${module.vpc.bastion_public_ip}"]
+}
+
+output "bastion_fqdn" {
   value = "${google_dns_record_set.bastion-public.name}"
 }
 
-output "bastion-admin-fqdn" {
+output "bastion_admin_fqdn" {
   value = "${google_dns_record_set.bastion-private.name}"
 }
 

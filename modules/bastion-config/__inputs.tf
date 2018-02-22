@@ -33,7 +33,7 @@ variable "vpc_dns_zone" {
 }
 
 #
-# Local file path to writhe SSH private key for bastion instance
+# Local file path to write SSH private key for bastion instance
 #
 variable "ssh_key_file_path" {
   type = "string"

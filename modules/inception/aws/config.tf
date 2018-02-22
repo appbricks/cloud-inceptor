@@ -1,9 +1,9 @@
 #
-# Inceptor Common Module
+# Inceptor bastion common config module
 #
 
-module "common" {
-  source = "../../common"
+module "config" {
+  source = "../../bastion-config"
 
   vpc_name     = "${var.vpc_name}"
   vpc_dns_zone = "${var.vpc_dns_zone}"
@@ -21,14 +21,14 @@ module "common" {
   bastion_public_ip = "${aws_eip.bastion.public_ip}"
 
   bastion_nic1_private_ip = "${aws_network_interface.bastion-public.private_ips[0]}"
-  bastion_nic1_netmask    = "${cidrnetmask(aws_subnet.dmz.0.cidr_block)}"
-  bastion_nic1_lan_cidr   = "${aws_subnet.dmz.0.cidr_block}"
+  bastion_nic1_netmask    = "${cidrnetmask(var.dmz_subnet_cidrs[0])}"
+  bastion_nic1_lan_cidr   = "${var.dmz_subnet_cidrs[0]}"
 
   bastion_nic2_private_ip  = "${aws_network_interface.bastion-private.private_ips[0]}"
-  bastion_nic2_netmask     = "${cidrnetmask(aws_subnet.engineering.0.cidr_block)}"
+  bastion_nic2_netmask     = "${cidrnetmask(var.engineering_subnet_cidrs[0])}"
   bastion_nic2_lan_cidr    = "${var.vpc_cidr}"
   bastion_nic2_lan_netmask = "${cidrnetmask(var.vpc_cidr)}"
-  bastion_nic2_lan_gateway = "${cidrhost(aws_subnet.engineering.0.cidr_block, 1)}"
+  bastion_nic2_lan_gateway = "${cidrhost(var.engineering_subnet_cidrs[0], 1)}"
 
   squidproxy_server_port = "${var.squidproxy_server_port}"
 

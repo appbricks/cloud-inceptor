@@ -1,184 +1,43 @@
 #
-# Inception Bastion VM
-#
+# Inception bastion instance configuration
+# 
 
-resource "aws_instance" "bastion" {
-  instance_type = "${var.bastion_instance_type}"
-  ami           = "${data.aws_ami.bastion.id}"
-  key_name      = "${aws_key_pair.bastion.key_name}"
+module "inception" {
+  source = "../../inception/aws"
 
-  tags {
-    Name = "${var.vpc_name}: bastion"
-  }
+  company_name      = "${var.company_name}"
+  organization_name = "${var.organization_name}"
+  locality          = "${var.locality}"
+  province          = "${var.province}"
+  country           = "${var.country}"
 
-  root_block_device {
-    volume_size = "160"
-  }
+  vpc_id       = "${aws_vpc.main.id}"
+  vpc_name     = "${var.vpc_name}"
+  vpc_dns_zone = "${var.vpc_dns_zone}"
+  vpc_cidr     = "${var.vpc_cidr}"
 
-  network_interface {
-    network_interface_id = "${aws_network_interface.bastion-public.id}"
-    device_index         = 0
-  }
+  dmz_subnet_ids           = "${aws_subnet.dmz.*.id}"
+  dmz_subnet_cidrs         = "${aws_subnet.dmz.*.cidr_block}"
+  engineering_subnet_ids   = "${aws_subnet.engineering.*.id}"
+  engineering_subnet_cidrs = "${aws_subnet.engineering.*.cidr_block}"
 
-  network_interface {
-    network_interface_id = "${aws_network_interface.bastion-private.id}"
-    device_index         = 1
-  }
+  bastion_instance_type = "${var.bastion_instance_type}"
+  bastion_image_name    = "${var.bastion_image_name}"
+  bastion_host_name     = "${var.bastion_host_name}"
+  bastion_use_fqdn      = "${var.bastion_use_fqdn}"
 
-  user_data_base64 = "${module.common.bastion_cloud_init_config}"
-}
+  squidproxy_server_port = "${var.squidproxy_server_port}"
 
-#
-# AMI
-#
+  vpn_server_port        = "${var.vpn_server_port}"
+  vpn_protocol           = "${var.vpn_protocol}"
+  vpn_network            = "${var.vpn_network}"
+  vpn_network_dns        = "${var.vpn_network_dns}"
+  vpn_tunnel_all_traffic = "${var.vpn_tunnel_all_traffic}"
+  vpn_users              = "${var.vpn_users}"
 
-data "aws_ami" "bastion" {
-  most_recent = true
+  concourse_server_port    = "${var.concourse_admin_password}"
+  concourse_admin_password = "${var.concourse_admin_password}"
 
-  filter {
-    name   = "name"
-    values = ["${var.bastion_image_name}"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
-
-  owners = ["self"]
-}
-
-#
-# Networking
-#
-
-resource "aws_network_interface" "bastion-public" {
-  subnet_id       = "${aws_subnet.dmz.0.id}"
-  private_ips     = ["${cidrhost(aws_subnet.dmz.0.cidr_block, -2)}"]
-  security_groups = ["${aws_security_group.bastion-public.id}"]
-
-  tags {
-    Name = "${var.vpc_name}: bastion-public"
-  }
-}
-
-resource "aws_network_interface" "bastion-private" {
-  subnet_id       = "${aws_subnet.engineering.0.id}"
-  private_ips     = ["${cidrhost(aws_subnet.engineering.0.cidr_block, -2)}"]
-  security_groups = ["${aws_security_group.bastion-private.id}"]
-
-  tags {
-    Name = "${var.vpc_name}: bastion-private"
-  }
-}
-
-resource "aws_eip_association" "bastion" {
-  network_interface_id = "${aws_network_interface.bastion-public.id}"
-  allocation_id        = "${aws_eip.bastion.id}"
-}
-
-resource "aws_eip" "bastion" {
-  vpc = true
-}
-
-#
-# Security 
-#
-
-resource "aws_security_group" "bastion-public" {
-  name        = "${var.vpc_name}: bastion rules public"
-  description = "Rules for ingress and egress of network traffic to bastion instance."
-  vpc_id      = "${aws_vpc.main.id}"
-
-  ingress {
-    from_port   = "80"
-    to_port     = "80"
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port   = "443"
-    to_port     = "443"
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port   = "${var.vpn_server_port}"
-    to_port     = "${var.vpn_server_port}"
-    protocol    = "${var.vpn_protocol}"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 65535
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 65535
-    protocol    = "udp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = -1
-    to_port     = -1
-    protocol    = "icmp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
-resource "aws_security_group" "bastion-private" {
-  name        = "${var.vpc_name}: bastion rules private"
-  description = "Rules for ingress and egress of network traffic to bastion instance."
-  vpc_id      = "${aws_vpc.main.id}"
-
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["${var.vpn_network}"]
-  }
-
-  ingress {
-    from_port   = "${var.squidproxy_server_port}"
-    to_port     = "${var.squidproxy_server_port}"
-    protocol    = "tcp"
-    cidr_blocks = ["${var.vpn_network}", "${var.vpc_cidr}"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 65535
-    protocol    = "tcp"
-    cidr_blocks = ["${var.vpc_cidr}"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 65535
-    protocol    = "udp"
-    cidr_blocks = ["${var.vpc_cidr}"]
-  }
-
-  egress {
-    from_port   = -1
-    to_port     = -1
-    protocol    = "icmp"
-    cidr_blocks = ["${var.vpc_cidr}"]
-  }
-}
-
-#
-# SSH key pair
-#
-
-resource "aws_key_pair" "bastion" {
-  key_name   = "bastion"
-  public_key = "${module.common.bastion_openssh_public_key}"
+  bootstrap_pipeline_file = "${var.bootstrap_pipeline_file}"
+  bootstrap_var_file      = "${var.bootstrap_var_file}"
 }

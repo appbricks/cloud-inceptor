@@ -22,20 +22,20 @@ output "engineering_subnetwork_name" {
 }
 
 #
-# Bastion resource attributesd
+# Bastion resource attributes
 #
 output "bastion_fqdn" {
-  value = "${length(var.bastion_host_name) == 0 ? var.vpc_name : var.bastion_host_name}.${var.vpc_dns_zone}"
+  value = "${module.inception.bastion_fqdn}"
 }
 
-output "bastion-private-ip" {
-  value = "${google_compute_address.bastion-engineering.address}"
+output "bastion_private_ip" {
+  value = "${module.inception.bastion_private_ip}"
 }
 
-output "bastion-public-ip" {
-  value = "${google_compute_address.bastion-public.address}"
+output "bastion_public_ip" {
+  value = "${module.inception.bastion_public_ip}"
 }
 
 output "vpn_admin_password" {
-  value = "${module.common.vpn_admin_password}"
+  value = "${module.inception.vpn_admin_password}"
 }
