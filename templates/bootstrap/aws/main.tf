@@ -60,7 +60,7 @@ data "aws_ami" "ubuntu" {
 resource "aws_security_group" "internal" {
   name        = "${var.vpc_name}: internal"
   description = "Rules for ingress and egress of network traffic within VPC."
-  vpc_id      = "${aws_vpc.main.vpc_id}"
+  vpc_id      = "${aws_vpc.main.id}"
 
   ingress {
     from_port = 0
