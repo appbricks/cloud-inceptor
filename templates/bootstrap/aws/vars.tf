@@ -90,5 +90,5 @@ variable "bootstrap_var_file" {
 # Jumpbox configuration
 # 
 variable "data_volume_device_name" {
-  default = "/dev/xdvb"
+  default = "/dev/xvdb"
 }

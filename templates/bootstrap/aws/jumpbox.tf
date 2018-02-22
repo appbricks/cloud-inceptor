@@ -15,6 +15,28 @@ resource "aws_instance" "jumpbox" {
   tags {
     Name = "${var.vpc_name}: jumpbox"
   }
+
+  user_data = <<USERDATA
+#cloud-config
+
+write_files:
+- encoding: b64
+  content: ${base64encode(data.template_file.mount-volume.rendered)}
+  path: /root/mount-volume.sh
+  permissions: '0744'
+
+runcmd: 
+- /root/mount-volume.sh
+USERDATA
+}
+
+data "template_file" "mount-volume" {
+  template = "${file("${path.module}/scripts/mount-volume.sh")}"
+
+  vars {
+    attached_device_name = "${var.data_volume_device_name}"
+    mount_directory      = "/data"
+  }
 }
 
 #
@@ -26,9 +48,10 @@ resource "aws_ebs_volume" "jumpbox-data" {
 }
 
 resource "aws_volume_attachment" "jumpbox-data" {
-  device_name = "/dev/sdb"
-  volume_id   = "${aws_ebs_volume.jumpbox-data.id}"
-  instance_id = "${aws_instance.jumpbox.id}"
+  device_name  = "${var.data_volume_device_name}"
+  volume_id    = "${aws_ebs_volume.jumpbox-data.id}"
+  instance_id  = "${aws_instance.jumpbox.id}"
+  force_detach = true
 }
 
 #
