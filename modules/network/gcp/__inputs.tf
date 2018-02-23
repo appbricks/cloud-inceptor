@@ -100,15 +100,15 @@ variable "vpn_network" {
 }
 
 variable "vpn_network_dns" {
-  type = ""
+  default = ""
 }
 
 variable "vpn_tunnel_all_traffic" {
-  type = "no"
+  default = "no"
 }
 
 variable "vpn_users" {
-  type = ""
+  default = ""
 }
 
 #
