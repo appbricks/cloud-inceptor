@@ -23,7 +23,7 @@ resource "google_compute_instance" "bastion" {
   }
 
   network_interface {
-    subnetwork = "${data.google_compute_subnetwork.dmz.self_link}"
+    subnetwork = "${var.dmz_subnetwork}"
     address    = "${google_compute_address.bastion-dmz.address}"
 
     access_config = [{
@@ -32,7 +32,7 @@ resource "google_compute_instance" "bastion" {
   }
 
   network_interface {
-    subnetwork = "${data.google_compute_subnetwork.engineering.self_link}"
+    subnetwork = "${var.engineering_subnetwork}"
     address    = "${google_compute_address.bastion-engineering.address}"
   }
 
@@ -59,16 +59,16 @@ resource "google_compute_address" "bastion-dmz" {
   name         = "${var.vpc_name}-bastion-dmz"
   address_type = "INTERNAL"
 
-  subnetwork = "${data.google_compute_subnetwork.dmz.self_link}"
-  address    = "${cidrhost(data.google_compute_subnetwork.dmz.0.ip_cidr_range, -3)}"
+  subnetwork = "${var.dmz_subnetwork}"
+  address    = "${cidrhost(var.dmz_subnetwork_cidr, -3)}"
 }
 
 resource "google_compute_address" "bastion-engineering" {
   name         = "${var.vpc_name}-bastion-engineering"
   address_type = "INTERNAL"
 
-  subnetwork = "${data.google_compute_subnetwork.engineering.self_link}"
-  address    = "${cidrhost(data.google_compute_subnetwork.engineering.0.ip_cidr_range, -3)}"
+  subnetwork = "${var.engineering_subnetwork}"
+  address    = "${cidrhost(var.engineering_subnetwork_cidr, -3)}"
 }
 
 resource "google_compute_address" "bastion-public" {
@@ -82,7 +82,7 @@ resource "google_compute_address" "bastion-public" {
 
 resource "google_compute_firewall" "bastion-vpn" {
   name    = "${var.vpc_name}-bastion-vpn"
-  network = "${data.google_compute_network.dmz.self_link}"
+  network = "${var.dmz_network}"
 
   direction = "INGRESS"
 
@@ -103,7 +103,7 @@ resource "google_compute_firewall" "bastion-vpn" {
 resource "google_compute_firewall" "bastion-ssh" {
   name = "${var.vpc_name}-bastion-ssh"
 
-  network   = "${data.google_compute_network.engineering.self_link}"
+  network   = "${var.engineering_network}"
   direction = "INGRESS"
 
   allow {
@@ -117,7 +117,7 @@ resource "google_compute_firewall" "bastion-ssh" {
 
 resource "google_compute_firewall" "bastion-proxy" {
   name    = "${var.vpc_name}-bastion-proxy"
-  network = "${data.google_compute_network.engineering.self_link}"
+  network = "${var.engineering_network}"
 
   direction = "INGRESS"
 

@@ -51,11 +51,23 @@ variable "dmz_subnetwork" {
   type = "string"
 }
 
+variable "dmz_subnetwork_cidr" {
+  type = "string"
+}
+
 variable "engineering_network" {
   type = "string"
 }
 
 variable "engineering_subnetwork" {
+  type = "string"
+}
+
+variable "engineering_subnetwork_cidr" {
+  type = "string"
+}
+
+variable "engineering_subnetwork_gateway" {
   type = "string"
 }
 
