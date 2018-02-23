@@ -3,7 +3,7 @@
 # 
 
 module "inception" {
-  source = "../../inception/aws"
+  source = "github.com/appbricks/cloud-inceptor//modules/inception/aws"
 
   company_name      = "${var.company_name}"
   organization_name = "${var.organization_name}"

@@ -3,7 +3,7 @@
 # 
 
 module "vpc" {
-  source = "../../../modules/network/gcp"
+  source = "github.com/appbricks/cloud-inceptor//modules/network/gcp"
 
   region = "${var.region}"
 

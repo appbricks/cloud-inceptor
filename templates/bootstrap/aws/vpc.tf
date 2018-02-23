@@ -3,7 +3,7 @@
 # 
 
 module "vpc" {
-  source = "../../../modules/network/aws"
+  source = "github.com/appbricks/cloud-inceptor//modules/network/aws"
 
   vpc_id       = "${aws_vpc.main.id}"
   vpc_name     = "${var.vpc_name}"

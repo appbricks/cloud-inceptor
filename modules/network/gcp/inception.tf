@@ -3,7 +3,7 @@
 # 
 
 module "inception" {
-  source = "../../inception/gcp"
+  source = "github.com/appbricks/cloud-inceptor//modules/inception/gcp"
 
   region = "${var.region}"
 
