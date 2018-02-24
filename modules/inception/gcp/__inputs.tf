@@ -146,6 +146,6 @@ variable "bootstrap_pipeline_file" {
   default = ""
 }
 
-variable "bootstrap_var_file" {
-  default = ""
+variable "bootstrap_pipeline_vars" {
+  type = "string"
 }

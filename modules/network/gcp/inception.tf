@@ -1,7 +1,10 @@
 #
 # Inception bastion instance configuration
 #
-# When debugging replace source github path 
+# When debugging replace source github path
+#
+# - "github.com/appbricks/cloud-inceptor//modules/inception/gcp"
+# 
 # with relative path filesystem path.
 #
 # - "../../inception/gcp"
@@ -46,5 +49,5 @@ module "inception" {
   concourse_server_port    = "${var.concourse_admin_password}"
   concourse_admin_password = "${var.concourse_admin_password}"
   bootstrap_pipeline_file  = "${var.bootstrap_pipeline_file}"
-  bootstrap_var_file       = "${var.bootstrap_var_file}"
+  bootstrap_pipeline_vars  = "${var.bootstrap_pipeline_vars}"
 }

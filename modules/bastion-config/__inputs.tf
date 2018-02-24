@@ -1,4 +1,11 @@
 #
+# Google Cloud Region
+#
+variable "region" {
+  type = "string"
+}
+
+#
 # Certificate Subject data for certificate creation
 #
 variable "company_name" {
@@ -29,6 +36,22 @@ variable "vpc_name" {
 }
 
 variable "vpc_dns_zone" {
+  type = "string"
+}
+
+variable "dmz_network" {
+  type = "string"
+}
+
+variable "dmz_subnetwork" {
+  type = "string"
+}
+
+variable "engineering_network" {
+  type = "string"
+}
+
+variable "engineering_subnetwork" {
   type = "string"
 }
 
@@ -149,6 +172,6 @@ variable "bootstrap_pipeline_file" {
   type = "string"
 }
 
-variable "bootstrap_var_file" {
+variable "bootstrap_pipeline_vars" {
   type = "string"
 }

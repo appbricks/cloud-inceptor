@@ -119,9 +119,16 @@ data "template_file" "www-static-index" {
 data "template_file" "bootstrap-pipeline-vars" {
   template = <<PIPELINE_VARS
 ---
-${file(length(var.bootstrap_var_file) == 0 ? "${path.module}/_placeholder_" : var.bootstrap_var_file)}
+${var.bootstrap_pipeline_vars}
 
+# VPC Variables
 environment: ${var.vpc_name}
+region: var.region
+
+dmz_network: ${var.dmz_network}
+dmz_subnetwork: ${var.dmz_subnetwork}
+engineering_network: ${var.engineering_network}
+engineering_subnetwork: ${var.engineering_subnetwork}
 PIPELINE_VARS
 }
 

@@ -2,6 +2,9 @@
 # Pave VPC with the foundation network architecture and resources
 # 
 # When debugging replace source github path 
+#
+# - "github.com/appbricks/cloud-inceptor//modules/network/gcp"
+#
 # with relative path filesystem path.
 #
 # - "../../../modules/network/gcp"
@@ -36,7 +39,7 @@ module "vpc" {
   concourse_server_port    = "${var.concourse_server_port}"
   concourse_admin_password = "${var.concourse_admin_password}"
   bootstrap_pipeline_file  = "${var.bootstrap_pipeline_file}"
-  bootstrap_var_file       = "${var.bootstrap_var_file}"
+  bootstrap_pipeline_vars  = "${var.bootstrap_pipeline_vars}"
 }
 
 resource "google_dns_record_set" "bastion-private" {

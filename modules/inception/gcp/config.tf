@@ -2,24 +2,34 @@
 # Inceptor bastion common config module
 # 
 # When debugging replace source github path 
+#
+# - "github.com/appbricks/cloud-inceptor//modules/bastion-config"
+#
 # with relative path filesystem path.
 #
-# - "../../../modules/network/gcp"
+# - "../../../modules/bastion-config"
 #
 
 module "config" {
   source = "github.com/appbricks/cloud-inceptor//modules/bastion-config"
 
-  vpc_name     = "${var.vpc_name}"
-  vpc_dns_zone = "${var.vpc_dns_zone}"
-
-  ssh_key_file_path = "${var.ssh_key_file_path}"
+  region = "${var.region}"
 
   company_name      = "${var.company_name}"
   organization_name = "${var.organization_name}"
   locality          = "${var.locality}"
   province          = "${var.province}"
   country           = "${var.country}"
+
+  vpc_name     = "${var.vpc_name}"
+  vpc_dns_zone = "${var.vpc_dns_zone}"
+
+  dmz_network            = "${var.dmz_network}"
+  dmz_subnetwork         = "${var.dmz_subnetwork}"
+  engineering_network    = "${var.engineering_network}"
+  engineering_subnetwork = "${var.engineering_subnetwork}"
+
+  ssh_key_file_path = "${var.ssh_key_file_path}"
 
   bastion_fqdn      = "${length(var.bastion_host_name) == 0 ? var.vpc_name : var.bastion_host_name}.${var.vpc_dns_zone}"
   bastion_use_fqdn  = "${var.bastion_use_fqdn}"
@@ -47,5 +57,5 @@ module "config" {
   concourse_server_port    = "${var.concourse_server_port}"
   concourse_admin_password = "${var.concourse_admin_password}"
   bootstrap_pipeline_file  = "${var.bootstrap_pipeline_file}"
-  bootstrap_var_file       = "${var.bootstrap_var_file}"
+  bootstrap_pipeline_vars  = "${var.bootstrap_pipeline_vars}"
 }
