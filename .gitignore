@@ -1,6 +1,7 @@
 .*
 *.log
 
+*.tfvars
 *.tfstate
 *.tfstate.backup
 
