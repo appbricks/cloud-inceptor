@@ -1,21 +1,4 @@
 #
-# GPS Connection
-#
-provider "google" {
-  region = "${var.region}"
-}
-
-#
-# Backend state
-#
-terraform {
-  backend "gcs" {
-    bucket = "appbricks-euw4-tf-states"
-    prefix = "test/cloud-inceptor"
-  }
-}
-
-#
 # Availability Zones in current region
 #
 
