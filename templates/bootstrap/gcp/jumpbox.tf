@@ -4,7 +4,7 @@
 
 resource "google_compute_instance" "jumpbox" {
   name         = "${var.vpc_name}-jumpbox"
-  machine_type = "g1-small"
+  machine_type = "f1-micro"
   zone         = "${data.google_compute_zones.available.names[0]}"
 
   tags = [
