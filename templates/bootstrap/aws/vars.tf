@@ -83,8 +83,17 @@ variable "vpn_users" {
 }
 
 #
-# Concourse bootstrap pipeline
+# Concourse
 #
+variable "concourse_server_port" {
+  default = "string"
+}
+
+variable "concourse_admin_password" {
+  default = "Passw0rd"
+}
+
+# Concourse bootstrap pipeline
 variable "bootstrap_pipeline_file" {
   default = ""
 }

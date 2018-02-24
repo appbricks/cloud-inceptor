@@ -33,8 +33,10 @@ module "vpc" {
   vpn_tunnel_all_traffic = "${var.vpn_tunnel_all_traffic}"
   vpn_users              = "${var.vpn_users}"
 
-  bootstrap_pipeline_file = "${var.bootstrap_pipeline_file}"
-  bootstrap_var_file      = "${var.bootstrap_var_file}"
+  concourse_server_port    = "${var.concourse_server_port}"
+  concourse_admin_password = "${var.concourse_admin_password}"
+  bootstrap_pipeline_file  = "${var.bootstrap_pipeline_file}"
+  bootstrap_var_file       = "${var.bootstrap_var_file}"
 }
 
 resource "google_dns_record_set" "bastion-private" {
@@ -65,4 +67,8 @@ output "bastion_admin_fqdn" {
 
 output "vpn_admin_password" {
   value = "${module.vpc.vpn_admin_password}"
+}
+
+output "concourse_admin_password" {
+  value = "${var.concourse_admin_password}"
 }

@@ -115,11 +115,11 @@ variable "vpn_users" {
 # Concourse configuration
 #
 variable "concourse_server_port" {
-  default = "8080"
+  default = "string"
 }
 
 variable "concourse_admin_password" {
-  default = "Passw0rd"
+  default = "string"
 }
 
 variable "bootstrap_pipeline_file" {
