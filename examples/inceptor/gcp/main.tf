@@ -3,7 +3,7 @@
 #
 
 module "bootstrap" {
-  source = "../../../templates/bootstrap/gcp"
+  source = "../../../modules/bootstrap/gcp"
 
   #
   # Company information used in certificate creation

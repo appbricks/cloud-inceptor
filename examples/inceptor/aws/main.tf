@@ -3,7 +3,7 @@
 #
 
 module "bootstrap" {
-  source = "../../../templates/bootstrap/aws"
+  source = "../../../modules/bootstrap/aws"
 
   #
   # Company information used in certificate creation
