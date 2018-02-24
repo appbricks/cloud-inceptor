@@ -25,22 +25,6 @@ resource "google_compute_subnetwork" "engineering" {
 }
 
 #
-# Peer engineering and dmz networks
-#
-
-resource "google_compute_network_peering" "dmz" {
-  name         = "${var.vpc_name}-dmz-engineering"
-  network      = "${google_compute_network.dmz.self_link}"
-  peer_network = "${google_compute_network.engineering.self_link}"
-}
-
-resource "google_compute_network_peering" "engineering" {
-  name         = "${var.vpc_name}-engineering-dmz"
-  network      = "${google_compute_network.engineering.self_link}"
-  peer_network = "${google_compute_network.dmz.self_link}"
-}
-
-#
 # Firewall rules on DMZ Network
 #
 
