@@ -1,5 +1,10 @@
 #
 # Inceptor bastion common config module
+# 
+# When debugging replace source github path 
+# with relative path filesystem path.
+#
+# - "../../../modules/network/gcp"
 #
 
 module "config" {

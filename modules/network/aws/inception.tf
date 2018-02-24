@@ -1,6 +1,11 @@
 #
 # Inception bastion instance configuration
 # 
+# When debugging replace source github path 
+# with relative path filesystem path.
+#
+# - "../../inception/gcp"
+#
 
 module "inception" {
   source = "github.com/appbricks/cloud-inceptor//modules/inception/aws"

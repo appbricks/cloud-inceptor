@@ -1,6 +1,11 @@
 #
 # Pave VPC with the foundation network architecture and resources
 # 
+# When debugging replace source github path 
+# with relative path filesystem path.
+#
+# - "../../../modules/network/gcp"
+#
 
 module "vpc" {
   source = "github.com/appbricks/cloud-inceptor//modules/network/aws"
