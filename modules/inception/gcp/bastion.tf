@@ -11,7 +11,6 @@ resource "google_compute_instance" "bastion" {
 
   tags = [
     "bastion-vpn",
-    "bastion-ssh",
     "bastion-proxy",
   ]
 
@@ -90,8 +89,6 @@ resource "google_compute_firewall" "bastion-vpn" {
   name    = "${var.vpc_name}-bastion-vpn"
   network = "${var.dmz_network}"
 
-  direction = "INGRESS"
-
   allow {
     protocol = "tcp"
     ports    = ["80", "443"]
@@ -102,36 +99,23 @@ resource "google_compute_firewall" "bastion-vpn" {
     ports    = ["${var.vpn_server_port}"]
   }
 
+  priority      = "900"
+  direction     = "INGRESS"
   source_ranges = ["0.0.0.0/0"]
   target_tags   = ["bastion-vpn"]
-}
-
-resource "google_compute_firewall" "bastion-ssh" {
-  name = "${var.vpc_name}-bastion-ssh"
-
-  network   = "${var.engineering_network}"
-  direction = "INGRESS"
-
-  allow {
-    protocol = "tcp"
-    ports    = ["22"]
-  }
-
-  source_ranges = ["${var.vpn_network}"]
-  target_tags   = ["bastion-ssh"]
 }
 
 resource "google_compute_firewall" "bastion-proxy" {
   name    = "${var.vpc_name}-bastion-proxy"
   network = "${var.engineering_network}"
 
-  direction = "INGRESS"
-
   allow {
     protocol = "tcp"
     ports    = ["${var.squidproxy_server_port}"]
   }
 
+  priority      = "900"
+  direction     = "INGRESS"
   source_ranges = ["${var.vpn_network}", "${var.vpc_cidr}"]
   target_tags   = ["bastion-proxy"]
 }
