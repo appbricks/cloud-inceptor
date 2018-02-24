@@ -127,5 +127,5 @@ variable "bootstrap_pipeline_file" {
 }
 
 variable "bootstrap_pipeline_vars" {
-  type = "string"
+  type = ""
 }
