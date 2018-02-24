@@ -60,7 +60,9 @@ resource "google_compute_address" "bastion-dmz" {
   address_type = "INTERNAL"
 
   subnetwork = "${var.dmz_subnetwork}"
-  address    = "${cidrhost(var.dmz_subnetwork_cidr, -3)}"
+  region     = "${var.region}"
+
+  address = "${cidrhost(var.dmz_subnetwork_cidr, -3)}"
 }
 
 resource "google_compute_address" "bastion-engineering" {
@@ -68,12 +70,16 @@ resource "google_compute_address" "bastion-engineering" {
   address_type = "INTERNAL"
 
   subnetwork = "${var.engineering_subnetwork}"
-  address    = "${cidrhost(var.engineering_subnetwork_cidr, -3)}"
+  region     = "${var.region}"
+
+  address = "${cidrhost(var.engineering_subnetwork_cidr, -3)}"
 }
 
 resource "google_compute_address" "bastion-public" {
   name         = "${var.vpc_name}-bastion"
   address_type = "EXTERNAL"
+
+  region = "${var.region}"
 }
 
 #
