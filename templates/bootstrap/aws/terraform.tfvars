@@ -1,5 +1,3 @@
-dev_mode = true
-
 #
 # Company information used in certificate creation
 #
