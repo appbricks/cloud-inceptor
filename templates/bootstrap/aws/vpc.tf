@@ -24,6 +24,8 @@ module "vpc" {
   province          = "${var.province}"
   country           = "${var.country}"
 
+  bastion_host_name = "${var.bastion_host_name}"
+
   vpn_server_port        = "${var.vpn_server_port}"
   vpn_protocol           = "${var.vpn_protocol}"
   vpn_network            = "${var.vpn_network}"

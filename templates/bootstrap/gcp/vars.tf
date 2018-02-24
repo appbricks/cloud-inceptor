@@ -61,6 +61,13 @@ variable "max_azs" {
 }
 
 #
+# Bastion host name
+#
+variable "bastion_host_name" {
+  default = ""
+}
+
+#
 # Open VPN configuration
 #
 variable "vpn_server_port" {
