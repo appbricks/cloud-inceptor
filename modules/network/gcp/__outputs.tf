@@ -5,20 +5,20 @@
 #
 # Network resource attributes
 #
-output "dmz_network_name" {
-  value = "${google_compute_network.dmz.name}"
+output "dmz_network" {
+  value = "${google_compute_network.dmz.self_link}"
 }
 
-output "dmz_subnetwork_name" {
-  value = "${google_compute_subnetwork.dmz.name}"
+output "dmz_subnetwork" {
+  value = "${google_compute_subnetwork.dmz.self_link}"
 }
 
-output "engineering_network_name" {
-  value = "${google_compute_network.engineering.name}"
+output "engineering_network" {
+  value = "${google_compute_network.engineering.self_link}"
 }
 
-output "engineering_subnetwork_name" {
-  value = "${google_compute_subnetwork.engineering.name}"
+output "engineering_subnetwork" {
+  value = "${google_compute_subnetwork.engineering.self_link}"
 }
 
 #
