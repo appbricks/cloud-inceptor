@@ -98,7 +98,7 @@ variable "vpn_users" {
 # Concourse
 #
 variable "concourse_server_port" {
-  default = "string"
+  default = "8080"
 }
 
 variable "concourse_admin_password" {
