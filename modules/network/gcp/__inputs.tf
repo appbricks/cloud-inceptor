@@ -50,12 +50,16 @@ variable "vpc_cidr" {
   type = "string"
 }
 
-variable "subnet_bits" {
+variable "vpc_subnet_bits" {
   type = "string"
 }
 
-variable "subnet_start" {
+variable "vpc_subnet_start" {
   type = "string"
+}
+
+variable "dmz_cidr" {
+  default = ""
 }
 
 #

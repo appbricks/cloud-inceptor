@@ -48,12 +48,16 @@ variable "vpc_cidr" {
   default = "10.0.0.0/16"
 }
 
-variable "subnet_bits" {
+variable "vpc_subnet_bits" {
   default = 8
 }
 
-variable "subnet_start" {
+variable "vpc_subnet_start" {
   default = 200
+}
+
+variable "dmz_cidr" {
+  default = ""
 }
 
 variable "max_azs" {

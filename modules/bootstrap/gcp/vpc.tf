@@ -13,13 +13,14 @@
 module "vpc" {
   source = "github.com/appbricks/cloud-inceptor//modules/network/gcp"
 
-  region       = "${var.region}"
-  vpc_name     = "${var.vpc_name}"
-  vpc_dns_zone = "${var.vpc_dns_zone}"
-  vpc_cidr     = "${var.vpc_cidr}"
-  subnet_bits  = "${var.subnet_bits}"
-  subnet_start = "${var.subnet_start}"
-  max_azs      = "${var.max_azs}"
+  region           = "${var.region}"
+  vpc_name         = "${var.vpc_name}"
+  vpc_dns_zone     = "${var.vpc_dns_zone}"
+  vpc_cidr         = "${var.vpc_cidr}"
+  vpc_subnet_bits  = "${var.vpc_subnet_bits}"
+  vpc_subnet_start = "${var.vpc_subnet_start}"
+  dmz_cidr         = "${var.dmz_cidr}"
+  max_azs          = "${var.max_azs}"
 
   company_name      = "${var.company_name}"
   organization_name = "${var.organization_name}"
