@@ -36,27 +36,42 @@ for n in $(echo $config_server_lan_interfaces | sed "s/,/ /g"); do
 
         set +e
 
-        if [[ -n $lan_gateway ]]; then
+        ifdown $itf
+        ip address flush dev $itf
 
-        cat << ---EOF > /etc/network/interfaces.d/$j-$itf.cfg
+        if [[ -n $ip ]]; then        
+            # Configure a static IP
+
+            if [[ -n lan_subnet && -n $lan_gateway ]]; then
+                # Configure a static route
+
+                cat << ---EOF > /etc/network/interfaces.d/$j-$itf.cfg
 auto $itf
 iface $itf inet static
     address $ip
+    netmask $lan_netmask
     post-up /sbin/route add -net $lan_subnet gw $lan_gateway
     post-down /sbin/route del -net $lan_subnet
 ---EOF
-        else
-        
-        cat << ---EOF > /etc/network/interfaces.d/$j-$itf.cfg
+            else
+            
+                cat << ---EOF > /etc/network/interfaces.d/$j-$itf.cfg
 auto $itf
 iface $itf inet static
     address $ip
     netmask $netmask
 ---EOF
 
+            fi
+        else
+            # Configure DHCP
+
+            cat << ---EOF > /etc/network/interfaces.d/$j-$itf.cfg
+auto $itf
+iface $itf inet dhcp
+---EOF
         fi
 
-        ifdown $itf
         ifup $itf
         set -e
         
