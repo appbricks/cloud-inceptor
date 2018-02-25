@@ -46,7 +46,7 @@ module "inception" {
   vpn_tunnel_all_traffic = "${var.vpn_tunnel_all_traffic}"
   vpn_users              = "${var.vpn_users}"
 
-  concourse_server_port    = "${var.concourse_admin_password}"
+  concourse_server_port    = "${var.concourse_server_port}"
   concourse_admin_password = "${var.concourse_admin_password}"
   bootstrap_pipeline_file  = "${var.bootstrap_pipeline_file}"
   bootstrap_pipeline_vars  = "${var.bootstrap_pipeline_vars}"

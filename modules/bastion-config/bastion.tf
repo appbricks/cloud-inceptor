@@ -103,7 +103,7 @@ openvpn:
   users: '${var.vpn_users}'
 
 concourse:
-  port: 127.0.0.1:8080
+  port: ${length(var.concourse_server_port) == 0 ? "" : "127.0.0.1:${var.concourse_server_port}"}
   password: ${var.concourse_admin_password}
 CONFIG
 }
