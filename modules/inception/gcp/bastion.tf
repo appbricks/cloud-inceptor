@@ -12,6 +12,8 @@ resource "google_compute_instance" "bastion" {
   tags = [
     "bastion-vpn",
     "bastion-proxy",
+    "bastion-deny-vpc",
+    "bastion-deny-dmz",
   ]
 
   boot_disk {
@@ -99,7 +101,7 @@ resource "google_compute_firewall" "bastion-vpn" {
     ports    = ["${var.vpn_server_port}"]
   }
 
-  priority      = "900"
+  priority      = "500"
   direction     = "INGRESS"
   source_ranges = ["0.0.0.0/0"]
   target_tags   = ["bastion-vpn"]
@@ -114,8 +116,36 @@ resource "google_compute_firewall" "bastion-proxy" {
     ports    = ["${var.squidproxy_server_port}"]
   }
 
-  priority      = "900"
+  priority      = "500"
   direction     = "INGRESS"
   source_ranges = ["${var.vpn_network}", "${var.vpc_cidr}"]
   target_tags   = ["bastion-proxy"]
+}
+
+resource "google_compute_firewall" "bastion-deny-vpc" {
+  name    = "${var.vpc_name}-bastion-deny-vpc"
+  network = "${var.engineering_network}"
+
+  deny {
+    protocol = "all"
+  }
+
+  priority      = "599"
+  direction     = "INGRESS"
+  source_ranges = ["${var.vpc_cidr}"]
+  target_tags   = ["bastion-deny-vpc"]
+}
+
+resource "google_compute_firewall" "bastion-deny-dmz" {
+  name    = "${var.vpc_name}-bastion-deny-dmz"
+  network = "${var.dmz_network}"
+
+  deny {
+    protocol = "all"
+  }
+
+  priority      = "599"
+  direction     = "INGRESS"
+  source_ranges = ["${var.dmz_subnetwork_cidr}"]
+  target_tags   = ["bastion-deny-dmz"]
 }
