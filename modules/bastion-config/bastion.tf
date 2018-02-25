@@ -123,7 +123,7 @@ ${var.bootstrap_pipeline_vars}
 
 # VPC Variables
 environment: ${var.vpc_name}
-region: var.region
+region: ${var.region}
 
 dmz_network: ${var.dmz_network}
 dmz_subnetwork: ${var.dmz_subnetwork}
