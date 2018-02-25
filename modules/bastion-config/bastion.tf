@@ -64,8 +64,8 @@ write_files:
   path: /root/bootstrap-vars.yml
   permissions: '0644'
 
-runcmd:
-- /root/.bin/restart_nics
+network:
+  config: disabled
 
 USER_DATA
   }
