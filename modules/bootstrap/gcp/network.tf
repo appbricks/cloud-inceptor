@@ -10,7 +10,7 @@
 # - "../../../modules/network/gcp"
 #
 
-module "vpc" {
+module "network" {
   source = "github.com/appbricks/cloud-inceptor//modules/network/gcp"
 
   region           = "${var.region}"
@@ -44,19 +44,19 @@ module "vpc" {
 }
 
 resource "google_dns_record_set" "bastion-private" {
-  name         = "admin-${module.vpc.bastion_fqdn}."
+  name         = "admin-${module.network.bastion_fqdn}."
   managed_zone = "${google_dns_managed_zone.vpc.name}"
 
   type    = "A"
   ttl     = "300"
-  rrdatas = ["${module.vpc.bastion_private_ip}"]
+  rrdatas = ["${module.network.bastion_private_ip}"]
 }
 
 resource "google_dns_record_set" "bastion-public" {
-  name         = "${module.vpc.bastion_fqdn}."
+  name         = "${module.network.bastion_fqdn}."
   managed_zone = "${google_dns_managed_zone.vpc.name}"
 
   type    = "A"
   ttl     = "300"
-  rrdatas = ["${module.vpc.bastion_public_ip}"]
+  rrdatas = ["${module.network.bastion_public_ip}"]
 }

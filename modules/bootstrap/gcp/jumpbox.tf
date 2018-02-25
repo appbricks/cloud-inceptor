@@ -20,7 +20,7 @@ resource "google_compute_instance" "jumpbox" {
   }
 
   network_interface {
-    subnetwork = "${module.vpc.engineering_subnetwork}"
+    subnetwork = "${module.network.engineering_subnetwork}"
   }
 
   metadata {
