@@ -24,7 +24,7 @@ resource "google_compute_instance" "jumpbox" {
   }
 
   metadata {
-    ssh-keys = "ubuntu:${tls_private_key.default-ssh-key.public_key_openssh} ubuntu"
+    ssh-keys = "ubuntu:${tls_private_key.default-ssh-key.public_key_openssh}"
   }
 }
 
