@@ -21,7 +21,7 @@ output "engineering_subnetwork" {
   value = "${module.network.engineering_subnetwork}"
 }
 
-output "vpc_dns_zone" {
+output "vpc_dns_zone_name" {
   value = "${google_dns_managed_zone.vpc.name}"
 }
 
