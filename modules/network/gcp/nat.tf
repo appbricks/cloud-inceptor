@@ -9,7 +9,7 @@ resource "google_compute_instance" "nat-gateway-engineering" {
   count = "${min(var.max_azs, length(data.google_compute_zones.available.names))}"
 
   name           = "${var.vpc_name}-nat-gateway-engineering-${count.index}"
-  machine_type   = "n1-standard-1"
+  machine_type   = "g1-small"
   zone           = "${data.google_compute_zones.available.names[count.index]}"
   can_ip_forward = true
 
