@@ -43,7 +43,3 @@ output "vpn_admin_password" {
 output "default_openssh_public_key" {
   value = "${tls_private_key.default-ssh-key.public_key_openssh}"
 }
-
-output "concourse_admin_password" {
-  value = "${var.concourse_admin_password}"
-}
