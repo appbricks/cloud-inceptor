@@ -80,8 +80,16 @@ while [[ $? -ne 0 ]] && [[ $i -lt 12 ]]; do
     
     i=$(($i+1))
     echo "Waiting for Concourse to startup..."
-
     sleep 5
+
+    # A race condition exists which crashes the web or 
+    # worker containers if containers do not come up in 
+    # a certain order. This loop restarts any crased
+    # containers.
+    for c in $(docker ps -a | grep Exited | sed 's|.*\(docker_.*\)$|\1|'); do
+        docker restart $c
+    done
+
     curl -f -L "$CONCOURSE_URL/api/v1/cli?arch=amd64&platform=linux" \
         -o /usr/local/bin/fly >/dev/null 2>&1
 done
@@ -89,6 +97,16 @@ if [[ $? -ne 0 ]]; then
     echo "ERROR! Concourse is still not running after 60 seconds."
     exit 1
 fi
+
+# A race condition exists which crashes the web or 
+# worker containers if containers do not come up in 
+# a certain order. This loop restarts any crased
+# containers.
+sleep 5
+for c in $(docker ps -a | grep Exited | sed 's|.*\(docker_.*\)$|\1|'); do
+    docker restart $c
+done
+
 chmod +x /usr/local/bin/fly
 
 docker_worker_cid=$(docker ps -a \
