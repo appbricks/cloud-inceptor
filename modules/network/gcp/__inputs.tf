@@ -73,6 +73,14 @@ variable "bastion_image_name" {
   default = "appbricks-inceptor-bastion"
 }
 
+variable "bastion_root_disk_size" {
+  default = 30
+}
+
+variable "bastion_concourse_vols_disk_size" {
+  default = 10
+}
+
 variable "bastion_host_name" {
   default = ""
 }

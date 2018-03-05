@@ -15,8 +15,12 @@ resource "google_compute_instance" "jumpbox" {
   boot_disk {
     initialize_params {
       image = "${data.google_compute_image.ubuntu.self_link}"
-      size  = "160"
+      size  = "40"
     }
+  }
+
+  attached_disk {
+    source = "${google_compute_disk.jumpbox-data.self_link}"
   }
 
   network_interface {
@@ -25,7 +29,40 @@ resource "google_compute_instance" "jumpbox" {
 
   metadata {
     ssh-keys = "ubuntu:${tls_private_key.default-ssh-key.public_key_openssh}"
+
+    user-data = <<USER_DATA
+#cloud-config
+
+write_files:
+- encoding: b64
+  content: ${base64encode(data.template_file.mount-jumpbox-data-volume.rendered)}
+  path: /root/mount-volume.sh
+  permissions: '0744'
+
+runcmd: 
+- /root/mount-volume.sh
+USER_DATA
   }
+}
+
+#
+# Jumpbox data volume
+#
+
+data "template_file" "mount-jumpbox-data-volume" {
+  template = "${file("${path.module}/scripts/mount-volume.sh")}"
+
+  vars {
+    attached_device_name = "/dev/sdb"
+    mount_directory      = "/data"
+  }
+}
+
+resource "google_compute_disk" "jumpbox-data" {
+  name = "${var.vpc_name}-jumpbox-data"
+  type = "pd-standard"
+  zone = "${data.google_compute_zones.available.names[0]}"
+  size = "160"
 }
 
 #

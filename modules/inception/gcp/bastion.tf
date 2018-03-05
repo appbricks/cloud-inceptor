@@ -19,8 +19,12 @@ resource "google_compute_instance" "bastion" {
   boot_disk {
     initialize_params {
       image = "${data.google_compute_image.bastion.self_link}"
-      size  = "160"
+      size  = "${var.bastion_root_disk_size}"
     }
+  }
+
+  attached_disk {
+    source = "${google_compute_disk.bastion-docker-volumes.self_link}"
   }
 
   network_interface {
@@ -42,6 +46,18 @@ resource "google_compute_instance" "bastion" {
     user-data          = "${module.config.bastion_cloud_init_config}"
     user-data-encoding = "base64"
   }
+}
+
+#
+# Attached disk for saving docker volumes. This disk needs to be
+# large enough for any installation packages concourse downloads.
+#
+
+resource "google_compute_disk" "bastion-docker-volumes" {
+  name = "${var.vpc_name}-bastion-docker-volumes"
+  type = "pd-standard"
+  zone = "${data.google_compute_zones.available.names[0]}"
+  size = "${var.bastion_concourse_vols_disk_size}"
 }
 
 #

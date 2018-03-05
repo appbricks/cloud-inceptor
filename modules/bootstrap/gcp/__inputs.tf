@@ -67,8 +67,28 @@ variable "max_azs" {
 #
 # Bastion host name
 #
+variable "bastion_instance_type" {
+  default = "n1-standard-1"
+}
+
+variable "bastion_image_name" {
+  default = "appbricks-inceptor-bastion"
+}
+
+variable "bastion_root_disk_size" {
+  default = 50
+}
+
+variable "bastion_concourse_vols_disk_size" {
+  default = 250
+}
+
 variable "bastion_host_name" {
   default = ""
+}
+
+variable "bastion_concourse_data_disk_size" {
+  default = 250
 }
 
 #

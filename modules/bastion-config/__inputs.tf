@@ -124,6 +124,18 @@ variable "bastion_nic2_lan_gateway" {
 }
 
 #
+# Bastion persistent volumes
+#
+
+variable "openvpn_volume_name" {
+  default = ""
+}
+
+variable "concourse_volume_name" {
+  default = ""
+}
+
+#
 # Bastion inception instance Squid Proxy configuration
 #
 variable "squidproxy_server_port" {

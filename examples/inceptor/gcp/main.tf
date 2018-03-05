@@ -64,7 +64,3 @@ output "bastion_admin_fqdn" {
 output "vpn_admin_password" {
   value = "${module.bootstrap.vpn_admin_password}"
 }
-
-output "concourse_admin_password" {
-  value = "${module.bootstrap.concourse_admin_password}"
-}

@@ -28,7 +28,9 @@ module "network" {
   province          = "${var.province}"
   country           = "${var.country}"
 
-  bastion_host_name = "${var.bastion_host_name}"
+  bastion_root_disk_size           = "${var.bastion_root_disk_size}"
+  bastion_concourse_vols_disk_size = "${var.bastion_concourse_vols_disk_size}"
+  bastion_host_name                = "${var.bastion_host_name}"
 
   vpn_server_port        = "${var.vpn_server_port}"
   vpn_protocol           = "${var.vpn_protocol}"

@@ -29,6 +29,17 @@ data "template_cloudinit_config" "bastion-cloudinit" {
 #cloud-config
 
 write_files:
+# Persistant and Data Volumes
+- encoding: b64
+  content: ${base64encode(data.template_file.mount-openvpn-volume.rendered)}
+  path: /root/mount-openvpn-volume.sh
+  permissions: '0744'
+- encoding: b64
+  content: ${base64encode(data.template_file.mount-concourse-volume.rendered)}
+  path: /root/mount-concourse-volume.sh
+  permissions: '0744'
+
+# Service configuration
 - encoding: b64
   content: ${base64encode(data.template_file.bastion-config.rendered)}
   path: /root/config.yml
@@ -64,10 +75,32 @@ write_files:
   path: /root/bootstrap-vars.yml
   permissions: '0644'
 
+runcmd: 
+- /root/mount-openvpn-volume.sh
+- /root/mount-concourse-volume.sh
+
 network:
   config: disabled
 
 USER_DATA
+  }
+}
+
+data "template_file" "mount-openvpn-volume" {
+  template = "${file("${path.module}/scripts/mount-volume.sh")}"
+
+  vars {
+    attached_device_name = "${var.openvpn_volume_name}"
+    mount_directory      = "/var/lib/openvpn"
+  }
+}
+
+data "template_file" "mount-concourse-volume" {
+  template = "${file("${path.module}/scripts/mount-volume.sh")}"
+
+  vars {
+    attached_device_name = "${var.concourse_volume_name}"
+    mount_directory      = "/var/lib/docker/volumes"
   }
 }
 

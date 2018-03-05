@@ -1,10 +1,12 @@
 #!/bin/bash
 
+[[ -n "${attached_device_name}" ]] || exit 0
+
 # Mount and format the data volume if available and unformatted
 
 i=12
 while [ $i -gt 0 ]; do
-  device="/dev/$(lsblk | tail -1 | cut -d" " -f1)"
+  device="/dev/$(lsblk | grep "$(basename ${attached_device_name})" | head -1 | cut -d" " -f1)"
 
   if [[ -n $device ]] && [[ $device == ${attached_device_name} ]]; then
     break
