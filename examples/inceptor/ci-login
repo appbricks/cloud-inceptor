@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -x
-
 usage () {
     echo -e "\nUSAGE: ./cf_login login|logout <CLOUD PROVIDER>\n"
     exit 1
@@ -48,5 +46,3 @@ else
     echo -e "\nUSAGE: ./cf_login login|logout <CLOUD PROVIDER>\n"
     exit 1
 fi
-
-set +x
