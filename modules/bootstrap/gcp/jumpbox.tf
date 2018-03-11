@@ -7,6 +7,8 @@ resource "google_compute_instance" "jumpbox" {
   machine_type = "f1-micro"
   zone         = "${data.google_compute_zones.available.names[0]}"
 
+  allow_stopping_for_update = true
+
   tags = [
     "nat-${var.vpc_name}-${var.region}",
     "allow-int-ssh",
