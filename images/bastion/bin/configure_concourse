@@ -70,7 +70,7 @@ fi
 sudo -S -u concourse /bin/sh -l <<EOF
 cd $CONCOURSE_HOME/docker
 export CONCOURSE_EXTERNAL_URL=$CONCOURSE_URL
-docker-compose up -d
+docker-compose up -d --no-recreate
 EOF
 
 i=0

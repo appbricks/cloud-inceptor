@@ -31,18 +31,14 @@ data "template_cloudinit_config" "bastion-cloudinit" {
 write_files:
 # Persistant and Data Volumes
 - encoding: b64
-  content: ${base64encode(data.template_file.mount-openvpn-volume.rendered)}
-  path: /root/mount-openvpn-volume.sh
-  permissions: '0744'
-- encoding: b64
-  content: ${base64encode(data.template_file.mount-concourse-volume.rendered)}
-  path: /root/mount-concourse-volume.sh
+  content: ${base64encode(data.template_file.mount-data-volume.rendered)}
+  path: /root/mount-data-volume.sh
   permissions: '0744'
 
 # Service configuration
 - encoding: b64
   content: ${base64encode(data.template_file.bastion-config.rendered)}
-  path: /root/config.yml
+  path: /root/bastion-config.yml
   permissions: '0744'
 
 # Web Server SSL certificates
@@ -76,8 +72,12 @@ write_files:
   permissions: '0644'
 
 runcmd: 
-- /root/mount-openvpn-volume.sh
-- /root/mount-concourse-volume.sh
+- /root/mount-data-volume.sh
+- mv /root/bastion-config.yml /root/config.yml
+- /root/.bin/configure_network 2>&1 | tee -a /var/log/configure_network.log
+- /root/.bin/configure_openvpn 2>&1 | tee -a /var/log/configure_openvpn.log
+- /root/.bin/configure_squidproxy 2>&1 | tee -a /var/log/configure_squidproxy.log
+- /root/.bin/configure_concourse 2>&1 | tee -a /var/log/configure_concourse.log
 
 network:
   config: disabled
@@ -86,21 +86,13 @@ USER_DATA
   }
 }
 
-data "template_file" "mount-openvpn-volume" {
+data "template_file" "mount-data-volume" {
   template = "${file("${path.module}/scripts/mount-volume.sh")}"
 
   vars {
-    attached_device_name = "${var.openvpn_volume_name}"
-    mount_directory      = "/var/lib/openvpn"
-  }
-}
-
-data "template_file" "mount-concourse-volume" {
-  template = "${file("${path.module}/scripts/mount-volume.sh")}"
-
-  vars {
-    attached_device_name = "${var.concourse_volume_name}"
-    mount_directory      = "/var/lib/docker/volumes"
+    attached_device_name = "${var.data_volume_name}"
+    mount_directory      = "/data"
+    world_readable       = "false"
   }
 }
 
@@ -113,6 +105,7 @@ server:
   use_fqdn: ${var.bastion_use_fqdn}
   private_ip: ${var.bastion_nic1_private_ip}
   lan_interfaces: '${var.bastion_nic1_private_ip}|${var.bastion_nic1_netmask}|${var.bastion_nic1_lan_cidr}|${var.bastion_nic1_lan_netmask}|${var.bastion_nic1_lan_gateway}|,${var.bastion_nic2_private_ip}|${var.bastion_nic2_netmask}|${var.bastion_nic2_lan_cidr}|${var.bastion_nic2_lan_netmask}|${var.bastion_nic2_lan_gateway}|'
+  docker_mount_path: /data
 
 openvpn:
   port: ${var.vpn_server_port}

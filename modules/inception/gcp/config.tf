@@ -45,7 +45,7 @@ module "config" {
   bastion_nic2_lan_netmask = "${cidrnetmask(var.vpc_cidr)}"
   bastion_nic2_lan_gateway = "${var.engineering_subnetwork_gateway}"
 
-  concourse_volume_name = "/dev/sdb"
+  data_volume_name = "/dev/sdb"
 
   squidproxy_server_port = "${var.squidproxy_server_port}"
 

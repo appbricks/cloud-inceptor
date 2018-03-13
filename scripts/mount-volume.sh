@@ -33,7 +33,7 @@ if [[ -n $device ]]; then
   sudo su - -c "echo -e \"\\n$device\\t${mount_directory}\\text4\\tdefaults\\t0 1\" >> /etc/fstab"
   sudo mount -a
 
-  sudo chmod a+rwx ${mount_directory}
+  [[ ${world_readable} == true ]] && sudo chmod a+rwx ${mount_directory}
 else
   echo "WARNING! Timed out waiting for data volume. Proceeding as a new install."
 fi

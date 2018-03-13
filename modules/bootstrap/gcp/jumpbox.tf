@@ -57,6 +57,7 @@ data "template_file" "mount-jumpbox-data-volume" {
   vars {
     attached_device_name = "/dev/sdb"
     mount_directory      = "/data"
+    world_readable       = "true"
   }
 }
 

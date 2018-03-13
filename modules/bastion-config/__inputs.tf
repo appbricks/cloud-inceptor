@@ -127,11 +127,7 @@ variable "bastion_nic2_lan_gateway" {
 # Bastion persistent volumes
 #
 
-variable "openvpn_volume_name" {
-  default = ""
-}
-
-variable "concourse_volume_name" {
+variable "data_volume_name" {
   default = ""
 }
 

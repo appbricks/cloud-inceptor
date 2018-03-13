@@ -31,7 +31,11 @@ if [ ! -e "/root/config.yml" ]; then
     s=$(head -1 /root/config.yml)
     [[ $s != "---" ]] && rm /root/config.yml
 fi
-[[ -e "/root/config.yml" ]] && eval $(parse_yaml /root/config.yml "config_")
+if [[ -e "/root/config.yml" ]]; then
+    eval $(parse_yaml /root/config.yml "config_")
+else
+    exit 0
+fi
 
 hn=$(hostname)
 cat /etc/hosts | grep "127.0.1.1" > /dev/null 2>&1
