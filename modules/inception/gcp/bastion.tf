@@ -24,7 +24,7 @@ resource "google_compute_instance" "bastion" {
   }
 
   attached_disk {
-    source = "${google_compute_disk.bastion-docker-volumes.self_link}"
+    source = "${google_compute_disk.bastion-data-volume.self_link}"
   }
 
   network_interface {
@@ -49,12 +49,12 @@ resource "google_compute_instance" "bastion" {
 }
 
 #
-# Attached disk for saving docker volumes. This disk needs to be
+# Attached disk for saving persistant data. This disk needs to be
 # large enough for any installation packages concourse downloads.
 #
 
-resource "google_compute_disk" "bastion-docker-volumes" {
-  name = "${var.vpc_name}-bastion-docker-volumes"
+resource "google_compute_disk" "bastion-data-volume" {
+  name = "${var.vpc_name}-bastion-data-volume"
   type = "pd-standard"
   zone = "${data.google_compute_zones.available.names[0]}"
   size = "${var.bastion_concourse_vols_disk_size}"
