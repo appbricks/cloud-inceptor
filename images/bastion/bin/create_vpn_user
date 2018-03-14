@@ -81,7 +81,7 @@ case "$config_openvpn_auth_strategy" in
 esac
 
 cp /etc/openvpn/users/${user}/*.zip /home/$user
-cp /etc/openvpn/openvpn-install-2.4.0-I602.exe /home/$user
+cp /etc/openvpn/openvpn-install-*.exe /home/$user
 chown -R $user:$user /home/$user
 
 if [[ -e /etc/apache2 ]]; then

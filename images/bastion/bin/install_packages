@@ -4,6 +4,9 @@ set -xe
 
 echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
 
+wget -O - https://swupdate.openvpn.net/repos/repo-public.gpg|apt-key add -
+echo "deb http://build.openvpn.net/debian/openvpn/release/2.4 $(lsb_release -c -s) main" > /etc/apt/sources.list.d/openvpn.list
+
 # Update and upgrade the distribution
 apt-get update
 apt-get -y \
@@ -34,11 +37,11 @@ apt-get install -y squid3
 systemctl stop squid
 systemctl disable squid
 
-curl -L https://s3.amazonaws.com/mevansam-software/openvpn/openvpn-install-2.4.0-I602.exe \
-    -o /etc/openvpn/openvpn-install-2.4.0-I602.exe
+curl -L https://swupdate.openvpn.org/community/releases/openvpn-install-2.4.5-I601.exe \
+    -o /etc/openvpn/openvpn-install-2.4.5-I601.exe
 
 # Docker Compose CLI
-curl -L https://github.com/docker/compose/releases/download/1.12.0/docker-compose-`uname -s`-`uname -m` \
+curl -L https://github.com/docker/compose/releases/download/1.19.0/docker-compose-`uname -s`-`uname -m` \
     > /usr/local/bin/docker-compose
 chmod +x /usr/local/bin/docker-compose
 

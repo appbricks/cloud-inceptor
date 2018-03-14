@@ -118,7 +118,7 @@ for n in $(echo $config_server_lan_interfaces | sed "s/,/ /g"); do
 done
 
 echo -e "\n# Enable PAM Authentication" >> /etc/openvpn/server.conf
-echo -e "plugin /usr/lib/openvpn/openvpn-plugin-auth-pam.so openvpn" >> /etc/openvpn/server.conf
+echo -e "plugin /usr/lib/openvpn/plugins/openvpn-plugin-auth-pam.so openvpn" >> /etc/openvpn/server.conf
 
 echo -e "\n# Prevent re-authorization every 3600 seconds" >> /etc/openvpn/server.conf
 echo -e "reneg-sec 0" >> /etc/openvpn/server.conf
