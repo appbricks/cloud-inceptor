@@ -11,7 +11,7 @@
 #
 
 module "network" {
-  source = "github.com/appbricks/cloud-inceptor//modules/network/gcp"
+  source = "../../../modules/network/gcp"
 
   region           = "${var.region}"
   vpc_name         = "${var.vpc_name}"

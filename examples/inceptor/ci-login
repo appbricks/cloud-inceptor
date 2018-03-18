@@ -1,11 +1,12 @@
 #!/bin/bash
 
 usage () {
-    echo -e "\nUSAGE: ./cf_login login|logout <CLOUD PROVIDER>\n"
+    echo -e "\nUSAGE: ./cf_login login|logout <CLOUD PROVIDER> [debug]\n"
     exit 1
 }
 
 [[ -n $2 ]] || usage
+[[ -n $3 && $3 == debug ]] && set -x
 
 cd $2
 tf_output=$(terraform output) || exit 1

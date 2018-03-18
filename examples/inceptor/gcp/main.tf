@@ -35,9 +35,11 @@ module "bootstrap" {
   #
   # Bootstrap pipeline
   #
-  bootstrap_pipeline_file = "../../../pipelines/bootstrap-hello-world/pipeline.yml"
+  bootstrap_pipeline_file = "../../../pipelines/bootstrap-greeting/pipeline.yml"
 
-  bootstrap_pipeline_vars = ""
+  bootstrap_pipeline_vars = <<PIPELINE_VARS
+locale: Asia/Dubai
+PIPELINE_VARS
 }
 
 #

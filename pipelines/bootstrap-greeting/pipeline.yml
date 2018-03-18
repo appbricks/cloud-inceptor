@@ -1,0 +1,175 @@
+---
+jobs:
+- name: bootstrap
+  plan:
+  - task: initialize
+    config:
+      platform: linux
+      image_resource:
+        type: docker-image
+        source: {repository: alpine}
+      run:
+        path: /bin/sh
+        args:
+        - -c
+        - |
+          set -e
+          
+          wget https://dl.minio.io/client/mc/release/linux-amd64/mc -O /usr/local/bin/mc
+          chmod +x /usr/local/bin/mc
+
+          # Create a bucket for greeting messages
+          mc config host add auto $AUTOS3_URL $AUTOS3_ACCESS_KEY $AUTOS3_SECRET_KEY
+          [[ "$(mc ls auto/ | awk '/greeting\/$/{ print $5 }')" == "greeting/" ]] || \
+            mc mb auto/greeting
+          
+          # Create folders to hold greeting messages
+          touch .greeting
+          mc cp .greeting auto/greeting/hello/.greeting
+          mc cp .greeting auto/greeting/goodbye/.greeting
+
+          # Create a file that can be used to trigger 
+          # other jobs. This file will be versioned by 
+          # a sequential number in its name.
+          echo -e "Hello  $ENVIRONMENT\n$(date +'%a %b %d %Y - %R %Z')" > hello-0
+          mc cp hello-0 auto/greeting/hello/hello-0
+      params:
+        ENVIRONMENT: ((environment))
+        AUTOS3_URL: ((autos3_url))
+        AUTOS3_ACCESS_KEY: ((autos3_access_key))
+        AUTOS3_SECRET_KEY: ((autos3_secret_key))
+
+- name: check-hello
+  plan:
+  - get: schedule
+    trigger: true
+  - get: hello-message
+
+- name: hello
+  plan:
+  - aggregate:
+    - get: hello-message
+      passed: [check-hello]
+      trigger: true
+  - task: say-hello
+    config:
+      platform: linux
+      image_resource:
+        type: docker-image
+        source: {repository: alpine}
+      inputs:
+      - name: hello-message
+        path: message
+      run:
+        path: /bin/sh
+        args:
+        - -c
+        - |
+          on_exit() {
+            rv=$?
+            [[ $rv -ne 0 ]] && cat out.log
+            exit $rv
+          }
+          trap "on_exit" INT TERM EXIT
+
+          set -e
+
+          wget https://dl.minio.io/client/mc/release/linux-amd64/mc -O /usr/local/bin/mc >>out.log 2>&1
+          chmod +x /usr/local/bin/mc >>out.log 2>&1
+          apk add figlet --update-cache >>out.log 2>&1
+
+          version=$(cat message/version)
+          figlet -cw 160 "$(cat message/hello-$version)"
+          
+          echo -e "Goodbye  $ENVIRONMENT\n$(date +'%a %b %d %Y - %R %Z')" > goodbye-$version
+
+          mc config host add auto $AUTOS3_URL $AUTOS3_ACCESS_KEY $AUTOS3_SECRET_KEY >>out.log 2>&1
+          mc find auto/greeting/goodbye --name "goodbye-*" --exec "mc rm {}" >>out.log 2>&1
+          mc cp goodbye-$version auto/greeting/goodbye/goodbye-$version >>out.log 2>&1
+      params:
+        ENVIRONMENT: ((environment))
+        AUTOS3_URL: ((autos3_url))
+        AUTOS3_ACCESS_KEY: ((autos3_access_key))
+        AUTOS3_SECRET_KEY: ((autos3_secret_key))
+
+- name: check-goodbye
+  plan:
+  - get: schedule
+    trigger: true
+  - get: goodbye-message
+
+- name: Goodbye
+  plan:
+  - aggregate:
+    - get: goodbye-message
+      passed: [check-goodbye]
+      trigger: true
+  - task: say-goodbye
+    config:
+      platform: linux
+      image_resource:
+        type: docker-image
+        source: {repository: alpine}
+      inputs:
+      - name: goodbye-message
+        path: message
+      run:
+        path: /bin/sh
+        args:
+        - -c
+        - |
+          on_exit() {
+            rv=$?
+            [[ $rv -ne 0 ]] && cat out.log
+            exit $rv
+          }
+          trap "on_exit" INT TERM EXIT
+
+          set -e
+
+          wget https://dl.minio.io/client/mc/release/linux-amd64/mc -O /usr/local/bin/mc >>out.log 2>&1
+          chmod +x /usr/local/bin/mc >>out.log 2>&1
+          apk add figlet --update-cache >>out.log 2>&1
+
+          version=$(cat message/version)
+          figlet -cw 160 "$(cat message/goodbye-$version)"
+
+          version=$(($version+1))
+          echo -e "Hello  $ENVIRONMENT\n$(date +'%a %b %d %Y - %R %Z')" > hello-$version
+
+          mc config host add auto $AUTOS3_URL $AUTOS3_ACCESS_KEY $AUTOS3_SECRET_KEY >>out.log 2>&1
+          mc find auto/greeting/hello --name "hello-*" --exec "mc rm {}" >>out.log 2>&1
+          mc cp hello-$version auto/greeting/hello/hello-$version >>out.log 2>&1
+      params: 
+        ENVIRONMENT: ((environment))
+        AUTOS3_URL: ((autos3_url))
+        AUTOS3_ACCESS_KEY: ((autos3_access_key))
+        AUTOS3_SECRET_KEY: ((autos3_secret_key))
+
+resources:
+
+- name: hello-message
+  type: s3
+  source:
+    bucket: greeting
+    endpoint: ((autos3_url))
+    access_key_id: ((autos3_access_key))
+    secret_access_key: ((autos3_secret_key))
+    regexp: hello/hello-(.*)
+
+- name: goodbye-message
+  type: s3
+  source:
+    bucket: greeting
+    endpoint: ((autos3_url))
+    access_key_id: ((autos3_access_key))
+    secret_access_key: ((autos3_secret_key))
+    regexp: goodbye/goodbye-(.*)
+
+- name: schedule
+  type: time
+  source:
+    interval: 1m
+    location: ((locale))
+    start: 12:00 AM
+    stop: 11:59 PM
