@@ -11,7 +11,7 @@
 #
 
 module "config" {
-  source = "../../../modules/bastion-config"
+  source = "github.com/appbricks/cloud-inceptor//modules/bastion-config"
 
   region = "${var.region}"
 
