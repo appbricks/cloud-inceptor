@@ -15,7 +15,7 @@ useradd concourse -p $(openssl rand -base64 32) -d /opt/concourse -G docker
 
 mkdir -p \
     $CONCOURSE_HOME/docker \
-    $CONCOURSE_HOME/blobstore \
+    $CONCOURSE_HOME/objectstore \
     $CONCOURSE_HOME/keys/web \
     $CONCOURSE_HOME/keys/worker
 
@@ -71,7 +71,7 @@ services:
   minio:
     image: minio/minio
     command: server /data
-    volumes: ["$CONCOURSE_HOME/blobstore:/data"]
+    volumes: ["$CONCOURSE_HOME/objectstore:/data"]
     environment:
       MINIO_ACCESS_KEY: $autos3_access_key
       MINIO_SECRET_KEY: $autos3_secret_key
