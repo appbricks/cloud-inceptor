@@ -11,7 +11,7 @@
 #
 
 module "inception" {
-  source = "github.com/appbricks/cloud-inceptor//modules/inception/gcp"
+  source = "../../inception/gcp"
 
   region            = "${var.region}"
   company_name      = "${var.company_name}"
