@@ -56,10 +56,13 @@ regions=${1:-$(aws ec2 describe-regions --output text | cut -f3)}
 base_amis=$(curl -sL https://cloud-images.ubuntu.com/query/$UBUNTU_RELEASE/server/released.txt \
     | awk '/release/&&/ebs-ssd/&&/amd64/&&/hvm/{ print $4 "|" $7 "|" $8 }')
 
+log_dir=${build_log_dir:-./}
+
 for r in $(echo "$regions"); do
     echo "Building AMI for region $r."
-    aws::build_ami "$IMAGE_NAME" \
-        "$r" "$base_amis" "bastion/build-aws.json" >build_aws_$r.log 2>&1 &
+    (aws::build_ami "$IMAGE_NAME" \
+        "$r" "$base_amis" "bastion/build-aws.json" 2>&1 \
+        | tee $log_dir/build-aws-$r.log &)
     pids+=$!
 done
 
