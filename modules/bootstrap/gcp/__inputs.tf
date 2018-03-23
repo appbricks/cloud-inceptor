@@ -137,3 +137,15 @@ variable "bootstrap_pipeline_file" {
 variable "bootstrap_pipeline_vars" {
   default = ""
 }
+
+#
+# Jumpbox
+#
+
+variable "deploy_jumpbox" {
+  default = "true"
+}
+
+variable "jumpbox_data_disk_size" {
+  default = "160"
+}

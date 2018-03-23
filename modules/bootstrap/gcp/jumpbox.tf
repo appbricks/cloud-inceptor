@@ -3,6 +3,8 @@
 #
 
 resource "google_compute_instance" "jumpbox" {
+  count = "${var.deploy_jumpbox == "true" ? 1 : 0}"
+
   name         = "${var.vpc_name}-jumpbox"
   machine_type = "f1-micro"
   zone         = "${data.google_compute_zones.available.names[0]}"
@@ -22,7 +24,7 @@ resource "google_compute_instance" "jumpbox" {
   }
 
   attached_disk {
-    source = "${google_compute_disk.jumpbox-data.self_link}"
+    source = "${google_compute_disk.jumpbox-data-disk.self_link}"
   }
 
   network_interface {
@@ -61,11 +63,13 @@ data "template_file" "mount-jumpbox-data-volume" {
   }
 }
 
-resource "google_compute_disk" "jumpbox-data" {
-  name = "${var.vpc_name}-jumpbox-data"
+resource "google_compute_disk" "jumpbox-data-disk" {
+  count = "${var.deploy_jumpbox == "true" ? 1 : 0}"
+
+  name = "${var.vpc_name}-jumpbox-data-disk"
   type = "pd-standard"
   zone = "${data.google_compute_zones.available.names[0]}"
-  size = "160"
+  size = "${var.jumpbox_data_disk_size}"
 }
 
 #
@@ -73,6 +77,8 @@ resource "google_compute_disk" "jumpbox-data" {
 #
 
 resource "google_dns_record_set" "jumpbox" {
+  count = "${var.deploy_jumpbox == "true" ? 1 : 0}"
+
   name         = "jumpbox.${google_dns_managed_zone.vpc.dns_name}"
   managed_zone = "${google_dns_managed_zone.vpc.name}"
 
@@ -86,5 +92,5 @@ resource "google_dns_record_set" "jumpbox" {
 #
 
 output "jumpbox-fqdn" {
-  value = "${google_dns_record_set.jumpbox.name}"
+  value = "jumpbox.${google_dns_managed_zone.vpc.dns_name}"
 }
