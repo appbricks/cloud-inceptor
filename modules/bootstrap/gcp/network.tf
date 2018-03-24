@@ -28,6 +28,8 @@ module "network" {
   province          = "${var.province}"
   country           = "${var.country}"
 
+  ssh_key_file_path = "${var.ssh_key_file_path}"
+
   bastion_root_disk_size           = "${var.bastion_root_disk_size}"
   bastion_concourse_vols_disk_size = "${var.bastion_concourse_vols_disk_size}"
   bastion_host_name                = "${var.bastion_host_name}"

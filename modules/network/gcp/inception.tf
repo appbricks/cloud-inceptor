@@ -32,6 +32,8 @@ module "inception" {
   engineering_subnetwork_cidr    = "${google_compute_subnetwork.engineering.ip_cidr_range}"
   engineering_subnetwork_gateway = "${google_compute_subnetwork.engineering.gateway_address}"
 
+  ssh_key_file_path = "${var.ssh_key_file_path}"
+
   bastion_instance_type            = "${var.bastion_instance_type}"
   bastion_image_name               = "${var.bastion_image_name}"
   bastion_root_disk_size           = "${var.bastion_root_disk_size}"

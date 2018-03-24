@@ -9,10 +9,10 @@ resource "tls_private_key" "bastion-ssh-key" {
 
 resource "local_file" "bastion-ssh-key" {
   content  = "${tls_private_key.bastion-ssh-key.private_key_pem}"
-  filename = "${var.ssh_key_file_path}"
+  filename = "${var.ssh_key_file_path}/vpn-admin-ssh-key.pem"
 
   provisioner "local-exec" {
-    command = "chmod 0600 ${var.ssh_key_file_path}"
+    command = "chmod 0600 ${var.ssh_key_file_path}/vpn-admin-ssh-key.pem"
   }
 }
 

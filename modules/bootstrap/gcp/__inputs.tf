@@ -65,7 +65,14 @@ variable "max_azs" {
 }
 
 #
-# Bastion host name
+# Local file path to write SSH private key for bastion instance
+#
+variable "ssh_key_file_path" {
+  type = "string"
+}
+
+#
+# Bastion inception instance variables
 #
 variable "bastion_instance_type" {
   default = "n1-standard-1"

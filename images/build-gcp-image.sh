@@ -38,4 +38,4 @@ log_dir=${build_log_dir:-./}
 echo "Building image."
 gcp::build_image "$IMAGE_NAME" \
     "$SOURCE_IMAGE_FAMILY" "bastion/build-gcp.json" 2>&1 \
-    | tee $log_dir/build-gcp.log 2>&1
+    | tee $log_dir/build-gcp.log

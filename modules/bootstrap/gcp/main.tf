@@ -26,9 +26,9 @@ resource "tls_private_key" "default-ssh-key" {
 
 resource "local_file" "default-ssh-key" {
   content  = "${tls_private_key.default-ssh-key.private_key_pem}"
-  filename = "default-ssh-key.pem"
+  filename = "${var.ssh_key_file_path}/default-ssh-key.pem"
 
   provisioner "local-exec" {
-    command = "chmod 0600 default-ssh-key.pem"
+    command = "chmod 0600 ${var.ssh_key_file_path}/default-ssh-key.pem"
   }
 }
