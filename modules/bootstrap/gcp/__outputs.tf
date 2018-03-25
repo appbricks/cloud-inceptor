@@ -40,6 +40,14 @@ output "vpn_admin_password" {
   value = "${module.network.vpn_admin_password}"
 }
 
+#
+# Default SSH key to use within VPC
+#
+
 output "default_openssh_public_key" {
   value = "${tls_private_key.default-ssh-key.public_key_openssh}"
+}
+
+output "default_openssh_private_key" {
+  value = "${tls_private_key.default-ssh-key.private_key_pem}"
 }
