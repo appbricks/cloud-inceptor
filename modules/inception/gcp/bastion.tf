@@ -42,7 +42,7 @@ resource "google_compute_instance" "bastion" {
   }
 
   metadata {
-    ssh-keys           = "ubuntu:${module.config.bastion_openssh_public_key} ubuntu"
+    ssh-keys           = "ubuntu:${module.config.bastion_openssh_public_key}"
     user-data          = "${module.config.bastion_cloud_init_config}"
     user-data-encoding = "base64"
   }
