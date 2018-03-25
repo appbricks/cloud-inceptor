@@ -1,0 +1,52 @@
+#!/bin/bash
+
+echo -e "\n**** Restarting Concourse containers ****"
+
+docker stop docker_concourse-worker_1
+docker stop docker_concourse-web_1
+docker stop docker_concourse-db_1
+docker stop docker_minio_1
+
+docker start docker_minio_1
+docker start docker_concourse-db_1
+docker start docker_concourse-web_1
+
+CONCOURSE_URL=http://$(docker ps -a | grep docker_concourse-web_1 | sed 's|.* \([0-9]*\.[0-9]*\.[0-9]*\.[0-9]:[0-9]*\)->.*|\1|')
+CONCOURSE_PASSWORD=$(cat bootstrap-vars.yml | awk '/concourse_password:/{ print $2 }')
+
+i=0
+curl -f -L "$CONCOURSE_URL" >/dev/null 2>&1
+while [[ $? -ne 0 && $i -lt 12 ]]; do
+    
+    i=$(($i+1))
+    echo "Waiting for Concourse to startup..."
+    sleep 5
+
+    curl -f -L "$CONCOURSE_URL" >/dev/null 2>&1
+done
+if [[ $? -ne 0 ]]; then 
+    echo "ERROR! Concourse is still not running after 60 seconds."
+    exit 1
+fi
+
+i=0
+WORKER_STATE=$(fly -t default workers | tail -1 | cut -d' ' -f11)
+while [[ $WORKER_STATE != stalled && $i -lt 12 ]]; do
+    
+    i=$(($i+1))
+    echo "Waiting for concourse worker to stall..."
+    sleep 5
+
+    WORKER_STATE=$(fly -t default workers | tail -1 | cut -d' ' -f11)
+done
+if [[ $? -ne 0 ]]; then 
+    echo "ERROR! Concourse has not stalled after 60 seconds."
+    exit 1
+fi
+
+fly -t default login -u admin -p $CONCOURSE_PASSWORD
+fly -t default prune-worker -w $(fly -t default workers | awk '/stalled/{ print $1 }')
+
+docker start docker_concourse-worker_1
+
+echo -e "Concourse containers have been restarted and worker node has been pruned.\n"

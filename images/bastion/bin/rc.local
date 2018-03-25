@@ -11,14 +11,22 @@
 #
 # By default this script does nothing.
 
-[ -e /root/.network_installed ] \
-    || /root/.bin/configure_network 2>&1 | tee -a /var/log/configure_network.log
+if [ -e /root/.network_installed ]; then
+    /root/.bin/restart_nics 2>&1 | tee -a /var/log/configure_network.log
+else
+    /root/.bin/configure_network 2>&1 | tee -a /var/log/configure_network.log
+fi
+
+if [ -e /root/.concourse_installed ]; then
+    /root/.bin/restart_concourse 2>&1 | tee -a /var/log/configure_network.log
+else
+    /root/.bin/configure_concourse 2>&1 | tee -a /var/log/configure_network.log
+fi
+
 [ -e /root/.openvpn_installed ] \
     || /root/.bin/configure_openvpn 2>&1 | tee -a /var/log/configure_openvpn.log
 [ -e /root/.squidproxy_installed ] \
     || /root/.bin/configure_squidproxy 2>&1 | tee -a /var/log/configure_squidproxy.log
-[ -e /root/.concourse_installed ] \
-    || /root/.bin/configure_concourse 2>&1 | tee -a /var/log/configure_concourse.log
 
 [ -e /etc/openvpn/iptables-dump.ipt ] && iptables-restore < /etc/openvpn/iptables-dump.ipt
 
