@@ -30,6 +30,7 @@ module "network" {
 
   ssh_key_file_path = "${var.ssh_key_file_path}"
 
+  bastion_instance_type            = "${var.bastion_instance_type}"
   bastion_root_disk_size           = "${var.bastion_root_disk_size}"
   bastion_concourse_vols_disk_size = "${var.bastion_concourse_vols_disk_size}"
   bastion_host_name                = "${var.bastion_host_name}"
