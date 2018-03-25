@@ -34,9 +34,7 @@ services:
 
   concourse-db:
     image: postgres:9.6
-    deploy:
-      restart_policy:
-        condition: unless-stopped
+    restart: unless-stopped
     environment:
       POSTGRES_DB: concourse
       POSTGRES_USER: concourse
@@ -49,11 +47,7 @@ services:
     command: web
     ports: ["$config_concourse_port:8080"]
     volumes: ["$CONCOURSE_HOME/keys/web:/concourse-keys"]
-    deploy:
-      restart_policy:
-        condition: unless-stopped
-        delay: 5s
-        max_attempts: 5
+    restart: unless-stopped
     environment:
       CONCOURSE_BASIC_AUTH_USERNAME: admin
       CONCOURSE_BASIC_AUTH_PASSWORD: $config_concourse_password
@@ -67,11 +61,7 @@ services:
     links: [concourse-web,minio]
     command: worker
     volumes: ["$CONCOURSE_HOME/keys/worker:/concourse-keys"]
-    deploy:
-      restart_policy:
-        condition: unless-stopped
-        delay: 5s
-        max_attempts: 5
+    restart: unless-stopped
     environment:
       CONCOURSE_TSA_HOST: concourse-web
 
@@ -85,9 +75,7 @@ services:
     image: minio/minio
     command: server /data
     volumes: ["$CONCOURSE_HOME/objectstore:/data"]
-    deploy:
-      restart_policy:
-        condition: unless-stopped
+    restart: unless-stopped
     environment:
       MINIO_ACCESS_KEY: $autos3_access_key
       MINIO_SECRET_KEY: $autos3_secret_key
@@ -120,7 +108,7 @@ EOF
 i=0
 curl -f -L "$CONCOURSE_URL/api/v1/cli?arch=amd64&platform=linux" \
     -o /usr/local/bin/fly >/dev/null 2>&1
-while [[ $? -ne 0 ]] && [[ $i -lt 12 ]]; do
+while [[ $? -ne 0 && $i -lt 12 ]]; do
     
     i=$(($i+1))
     echo "Waiting for Concourse to startup..."
