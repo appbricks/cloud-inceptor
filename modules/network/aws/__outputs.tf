@@ -9,8 +9,8 @@ output "dmz_subnets" {
   value = "${aws_subnet.dmz.*.id}"
 }
 
-output "engineering_subnets" {
-  value = "${aws_subnet.engineering.*.id}"
+output "mgmt_subnets" {
+  value = "${aws_subnet.mgmt.*.id}"
 }
 
 #

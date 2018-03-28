@@ -23,8 +23,8 @@ module "inception" {
 
   dmz_subnet_ids           = "${aws_subnet.dmz.*.id}"
   dmz_subnet_cidrs         = "${aws_subnet.dmz.*.cidr_block}"
-  engineering_subnet_ids   = "${aws_subnet.engineering.*.id}"
-  engineering_subnet_cidrs = "${aws_subnet.engineering.*.cidr_block}"
+  mgmt_subnet_ids   = "${aws_subnet.mgmt.*.id}"
+  mgmt_subnet_cidrs = "${aws_subnet.mgmt.*.cidr_block}"
 
   bastion_instance_type = "${var.bastion_instance_type}"
   bastion_image_name    = "${var.bastion_image_name}"

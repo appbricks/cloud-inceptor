@@ -1,14 +1,14 @@
 #
 # NAT instances and routing for resources 
-# within the engineering network. Resources
+# within the mgmt network. Resources
 # that require NATing should be tagged with
 # the label 'nat-<VPC_NAME>-<REGION>.
 #
 
-resource "google_compute_instance" "nat-gateway-engineering" {
+resource "google_compute_instance" "nat-gateway-mgmt" {
   count = "${min(var.max_azs, length(data.google_compute_zones.available.names))}"
 
-  name         = "${var.vpc_name}-nat-gateway-engineering-${count.index}"
+  name         = "${var.vpc_name}-nat-gateway-mgmt-${count.index}"
   machine_type = "g1-small"
   zone         = "${data.google_compute_zones.available.names[count.index]}"
 
@@ -23,7 +23,7 @@ resource "google_compute_instance" "nat-gateway-engineering" {
   }
 
   network_interface {
-    subnetwork = "${google_compute_subnetwork.engineering.self_link}"
+    subnetwork = "${google_compute_subnetwork.mgmt.self_link}"
 
     access_config {
       // Ephemeral
@@ -37,13 +37,13 @@ sudo iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
 EOF
 }
 
-resource "google_compute_route" "nat-route-engineering" {
+resource "google_compute_route" "nat-route-mgmt" {
   count = "${min(var.max_azs, length(data.google_compute_zones.available.names))}"
 
-  name                   = "${var.vpc_name}-nat-route-engineering-${count.index}"
+  name                   = "${var.vpc_name}-nat-route-mgmt-${count.index}"
   dest_range             = "0.0.0.0/0"
-  network                = "${google_compute_network.engineering.name}"
-  next_hop_instance      = "${google_compute_instance.nat-gateway-engineering.name}"
+  network                = "${google_compute_network.mgmt.name}"
+  next_hop_instance      = "${google_compute_instance.nat-gateway-mgmt.name}"
   next_hop_instance_zone = "${data.google_compute_zones.available.names[count.index]}"
   priority               = 800
 

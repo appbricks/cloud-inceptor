@@ -13,12 +13,12 @@ output "dmz_subnetwork" {
   value = "${google_compute_subnetwork.dmz.self_link}"
 }
 
-output "engineering_network" {
-  value = "${google_compute_network.engineering.self_link}"
+output "mgmt_network" {
+  value = "${google_compute_network.mgmt.self_link}"
 }
 
-output "engineering_subnetwork" {
-  value = "${google_compute_subnetwork.engineering.self_link}"
+output "mgmt_subnetwork" {
+  value = "${google_compute_subnetwork.mgmt.self_link}"
 }
 
 #

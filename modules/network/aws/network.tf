@@ -15,7 +15,7 @@ resource "aws_subnet" "dmz" {
   }
 }
 
-resource "aws_subnet" "engineering" {
+resource "aws_subnet" "mgmt" {
   count = "${min(var.max_azs, length(data.aws_availability_zones.available.names))}"
 
   vpc_id            = "${data.aws_vpc.main.id}"
@@ -24,7 +24,7 @@ resource "aws_subnet" "engineering" {
   cidr_block = "${cidrsubnet(var.vpc_cidr, var.subnet_bits, var.subnet_start + (1 * length(data.aws_availability_zones.available.names) + count.index))}"
 
   tags {
-    Name = "${var.vpc_name}: engineering subnet ${count.index}"
+    Name = "${var.vpc_name}: mgmt subnet ${count.index}"
   }
 }
 
@@ -97,9 +97,9 @@ resource "aws_route_table_association" "dmz" {
   route_table_id = "${aws_route_table.igw.id}"
 }
 
-resource "aws_route_table_association" "engineering" {
+resource "aws_route_table_association" "mgmt" {
   count = "${min(var.max_azs, length(data.aws_availability_zones.available.names))}"
 
-  subnet_id      = "${element(aws_subnet.engineering.*.id, count.index)}"
+  subnet_id      = "${element(aws_subnet.mgmt.*.id, count.index)}"
   route_table_id = "${element(aws_route_table.nat.*.id, count.index)}"
 }

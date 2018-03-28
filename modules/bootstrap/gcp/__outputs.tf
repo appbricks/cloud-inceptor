@@ -13,12 +13,12 @@ output "dmz_subnetwork" {
   value = "${module.network.dmz_subnetwork}"
 }
 
-output "engineering_network" {
-  value = "${module.network.engineering_network}"
+output "mgmt_network" {
+  value = "${module.network.mgmt_network}"
 }
 
-output "engineering_subnetwork" {
-  value = "${module.network.engineering_subnetwork}"
+output "mgmt_subnetwork" {
+  value = "${module.network.mgmt_subnetwork}"
 }
 
 output "vpc_dns_zone_name" {

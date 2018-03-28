@@ -27,10 +27,10 @@ module "inception" {
   dmz_network                    = "${google_compute_network.dmz.self_link}"
   dmz_subnetwork                 = "${google_compute_subnetwork.dmz.self_link}"
   dmz_subnetwork_cidr            = "${google_compute_subnetwork.dmz.ip_cidr_range}"
-  engineering_network            = "${google_compute_network.engineering.self_link}"
-  engineering_subnetwork         = "${google_compute_subnetwork.engineering.self_link}"
-  engineering_subnetwork_cidr    = "${google_compute_subnetwork.engineering.ip_cidr_range}"
-  engineering_subnetwork_gateway = "${google_compute_subnetwork.engineering.gateway_address}"
+  mgmt_network            = "${google_compute_network.mgmt.self_link}"
+  mgmt_subnetwork         = "${google_compute_subnetwork.mgmt.self_link}"
+  mgmt_subnetwork_cidr    = "${google_compute_subnetwork.mgmt.ip_cidr_range}"
+  mgmt_subnetwork_gateway = "${google_compute_subnetwork.mgmt.gateway_address}"
 
   ssh_key_file_path = "${var.ssh_key_file_path}"
 

@@ -32,6 +32,9 @@ module "bootstrap" {
   # name server records of the 'vpc_dns_zone' will be added.
   dns_managed_zone_name = "gcp-appbricks-cloud"
 
+  # Local file path to write SSH private key for bastion instance
+  ssh_key_file_path = "${path.module}"
+
   #
   # Bootstrap pipeline
   #
@@ -47,7 +50,7 @@ PIPELINE_VARS
 #
 terraform {
   backend "gcs" {
-    bucket = "appbricks-euw4-tf-states"
+    bucket = "tfstate-europe-west1"
     prefix = "test/cloud-inceptor"
   }
 }

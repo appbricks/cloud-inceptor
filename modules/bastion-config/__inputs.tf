@@ -47,11 +47,11 @@ variable "dmz_subnetwork" {
   type = "string"
 }
 
-variable "engineering_network" {
+variable "mgmt_network" {
   type = "string"
 }
 
-variable "engineering_subnetwork" {
+variable "mgmt_subnetwork" {
   type = "string"
 }
 

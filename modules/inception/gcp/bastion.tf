@@ -37,8 +37,8 @@ resource "google_compute_instance" "bastion" {
   }
 
   network_interface {
-    subnetwork = "${var.engineering_subnetwork}"
-    address    = "${google_compute_address.bastion-engineering.address}"
+    subnetwork = "${var.mgmt_subnetwork}"
+    address    = "${google_compute_address.bastion-mgmt.address}"
   }
 
   metadata {
@@ -82,14 +82,14 @@ resource "google_compute_address" "bastion-dmz" {
   address = "${cidrhost(var.dmz_subnetwork_cidr, -3)}"
 }
 
-resource "google_compute_address" "bastion-engineering" {
-  name         = "${var.vpc_name}-bastion-engineering"
+resource "google_compute_address" "bastion-mgmt" {
+  name         = "${var.vpc_name}-bastion-mgmt"
   address_type = "INTERNAL"
 
-  subnetwork = "${var.engineering_subnetwork}"
+  subnetwork = "${var.mgmt_subnetwork}"
   region     = "${var.region}"
 
-  address = "${cidrhost(var.engineering_subnetwork_cidr, -3)}"
+  address = "${cidrhost(var.mgmt_subnetwork_cidr, -3)}"
 }
 
 resource "google_compute_address" "bastion-public" {
@@ -125,7 +125,7 @@ resource "google_compute_firewall" "bastion-vpn" {
 
 resource "google_compute_firewall" "bastion-proxy" {
   name    = "${var.vpc_name}-bastion-proxy"
-  network = "${var.engineering_network}"
+  network = "${var.mgmt_network}"
 
   allow {
     protocol = "tcp"
@@ -140,7 +140,7 @@ resource "google_compute_firewall" "bastion-proxy" {
 
 resource "google_compute_firewall" "bastion-deny-vpc" {
   name    = "${var.vpc_name}-bastion-deny-vpc"
-  network = "${var.engineering_network}"
+  network = "${var.mgmt_network}"
 
   deny {
     protocol = "all"

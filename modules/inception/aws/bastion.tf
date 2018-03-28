@@ -63,8 +63,8 @@ resource "aws_network_interface" "bastion-public" {
 }
 
 resource "aws_network_interface" "bastion-private" {
-  subnet_id       = "${var.engineering_subnet_ids[0]}"
-  private_ips     = ["${cidrhost(var.engineering_subnet_cidrs[0], -2)}"]
+  subnet_id       = "${var.mgmt_subnet_ids[0]}"
+  private_ips     = ["${cidrhost(var.mgmt_subnet_cidrs[0], -2)}"]
   security_groups = ["${aws_security_group.bastion-private.id}"]
 
   tags {

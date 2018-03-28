@@ -153,8 +153,8 @@ region: ${var.region}
 
 dmz_network: ${var.dmz_network}
 dmz_subnetwork: ${var.dmz_subnetwork}
-engineering_network: ${var.engineering_network}
-engineering_subnetwork: ${var.engineering_subnetwork}
+mgmt_network: ${var.mgmt_network}
+mgmt_subnetwork: ${var.mgmt_subnetwork}
 PIPELINE_VARS
 }
 
