@@ -159,6 +159,7 @@ PIPELINE_VARS
 }
 
 resource "random_string" "vpn-admin-password" {
-  length  = 16
-  special = true
+  length           = 16
+  special          = true
+  override_special = "!@#$%&*()-_=+[]{}?"
 }
