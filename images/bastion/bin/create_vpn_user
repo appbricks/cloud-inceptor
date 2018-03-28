@@ -67,7 +67,7 @@ userdel $user > /dev/null 2>&1
 set -e
 rm -fr /home/$user
 
-password=$(mkpasswd $2)
+password=$(mkpasswd "$2")
 useradd $user -p $password -m -d /home/$user -s /bin/bash
 
 case "$config_openvpn_auth_strategy" in

@@ -243,9 +243,9 @@ set +ex
 
 # Create users
 
-if [[ -n $config_openvpn_admin_passwd ]]; then
+if [[ -n "$config_openvpn_admin_passwd" ]]; then
 
-    create_vpn_user vpn_admin $config_openvpn_admin_passwd
+    create_vpn_user vpn_admin "$config_openvpn_admin_passwd"
     adduser vpn_admin sudo
 
     mkdir -p /home/vpn_admin/.ssh
