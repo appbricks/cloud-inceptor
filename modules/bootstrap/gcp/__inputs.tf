@@ -6,7 +6,7 @@ variable "region" {
 }
 
 #
-# Used for certificates creations
+# Certificate Subject data for certificate creation
 #
 variable "company_name" {
   type = "string"
@@ -26,6 +26,18 @@ variable "province" {
 
 variable "country" {
   type = "string"
+}
+
+#
+# Root CA key and cert to use for signing self signed certificates
+#
+
+variable "root_ca_key" {
+  default = ""
+}
+
+variable "root_ca_cert" {
+  default = ""
 }
 
 #

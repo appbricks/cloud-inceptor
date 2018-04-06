@@ -13,7 +13,17 @@
 module "network" {
   source = "../../../modules/network/gcp"
 
-  region           = "${var.region}"
+  region = "${var.region}"
+
+  company_name      = "${var.company_name}"
+  organization_name = "${var.organization_name}"
+  locality          = "${var.locality}"
+  province          = "${var.province}"
+  country           = "${var.country}"
+
+  root_ca_key  = "${var.root_ca_key}"
+  root_ca_cert = "${var.root_ca_cert}"
+
   vpc_name         = "${var.vpc_name}"
   vpc_dns_zone     = "${var.vpc_dns_zone}"
   vpc_cidr         = "${var.vpc_cidr}"
@@ -21,12 +31,6 @@ module "network" {
   vpc_subnet_start = "${var.vpc_subnet_start}"
   dmz_cidr         = "${var.dmz_cidr}"
   max_azs          = "${var.max_azs}"
-
-  company_name      = "${var.company_name}"
-  organization_name = "${var.organization_name}"
-  locality          = "${var.locality}"
-  province          = "${var.province}"
-  country           = "${var.country}"
 
   ssh_key_file_path = "${var.ssh_key_file_path}"
 

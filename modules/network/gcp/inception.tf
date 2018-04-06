@@ -13,20 +13,24 @@
 module "inception" {
   source = "../../inception/gcp"
 
-  region            = "${var.region}"
+  region = "${var.region}"
+
   company_name      = "${var.company_name}"
   organization_name = "${var.organization_name}"
   locality          = "${var.locality}"
   province          = "${var.province}"
   country           = "${var.country}"
 
+  root_ca_key  = "${var.root_ca_key}"
+  root_ca_cert = "${var.root_ca_cert}"
+
   vpc_name     = "${var.vpc_name}"
   vpc_dns_zone = "${var.vpc_dns_zone}"
   vpc_cidr     = "${var.vpc_cidr}"
 
-  dmz_network                    = "${google_compute_network.dmz.self_link}"
-  dmz_subnetwork                 = "${google_compute_subnetwork.dmz.self_link}"
-  dmz_subnetwork_cidr            = "${google_compute_subnetwork.dmz.ip_cidr_range}"
+  dmz_network             = "${google_compute_network.dmz.self_link}"
+  dmz_subnetwork          = "${google_compute_subnetwork.dmz.self_link}"
+  dmz_subnetwork_cidr     = "${google_compute_subnetwork.dmz.ip_cidr_range}"
   mgmt_network            = "${google_compute_network.mgmt.self_link}"
   mgmt_subnetwork         = "${google_compute_subnetwork.mgmt.self_link}"
   mgmt_subnetwork_cidr    = "${google_compute_subnetwork.mgmt.ip_cidr_range}"

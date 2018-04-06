@@ -3,6 +3,17 @@
 #
 
 #
+# Root CA for signing self-signed cert
+#
+output "root_ca_key" {
+  value = "${module.network.root_ca_key}"
+}
+
+output "root_ca_cert" {
+  value = "${module.network.root_ca_cert}"
+}
+
+#
 # Network resource attributes
 #
 output "dmz_network" {

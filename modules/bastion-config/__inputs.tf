@@ -29,6 +29,18 @@ variable "country" {
 }
 
 #
+# Root CA key and cert to use for signing self signed certificates
+#
+
+variable "root_ca_key" {
+  default = ""
+}
+
+variable "root_ca_cert" {
+  default = ""
+}
+
+#
 # VPC and network variables
 #
 variable "vpc_name" {

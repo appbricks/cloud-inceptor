@@ -2,6 +2,14 @@
 # Root CA
 #
 
+locals {
+  root_ca_key = "${length(var.root_ca_key) > 0 && length(var.root_ca_cert) > 0 
+    ? var.root_ca_key : tls_private_key.root-ca-key.private_key_pem}"
+
+  root_ca_cert = "${length(var.root_ca_key) > 0 && length(var.root_ca_cert) > 0 
+    ? var.root_ca_cert : tls_self_signed_cert.root-ca.cert_pem}"
+}
+
 resource "tls_private_key" "root-ca-key" {
   algorithm = "RSA"
   rsa_bits  = "4096"
@@ -53,9 +61,10 @@ resource "tls_cert_request" "bastion-web" {
 resource "tls_locally_signed_cert" "bastion-web" {
   cert_request_pem = "${tls_cert_request.bastion-web.cert_request_pem}"
 
-  ca_key_algorithm   = "RSA"
-  ca_private_key_pem = "${tls_private_key.root-ca-key.private_key_pem}"
-  ca_cert_pem        = "${tls_self_signed_cert.root-ca.cert_pem}"
+  ca_key_algorithm = "RSA"
+
+  ca_private_key_pem = "${local.root_ca_key}"
+  ca_cert_pem        = "${local.root_ca_cert}"
 
   validity_period_hours = 87600
 

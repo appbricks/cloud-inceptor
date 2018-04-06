@@ -3,6 +3,17 @@
 #
 
 #
+# Root CA for signing self-signed cert
+#
+output "root_ca_key" {
+  value = "${module.config.root_ca_key}"
+}
+
+output "root_ca_cert" {
+  value = "${module.config.root_ca_cert}"
+}
+
+#
 # Bastion resource attributesd
 #
 output "bastion_fqdn" {

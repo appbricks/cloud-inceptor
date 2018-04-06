@@ -21,11 +21,14 @@ module "config" {
   province          = "${var.province}"
   country           = "${var.country}"
 
+  root_ca_key  = "${var.root_ca_key}"
+  root_ca_cert = "${var.root_ca_cert}"
+
   vpc_name     = "${var.vpc_name}"
   vpc_dns_zone = "${var.vpc_dns_zone}"
 
-  dmz_network            = "${var.dmz_network}"
-  dmz_subnetwork         = "${var.dmz_subnetwork}"
+  dmz_network     = "${var.dmz_network}"
+  dmz_subnetwork  = "${var.dmz_subnetwork}"
   mgmt_network    = "${var.mgmt_network}"
   mgmt_subnetwork = "${var.mgmt_subnetwork}"
 
