@@ -17,12 +17,8 @@ else
     /root/.bin/configure_network 2>&1 | tee -a /var/log/configure_network.log
 fi
 
-if [ -e /root/.concourse_installed ]; then
-    /root/.bin/restart_concourse 2>&1 | tee -a /var/log/configure_network.log
-else
-    /root/.bin/configure_concourse 2>&1 | tee -a /var/log/configure_network.log
-fi
-
+[ -e /root/.concourse_installed ] \
+    || /root/.bin/configure_concourse 2>&1 | tee -a /var/log/configure_concourse.log
 [ -e /root/.openvpn_installed ] \
     || /root/.bin/configure_openvpn 2>&1 | tee -a /var/log/configure_openvpn.log
 [ -e /root/.squidproxy_installed ] \
