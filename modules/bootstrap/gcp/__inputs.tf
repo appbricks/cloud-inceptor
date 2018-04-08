@@ -111,6 +111,20 @@ variable "bastion_concourse_data_disk_size" {
 }
 
 #
+# Bastion admin SSH port
+#
+variable "bastion_admin_ssh_port" {
+  default = "22"
+}
+
+#
+# Squid Proxy port
+#
+variable "squidproxy_server_port" {
+  default = "8888"
+}
+
+#
 # Open VPN configuration
 #
 variable "vpn_server_port" {

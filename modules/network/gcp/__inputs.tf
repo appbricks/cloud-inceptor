@@ -109,7 +109,14 @@ variable "bastion_use_fqdn" {
 }
 
 #
-# Squid Proxy configuration
+# Bastion admin SSH port
+#
+variable "bastion_admin_ssh_port" {
+  default = "22"
+}
+
+#
+# Squid Proxy port
 #
 variable "squidproxy_server_port" {
   default = "8888"

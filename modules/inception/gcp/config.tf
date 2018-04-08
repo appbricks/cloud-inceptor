@@ -50,6 +50,7 @@ module "config" {
 
   data_volume_name = "/dev/sdb"
 
+  bastion_admin_ssh_port = "${var.bastion_admin_ssh_port}"
   squidproxy_server_port = "${var.squidproxy_server_port}"
 
   vpn_server_port        = "${var.vpn_server_port}"

@@ -113,6 +113,7 @@ openvpn:
   subnet: ${var.vpn_network}
   netmask: ${cidrnetmask(var.vpn_network)}
   admin_passwd: ${random_string.vpn-admin-password.result}
+  admin_ssh_port: ${var.bastion_admin_ssh_port}
   dns_servers: ${var.vpn_network_dns}
   server_domain: ${var.vpc_dns_zone}
   server_description: ${var.vpc_name}-vpn

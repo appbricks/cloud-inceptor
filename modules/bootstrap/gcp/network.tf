@@ -39,6 +39,9 @@ module "network" {
   bastion_concourse_vols_disk_size = "${var.bastion_concourse_vols_disk_size}"
   bastion_host_name                = "${var.bastion_host_name}"
 
+  bastion_admin_ssh_port = "${var.bastion_admin_ssh_port}"
+  squidproxy_server_port = "${var.squidproxy_server_port}"
+
   vpn_server_port        = "${var.vpn_server_port}"
   vpn_protocol           = "${var.vpn_protocol}"
   vpn_network            = "${var.vpn_network}"

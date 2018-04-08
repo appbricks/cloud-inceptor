@@ -144,6 +144,13 @@ variable "data_volume_name" {
 }
 
 #
+# Bastion admin SSH port
+#
+variable "bastion_admin_ssh_port" {
+  default = "22"
+}
+
+#
 # Bastion inception instance Squid Proxy configuration
 #
 variable "squidproxy_server_port" {

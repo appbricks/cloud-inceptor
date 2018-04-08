@@ -252,6 +252,9 @@ if [[ -n "$config_openvpn_admin_passwd" ]]; then
     cp /home/ubuntu/.ssh/authorized_keys /home/vpn_admin/.ssh
     chown -R vpn_admin:vpn_admin /home/vpn_admin/.ssh
 
+    [[ -n "$config_openvpn_admin_ssh_port" ]] && \
+        sed -i "s|^Port [0-9]*$|Port $config_openvpn_admin_ssh_port|" /etc/ssh/sshd_config
+
     echo -e "\nAllowUsers vpn_admin" >> /etc/ssh/sshd_config
     service sshd restart
 fi
