@@ -59,8 +59,8 @@ output "bastion_fqdn" {
   value = "${aws_route53_record.bastion-public.name}"
 }
 
-output "vpn_admin_password" {
-  value = "${module.vpc.vpn_admin_password}"
+output "bastion_admin_password" {
+  value = "${module.vpc.bastion_admin_password}"
 }
 
 output "concourse_admin_password" {

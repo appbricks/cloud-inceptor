@@ -111,24 +111,25 @@ variable "bastion_concourse_data_disk_size" {
 }
 
 #
-# Bastion admin SSH port
+# Bastion access configuration
 #
 variable "bastion_admin_ssh_port" {
   default = "22"
 }
 
-#
-# Squid Proxy port
-#
-variable "squidproxy_server_port" {
-  default = "8888"
+variable "bastion_admin_user" {
+  default = "bastion_admin"
+}
+
+variable "bastion_allow_public_ssh" {
+  default = "false"
 }
 
 #
 # Open VPN configuration
 #
 variable "vpn_server_port" {
-  default = "2295"
+  default = ""
 }
 
 variable "vpn_protocol" {
@@ -155,7 +156,7 @@ variable "vpn_users" {
 # Concourse
 #
 variable "concourse_server_port" {
-  default = "8080"
+  default = ""
 }
 
 variable "concourse_admin_password" {
@@ -172,9 +173,15 @@ variable "bootstrap_pipeline_vars" {
 }
 
 #
+# Squid Proxy port
+#
+variable "squidproxy_server_port" {
+  default = ""
+}
+
+#
 # Jumpbox
 #
-
 variable "deploy_jumpbox" {
   default = "true"
 }

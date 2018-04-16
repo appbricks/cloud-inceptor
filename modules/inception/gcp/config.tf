@@ -38,9 +38,11 @@ module "config" {
   bastion_use_fqdn  = "${var.bastion_use_fqdn}"
   bastion_public_ip = "${google_compute_address.bastion-public.address}"
 
-  bastion_nic1_private_ip = "${google_compute_address.bastion-dmz.address}"
-  bastion_nic1_netmask    = "${cidrnetmask(var.dmz_subnetwork_cidr)}"
-  bastion_nic1_lan_cidr   = "${var.dmz_subnetwork_cidr}"
+  bastion_nic1_private_ip  = "${google_compute_address.bastion-dmz.address}"
+  bastion_nic1_netmask     = "${cidrnetmask(var.dmz_subnetwork_cidr)}"
+  bastion_nic1_lan_cidr    = "${var.dmz_subnetwork_cidr}"
+  bastion_nic1_lan_gateway = ""
+  bastion_nic1_lan_netmask = ""
 
   bastion_nic2_private_ip  = "${google_compute_address.bastion-mgmt.address}"
   bastion_nic2_netmask     = "${cidrnetmask(var.mgmt_subnetwork_cidr)}"
@@ -51,6 +53,7 @@ module "config" {
   data_volume_name = "/dev/sdb"
 
   bastion_admin_ssh_port = "${var.bastion_admin_ssh_port}"
+  bastion_admin_user     = "${var.bastion_admin_user}"
   squidproxy_server_port = "${var.squidproxy_server_port}"
 
   vpn_server_port        = "${var.vpn_server_port}"

@@ -44,11 +44,11 @@ output "bastion_fqdn" {
 }
 
 output "bastion_admin_fqdn" {
-  value = "${google_dns_record_set.bastion-private.name}"
+  value = "${google_dns_record_set.bastion-admin.name}"
 }
 
-output "vpn_admin_password" {
-  value = "${module.network.vpn_admin_password}"
+output "bastion_admin_password" {
+  value = "${module.network.bastion_admin_password}"
 }
 
 #

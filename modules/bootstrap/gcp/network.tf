@@ -39,8 +39,10 @@ module "network" {
   bastion_concourse_vols_disk_size = "${var.bastion_concourse_vols_disk_size}"
   bastion_host_name                = "${var.bastion_host_name}"
 
-  bastion_admin_ssh_port = "${var.bastion_admin_ssh_port}"
-  squidproxy_server_port = "${var.squidproxy_server_port}"
+  bastion_admin_ssh_port   = "${var.bastion_admin_ssh_port}"
+  bastion_admin_user       = "${var.bastion_admin_user}"
+  bastion_allow_public_ssh = "${var.bastion_allow_public_ssh}"
+  squidproxy_server_port   = "${var.squidproxy_server_port}"
 
   vpn_server_port        = "${var.vpn_server_port}"
   vpn_protocol           = "${var.vpn_protocol}"
@@ -55,13 +57,13 @@ module "network" {
   bootstrap_pipeline_vars  = "${var.bootstrap_pipeline_vars}"
 }
 
-resource "google_dns_record_set" "bastion-private" {
+resource "google_dns_record_set" "bastion-admin" {
   name         = "admin-${module.network.bastion_fqdn}."
   managed_zone = "${google_dns_managed_zone.vpc.name}"
 
   type    = "A"
   ttl     = "300"
-  rrdatas = ["${module.network.bastion_private_ip}"]
+  rrdatas = ["${var.bastion_allow_public_ssh == "false" ? module.network.bastion_private_ip : module.network.bastion_public_ip}"]
 }
 
 resource "google_dns_record_set" "bastion-public" {

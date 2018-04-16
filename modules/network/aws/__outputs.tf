@@ -28,6 +28,6 @@ output "bastion_public_ip" {
   value = "${module.inception.bastion_public_ip}"
 }
 
-output "vpn_admin_password" {
-  value = "${module.inception.vpn_admin_password}"
+output "bastion_admin_password" {
+  value = "${module.inception.bastion_admin_password}"
 }

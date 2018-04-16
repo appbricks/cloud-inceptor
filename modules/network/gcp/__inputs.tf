@@ -109,32 +109,33 @@ variable "bastion_use_fqdn" {
 }
 
 #
-# Bastion admin SSH port
+# Bastion access configuration
 #
 variable "bastion_admin_ssh_port" {
   default = "22"
 }
 
-#
-# Squid Proxy port
-#
-variable "squidproxy_server_port" {
-  default = "8888"
+variable "bastion_admin_user" {
+  default = "bastion_admin"
+}
+
+variable "bastion_allow_public_ssh" {
+  default = "false"
 }
 
 #
 # Open VPN configuration
 #
 variable "vpn_server_port" {
-  type = "string"
+  type = ""
 }
 
 variable "vpn_protocol" {
-  type = "string"
+  type = ""
 }
 
 variable "vpn_network" {
-  type = "string"
+  type = ""
 }
 
 variable "vpn_network_dns" {
@@ -142,7 +143,7 @@ variable "vpn_network_dns" {
 }
 
 variable "vpn_tunnel_all_traffic" {
-  default = "no"
+  default = ""
 }
 
 variable "vpn_users" {
@@ -150,14 +151,21 @@ variable "vpn_users" {
 }
 
 #
+# Squid Proxy port
+#
+variable "squidproxy_server_port" {
+  type = ""
+}
+
+#
 # Concourse configuration
 #
 variable "concourse_server_port" {
-  default = "string"
+  type = ""
 }
 
 variable "concourse_admin_password" {
-  default = "string"
+  type = ""
 }
 
 variable "bootstrap_pipeline_file" {

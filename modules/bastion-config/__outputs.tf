@@ -25,6 +25,6 @@ output "bastion_cloud_init_config" {
 }
 
 # The password generated for the VPN admin user
-output "vpn_admin_password" {
-  value = "${random_string.vpn-admin-password.result}"
+output "bastion_admin_password" {
+  value = "${random_string.bastion-admin-password.result}"
 }

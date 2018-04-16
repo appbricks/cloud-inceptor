@@ -3,6 +3,10 @@
 SCRIPT_HOME=$(cd $(dirname "$(ls -l $0 | awk '{ print $NF }')") && pwd)
 source $SCRIPT_HOME/common
 
+#
+# Configure NICS
+#
+
 echo -e "\n============================= Network Interfaces =============================="
 ip a
 echo -e "=================================== Routes ===================================="
@@ -11,7 +15,7 @@ echo -e "=======================================================================
 
 set -ex
 
-vpn_itf=$(ip a \
+public_itf=$(ip a \
     | grep -B 5 "$config_server_private_ip" \
     | awk '/^[0-9]*: (eth|ens?)[0-9]:/{ print substr($2,0,length($2)-1) }')
 
@@ -32,7 +36,7 @@ for n in $(echo $config_server_lan_interfaces | sed "s/,/ /g"); do
     lan_netmask=$(echo $n | awk -F'|' '{print $4}')
     lan_gateway=$(echo $n | awk -F'|' '{print $5}')
 
-    if [[ $itf != $vpn_itf ]]; then
+    if [[ $itf != $public_itf ]]; then
 
         set +e
 
@@ -79,6 +83,10 @@ iface $itf inet dhcp
     fi
 done
 
+#
+# Configure Docker daemon
+#
+
 systemctl enable docker
 set +e
 
@@ -112,6 +120,36 @@ fi
 
 set -e
 systemctl restart docker
+
+#
+# Configure SSH Access
+#
+
+if [[ -n "$config_server_admin_passwd" ]]; then
+
+    admin_user=${config_server_admin_user:-admin}
+    admin_password=$(mkpasswd "$config_server_admin_passwd")
+
+    set +e
+    id $admin_user >/dev/null 2>&1
+    if [[ $? -ne 0 ]]; then
+        useradd $admin_user -p $admin_password -m -d /home/$admin_user -s /bin/bash
+    else
+        usermod $admin_user -p $admin_password
+    fi
+    adduser $admin_user sudo
+
+    # Remove any overrides that may 
+    # allow passwordless sudos
+    rm -fr /etc/sudoers.d/*
+    
+    set -e
+    [[ -n "$config_server_admin_ssh_port" ]] && \
+        sed -i "s|^Port [0-9]*$|Port $config_server_admin_ssh_port|" /etc/ssh/sshd_config
+
+    echo -e "\nAllowUsers $admin_user" >> /etc/ssh/sshd_config
+    service sshd restart
+fi
 
 set +ex
 

@@ -10,8 +10,8 @@ resource "google_compute_instance" "bastion" {
   allow_stopping_for_update = true
 
   tags = [
-    "bastion-vpn",
     "bastion-ssh",
+    "bastion-vpn",
     "bastion-proxy",
     "bastion-deny-vpc",
     "bastion-deny-dmz",
@@ -43,7 +43,7 @@ resource "google_compute_instance" "bastion" {
   }
 
   metadata {
-    ssh-keys           = "ubuntu:${module.config.bastion_openssh_public_key}"
+    ssh-keys           = "${var.bastion_admin_user}:${module.config.bastion_openssh_public_key}"
     user-data          = "${module.config.bastion_cloud_init_config}"
     user-data-encoding = "base64"
   }
@@ -104,7 +104,26 @@ resource "google_compute_address" "bastion-public" {
 # Security (Firewall rules for the inception bastion instance)
 #
 
+resource "google_compute_firewall" "bastion-ssh" {
+  count = "${var.bastion_allow_public_ssh == "true" ? 1 : 0 }"
+
+  name    = "${var.vpc_name}-bastion-ssh"
+  network = "${var.dmz_network}"
+
+  allow {
+    protocol = "tcp"
+    ports    = ["${var.bastion_admin_ssh_port}"]
+  }
+
+  priority      = "500"
+  direction     = "INGRESS"
+  source_ranges = ["0.0.0.0/0"]
+  target_tags   = ["bastion-ssh"]
+}
+
 resource "google_compute_firewall" "bastion-vpn" {
+  count = "${var.vpn_server_port == "" ? 0 : 1 }"
+
   name    = "${var.vpc_name}-bastion-vpn"
   network = "${var.dmz_network}"
 
@@ -124,22 +143,9 @@ resource "google_compute_firewall" "bastion-vpn" {
   target_tags   = ["bastion-vpn"]
 }
 
-resource "google_compute_firewall" "bastion-ssh" {
-  name    = "${var.vpc_name}-bastion-ssh"
-  network = "${var.mgmt_network}"
-
-  allow {
-    protocol = "tcp"
-    ports    = ["${var.bastion_admin_ssh_port}"]
-  }
-
-  priority      = "500"
-  direction     = "INGRESS"
-  source_ranges = ["${var.vpn_network}"]
-  target_tags   = ["bastion-ssh"]
-}
-
 resource "google_compute_firewall" "bastion-proxy" {
+  count = "${var.squidproxy_server_port == "" ? 0 : 1 }"
+
   name    = "${var.vpc_name}-bastion-proxy"
   network = "${var.mgmt_network}"
 

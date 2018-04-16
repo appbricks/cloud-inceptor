@@ -60,7 +60,7 @@ variable "mgmt_subnet_cidrs" {
 # Local file path to write SSH private key for bastion instance
 #
 variable "ssh_key_file_path" {
-  default = "vpn-admin-ssh-key.pem"
+  default = "bastion-admin-ssh-key.pem"
 }
 
 #

@@ -76,7 +76,7 @@ openvpn:
   users: <COMMA SEPARATED LIST OF 'user|passwd'>
 ```
 
-> Providing the `admin_passwd` creates a "vpn_admin" user with VPN credentials and disables the default os user.
+> Providing the `admin_passwd` creates a "admin" user with VPN credentials and disables the default os user.
 
 > For the VPN certificate, fields `country`,`org`,`cn`,`ou`,`email` and name are mandatory.
 

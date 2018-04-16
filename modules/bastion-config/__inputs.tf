@@ -33,11 +33,11 @@ variable "country" {
 #
 
 variable "root_ca_key" {
-  default = ""
+  type = "string"
 }
 
 variable "root_ca_cert" {
-  default = ""
+  type = "string"
 }
 
 #
@@ -93,46 +93,46 @@ variable "bastion_public_ip" {
 # Bastion NIC 1 on DMZ network
 #
 variable "bastion_nic1_private_ip" {
-  default = ""
+  type = "string"
 }
 
 variable "bastion_nic1_netmask" {
-  default = ""
+  type = "string"
 }
 
 variable "bastion_nic1_lan_cidr" {
-  default = ""
+  type = "string"
 }
 
 variable "bastion_nic1_lan_netmask" {
-  default = ""
+  type = "string"
 }
 
 variable "bastion_nic1_lan_gateway" {
-  default = ""
+  type = "string"
 }
 
 #
 # Bastion NIC 2 on internal network
 #
 variable "bastion_nic2_private_ip" {
-  default = ""
+  type = "string"
 }
 
 variable "bastion_nic2_netmask" {
-  default = ""
+  type = "string"
 }
 
 variable "bastion_nic2_lan_cidr" {
-  default = ""
+  type = "string"
 }
 
 variable "bastion_nic2_lan_netmask" {
-  default = ""
+  type = "string"
 }
 
 variable "bastion_nic2_lan_gateway" {
-  default = ""
+  type = "string"
 }
 
 #
@@ -140,20 +140,17 @@ variable "bastion_nic2_lan_gateway" {
 #
 
 variable "data_volume_name" {
-  default = ""
+  type = "string"
 }
 
 #
-# Bastion admin SSH port
+# Bastion access configuration
 #
 variable "bastion_admin_ssh_port" {
-  default = "22"
+  type = "string"
 }
 
-#
-# Bastion inception instance Squid Proxy configuration
-#
-variable "squidproxy_server_port" {
+variable "bastion_admin_user" {
   type = "string"
 }
 
@@ -181,6 +178,13 @@ variable "vpn_tunnel_all_traffic" {
 }
 
 variable "vpn_users" {
+  type = "string"
+}
+
+#
+# Bastion inception instance Squid Proxy configuration
+#
+variable "squidproxy_server_port" {
   type = "string"
 }
 

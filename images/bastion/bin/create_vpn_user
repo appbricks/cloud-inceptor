@@ -2,17 +2,23 @@
 
 set -e
 
-if [[ -z "$1" ]] || [[ -z "$2" ]]; then
-    echo -e "\nUsage: create_vpn_user user password\n"
-    exit 1
-fi
-
 if [[ `whoami` != "root" ]]; then 
     echo -e "\nThis script needs to be run as root.\n"
     exit 1
 fi
 
+if [[ -z "$1" ]]; then
+    echo -e "\nUsage: create_vpn_user user [ password ]\n"
+    exit 1
+fi
 user=$1
+
+if [[ -z "$2" && ! -e /home/$user ]]; then
+    echo -e "\nHome directory for $user does not exist. Please"
+    echo -e "create the user or pass the password as the second"
+    echo -e "argument to this script to create a new user.\n"
+    exit 1
+fi
 
 rm -fr /etc/openvpn/users/${user}
 dest_dir=/etc/openvpn/users/${user}/client
@@ -62,13 +68,15 @@ rm -fr "$vpn_server_description"
 
 popd
 
-set +e
-userdel $user > /dev/null 2>&1
-set -e
-rm -fr /home/$user
+if [[ -n $2 ]]; then
+    set +e
+    userdel $user > /dev/null 2>&1
+    set -e
+    rm -fr /home/$user
 
-password=$(mkpasswd "$2")
-useradd $user -p $password -m -d /home/$user -s /bin/bash
+    password=$(mkpasswd "$2")
+    useradd $user -p $password -m -d /home/$user -s /bin/bash
+fi
 
 case "$config_openvpn_auth_strategy" in
     google_mfa)

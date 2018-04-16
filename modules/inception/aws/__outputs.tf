@@ -17,6 +17,6 @@ output "bastion_public_ip" {
   value = "${aws_eip.bastion.public_ip}"
 }
 
-output "vpn_admin_password" {
-  value = "${module.config.vpn_admin_password}"
+output "bastion_admin_password" {
+  value = "${module.config.bastion_admin_password}"
 }

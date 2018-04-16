@@ -28,6 +28,6 @@ output "bastion_public_ip" {
   value = "${google_compute_address.bastion-public.address}"
 }
 
-output "vpn_admin_password" {
-  value = "${module.config.vpn_admin_password}"
+output "bastion_admin_password" {
+  value = "${module.config.bastion_admin_password}"
 }

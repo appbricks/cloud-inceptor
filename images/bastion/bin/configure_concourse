@@ -9,13 +9,13 @@ fi
 
 CONCOURSE_HOME=/data/concourse
 
-rm -fr $CONCOURSE_HOME
 userdel concourse >/dev/null 2>&1
 useradd concourse -p $(openssl rand -base64 32) -d /opt/concourse -G docker
 
 mkdir -p \
     $CONCOURSE_HOME/docker \
     $CONCOURSE_HOME/objectstore \
+    $CONCOURSE_HOME/database \
     $CONCOURSE_HOME/keys/web \
     $CONCOURSE_HOME/keys/worker
 
@@ -34,6 +34,7 @@ services:
 
   concourse-db:
     image: postgres
+    volumes: ["$CONCOURSE_HOME/database:/database"]
     restart: unless-stopped
     environment:
       POSTGRES_DB: concourse

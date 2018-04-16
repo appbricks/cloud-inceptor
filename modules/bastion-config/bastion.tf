@@ -9,10 +9,10 @@ resource "tls_private_key" "bastion-ssh-key" {
 
 resource "local_file" "bastion-ssh-key" {
   content  = "${tls_private_key.bastion-ssh-key.private_key_pem}"
-  filename = "${var.ssh_key_file_path}/vpn-admin-ssh-key.pem"
+  filename = "${var.ssh_key_file_path}/bastion-admin-ssh-key.pem"
 
   provisioner "local-exec" {
-    command = "chmod 0600 ${var.ssh_key_file_path}/vpn-admin-ssh-key.pem"
+    command = "chmod 0600 ${var.ssh_key_file_path}/bastion-admin-ssh-key.pem"
   }
 }
 
@@ -105,6 +105,9 @@ server:
   use_fqdn: ${var.bastion_use_fqdn}
   private_ip: ${var.bastion_nic1_private_ip}
   lan_interfaces: '${var.bastion_nic1_private_ip}|${var.bastion_nic1_netmask}|${var.bastion_nic1_lan_cidr}|${var.bastion_nic1_lan_netmask}|${var.bastion_nic1_lan_gateway}|,${var.bastion_nic2_private_ip}|${var.bastion_nic2_netmask}|${var.bastion_nic2_lan_cidr}|${var.bastion_nic2_lan_netmask}|${var.bastion_nic2_lan_gateway}|'
+  admin_ssh_port: ${var.bastion_admin_ssh_port}
+  admin_user: ${var.bastion_admin_user}
+  admin_passwd: ${random_string.bastion-admin-password.result}
   docker_mount_path: /data
 
 openvpn:
@@ -112,8 +115,6 @@ openvpn:
   protocol: ${var.vpn_protocol}
   subnet: ${var.vpn_network}
   netmask: ${cidrnetmask(var.vpn_network)}
-  admin_passwd: ${random_string.vpn-admin-password.result}
-  admin_ssh_port: ${var.bastion_admin_ssh_port}
   dns_servers: ${var.vpn_network_dns}
   server_domain: ${var.vpc_dns_zone}
   server_description: ${var.vpc_name}-vpn
@@ -159,7 +160,7 @@ mgmt_subnetwork: ${var.mgmt_subnetwork}
 PIPELINE_VARS
 }
 
-resource "random_string" "vpn-admin-password" {
+resource "random_string" "bastion-admin-password" {
   length  = 32
   special = false
 }

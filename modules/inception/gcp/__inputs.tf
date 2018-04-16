@@ -31,7 +31,6 @@ variable "country" {
 #
 # Root CA key and cert to use for signing self signed certificates
 #
-
 variable "root_ca_key" {
   default = ""
 }
@@ -118,55 +117,63 @@ variable "bastion_use_fqdn" {
 }
 
 #
-# Bastion admin SSH port
+# Bastion access configuration
 #
 variable "bastion_admin_ssh_port" {
   default = "22"
 }
 
-#
-# Squid Proxy port
-#
-variable "squidproxy_server_port" {
-  default = "8888"
+variable "bastion_admin_user" {
+  default = "bastion_admin"
+}
+
+variable "bastion_allow_public_ssh" {
+  default = "false"
 }
 
 #
 # Open VPN configuration
 #
 variable "vpn_server_port" {
-  type = "string"
+  default = ""
 }
 
 variable "vpn_protocol" {
-  type = "string"
+  default = ""
 }
 
 variable "vpn_network" {
-  type = "string"
+  default = ""
 }
 
 variable "vpn_network_dns" {
-  type = "string"
+  default = ""
 }
 
 variable "vpn_tunnel_all_traffic" {
-  type = "string"
+  default = ""
 }
 
 variable "vpn_users" {
-  type = "string"
+  default = ""
+}
+
+#
+# Squid Proxy port
+#
+variable "squidproxy_server_port" {
+  default = ""
 }
 
 #
 # Concourse configuration
 #
 variable "concourse_server_port" {
-  default = "8080"
+  default = ""
 }
 
 variable "concourse_admin_password" {
-  default = "Passw0rd"
+  default = ""
 }
 
 variable "bootstrap_pipeline_file" {
@@ -174,5 +181,5 @@ variable "bootstrap_pipeline_file" {
 }
 
 variable "bootstrap_pipeline_vars" {
-  type = "string"
+  default = ""
 }
