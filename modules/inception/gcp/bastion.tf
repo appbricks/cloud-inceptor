@@ -1,14 +1,8 @@
 #
 # Inception Bastion instance
 #
-# This instance will be configured if a DMZ network is
-# provided and it will be multi-homed on both the DMZ 
-# and Admin Networks.
-#
 
-resource "google_compute_instance" "bastion-mh" {
-  count = "${var.dmz_subnetwork != "" ? 1 : 0}"
-
+resource "google_compute_instance" "bastion" {
   name         = "${var.vpc_name}-bastion"
   machine_type = "${var.bastion_instance_type}"
   zone         = "${data.google_compute_zones.available.names[0]}"
@@ -56,58 +50,6 @@ resource "google_compute_instance" "bastion-mh" {
 }
 
 #
-# Inception Bastion instance
-#
-# This instance will be configured when a DMZ network
-# is not provided and it will be single-homed on the
-# Admin Network.
-#
-
-resource "google_compute_instance" "bastion-sh" {
-  count = "${var.dmz_subnetwork == "" ? 1 : 0}"
-
-  name         = "${var.vpc_name}-bastion"
-  machine_type = "${var.bastion_instance_type}"
-  zone         = "${data.google_compute_zones.available.names[0]}"
-
-  allow_stopping_for_update = true
-
-  tags = [
-    "bastion-ssh",
-    "bastion-vpn",
-    "bastion-proxy",
-    "bastion-deny-vpc",
-    "bastion-deny-dmz",
-  ]
-
-  boot_disk {
-    initialize_params {
-      image = "${data.google_compute_image.bastion.self_link}"
-      size  = "${var.bastion_root_disk_size}"
-    }
-  }
-
-  attached_disk {
-    source = "${google_compute_disk.bastion-data-volume.self_link}"
-  }
-
-  network_interface {
-    subnetwork = "${var.admin_subnetwork}"
-    address    = "${google_compute_address.bastion-dmz.address}"
-
-    access_config = [{
-      nat_ip = "${google_compute_address.bastion-public.address}"
-    }]
-  }
-
-  metadata {
-    ssh-keys           = "${var.bastion_admin_user}:${module.config.bastion_openssh_public_key}"
-    user-data          = "${module.config.bastion_cloud_init_config}"
-    user-data-encoding = "base64"
-  }
-}
-
-#
 # Attached disk for saving persistant data. This disk needs to be
 # large enough for any installation packages concourse downloads.
 #
@@ -132,8 +74,6 @@ data "google_compute_image" "bastion" {
 #
 
 resource "google_compute_address" "bastion-dmz" {
-  count = "${var.dmz_subnetwork == "" ? 0 : 1}"
-
   name         = "${var.vpc_name}-bastion-dmz"
   address_type = "INTERNAL"
 
@@ -168,7 +108,7 @@ resource "google_compute_firewall" "bastion-ssh" {
   count = "${var.bastion_allow_public_ssh == "true" ? 1 : 0 }"
 
   name    = "${var.vpc_name}-bastion-ssh"
-  network = "${var.dmz_subnetwork == "" ? var.admin_network : var.dmz_network}"
+  network = "${var.dmz_network}"
 
   allow {
     protocol = "tcp"
@@ -182,10 +122,10 @@ resource "google_compute_firewall" "bastion-ssh" {
 }
 
 resource "google_compute_firewall" "bastion-vpn" {
-  count = "${var.vpn_server_port == "" ? 0 : 1 }"
+  count = "${length(var.vpn_server_port) == 0 ? 0 : 1 }"
 
   name    = "${var.vpc_name}-bastion-vpn"
-  network = "${var.dmz_subnetwork == "" ? var.admin_network : var.dmz_network}"
+  network = "${var.dmz_network}"
 
   allow {
     protocol = "tcp"
@@ -204,7 +144,7 @@ resource "google_compute_firewall" "bastion-vpn" {
 }
 
 resource "google_compute_firewall" "bastion-proxy" {
-  count = "${var.squidproxy_server_port == "" ? 0 : 1 }"
+  count = "${length(var.squidproxy_server_port) == 0 ? 0 : 1 }"
 
   name    = "${var.vpc_name}-bastion-proxy"
   network = "${var.admin_network}"
@@ -235,8 +175,6 @@ resource "google_compute_firewall" "bastion-deny-vpc" {
 }
 
 resource "google_compute_firewall" "bastion-deny-dmz" {
-  count = "${var.dmz_subnetwork == "" ? 0 : 1}"
-
   name    = "${var.vpc_name}-bastion-deny-dmz"
   network = "${var.dmz_network}"
 
