@@ -118,11 +118,11 @@ variable "bastion_admin_ssh_port" {
 }
 
 variable "bastion_admin_user" {
-  default = "bastion_admin"
+  default = "bastion-admin"
 }
 
 variable "bastion_allow_public_ssh" {
-  default = "false"
+  default = "true"
 }
 
 #

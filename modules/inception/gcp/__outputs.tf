@@ -21,7 +21,7 @@ output "bastion_fqdn" {
 }
 
 output "bastion_private_ip" {
-  value = "${google_compute_address.bastion-mgmt.address}"
+  value = "${google_compute_address.bastion-admin.address}"
 }
 
 output "bastion_public_ip" {

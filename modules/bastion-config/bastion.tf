@@ -96,6 +96,10 @@ data "template_file" "mount-data-volume" {
   }
 }
 
+output "xxx" {
+  value = "${data.template_file.bastion-config.rendered}"
+}
+
 data "template_file" "bastion-config" {
   template = <<CONFIG
 ---
@@ -104,7 +108,19 @@ server:
   fqdn: ${var.bastion_fqdn}
   use_fqdn: ${var.bastion_use_fqdn}
   private_ip: ${var.bastion_nic1_private_ip}
-  lan_interfaces: '${var.bastion_nic1_private_ip}|${var.bastion_nic1_netmask}|${var.bastion_nic1_lan_cidr}|${var.bastion_nic1_lan_netmask}|${var.bastion_nic1_lan_gateway}|,${var.bastion_nic2_private_ip}|${var.bastion_nic2_netmask}|${var.bastion_nic2_lan_cidr}|${var.bastion_nic2_lan_netmask}|${var.bastion_nic2_lan_gateway}|'
+  lan_interfaces: '${join("|", list(
+      var.bastion_nic1_private_ip,
+      var.bastion_nic1_netmask,
+      var.bastion_nic1_lan_cidr,
+      var.bastion_nic1_lan_netmask,
+      var.bastion_nic1_lan_gateway
+    ))},${var.bastion_nic2_private_ip == "" ? "" : join("|", list(
+      var.bastion_nic2_private_ip,
+      var.bastion_nic2_netmask,
+      var.bastion_nic2_lan_cidr,
+      var.bastion_nic2_lan_netmask,
+      var.bastion_nic2_lan_gateway
+    ))}'
   admin_ssh_port: ${var.bastion_admin_ssh_port}
   admin_user: ${var.bastion_admin_user}
   admin_passwd: ${random_string.bastion-admin-password.result}
@@ -155,8 +171,8 @@ region: ${var.region}
 
 dmz_network: ${var.dmz_network}
 dmz_subnetwork: ${var.dmz_subnetwork}
-mgmt_network: ${var.mgmt_network}
-mgmt_subnetwork: ${var.mgmt_subnetwork}
+admin_network: ${var.admin_network}
+admin_subnetwork: ${var.admin_subnetwork}
 PIPELINE_VARS
 }
 

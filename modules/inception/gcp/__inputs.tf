@@ -66,19 +66,19 @@ variable "dmz_subnetwork_cidr" {
   type = "string"
 }
 
-variable "mgmt_network" {
+variable "admin_network" {
   type = "string"
 }
 
-variable "mgmt_subnetwork" {
+variable "admin_subnetwork" {
   type = "string"
 }
 
-variable "mgmt_subnetwork_cidr" {
+variable "admin_subnetwork_cidr" {
   type = "string"
 }
 
-variable "mgmt_subnetwork_gateway" {
+variable "admin_subnetwork_gateway" {
   type = "string"
 }
 

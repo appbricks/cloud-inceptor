@@ -28,7 +28,7 @@ resource "google_compute_instance" "jumpbox" {
   }
 
   network_interface {
-    subnetwork = "${module.network.mgmt_subnetwork}"
+    subnetwork = "${module.network.admin_subnetwork}"
   }
 
   metadata {

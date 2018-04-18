@@ -7,7 +7,7 @@ resource "aws_instance" "jumpbox" {
   ami           = "${data.aws_ami.ubuntu.id}"
   key_name      = "${aws_key_pair.default.key_name}"
 
-  subnet_id         = "${module.vpc.mgmt_subnets[0]}"
+  subnet_id         = "${module.vpc.admin_subnets[0]}"
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
 
   vpc_security_group_ids = ["${aws_security_group.internal.id}"]

@@ -29,8 +29,8 @@ module "config" {
 
   dmz_network     = "${var.dmz_network}"
   dmz_subnetwork  = "${var.dmz_subnetwork}"
-  mgmt_network    = "${var.mgmt_network}"
-  mgmt_subnetwork = "${var.mgmt_subnetwork}"
+  admin_network    = "${var.admin_network}"
+  admin_subnetwork = "${var.admin_subnetwork}"
 
   ssh_key_file_path = "${var.ssh_key_file_path}"
 
@@ -44,11 +44,11 @@ module "config" {
   bastion_nic1_lan_gateway = ""
   bastion_nic1_lan_netmask = ""
 
-  bastion_nic2_private_ip  = "${google_compute_address.bastion-mgmt.address}"
-  bastion_nic2_netmask     = "${cidrnetmask(var.mgmt_subnetwork_cidr)}"
+  bastion_nic2_private_ip  = "${google_compute_address.bastion-admin.address}"
+  bastion_nic2_netmask     = "${cidrnetmask(var.admin_subnetwork_cidr)}"
   bastion_nic2_lan_cidr    = "${var.vpc_cidr}"
   bastion_nic2_lan_netmask = "${cidrnetmask(var.vpc_cidr)}"
-  bastion_nic2_lan_gateway = "${var.mgmt_subnetwork_gateway}"
+  bastion_nic2_lan_gateway = "${var.admin_subnetwork_gateway}"
 
   data_volume_name = "/dev/sdb"
 
@@ -59,7 +59,7 @@ module "config" {
   vpn_server_port        = "${var.vpn_server_port}"
   vpn_protocol           = "${var.vpn_protocol}"
   vpn_network            = "${var.vpn_network}"
-  vpn_network_dns        = "${length(var.vpn_network_dns) == 0 ? var.mgmt_subnetwork_gateway: var.vpn_network_dns}"
+  vpn_network_dns        = "${length(var.vpn_network_dns) == 0 ? var.admin_subnetwork_gateway: var.vpn_network_dns}"
   vpn_tunnel_all_traffic = "${var.vpn_tunnel_all_traffic}"
   vpn_users              = "${var.vpn_users}"
 

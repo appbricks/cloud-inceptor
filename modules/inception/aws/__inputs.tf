@@ -48,11 +48,11 @@ variable "dmz_subnet_cidrs" {
   type = "list"
 }
 
-variable "mgmt_subnet_ids" {
+variable "admin_subnet_ids" {
   type = "list"
 }
 
-variable "mgmt_subnet_cidrs" {
+variable "admin_subnet_cidrs" {
   type = "list"
 }
 

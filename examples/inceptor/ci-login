@@ -16,21 +16,14 @@ if [[ $1 == login ]]; then
     host=$(echo -e "$tf_output" | awk '/bastion_admin_fqdn/{ print $3 }')
     password=$(echo -e "$tf_output" | awk '/concourse_admin_password/{ print $3 }')
 
-    echo -e "\nChecking connectivity to $host...\n  * This will hang if you are not logged on to the VPN."
-    nc -v -z -w 1 $host 22 >/dev/null 2>&1
-    if [[ $? -ne 0 ]]; then
-        echo "ERROR! Unable to reach SSH port of $host."
-        exit 1
-    fi
-
     echo -e "\nCreating SSH tunnel in order to access Concourse."
     ps -ef | awk '/8080\:127\.0\.0\.1\:8080/{ print $2 }' | sudo xargs kill -15
     ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no \
-        -i $2/bastion-admin-ssh-key.pem $TF_VAR_bastion_admin_user@$host \
-        -L 8080:127.0.0.1:8080 -N >/dev/null 2>&1 &
+        -i $2/bastion-admin-ssh-key.pem bastion-admin@$host \
+        -L 8080:127.0.0.1:8080 -N &
 
     sleep 2
-    fly -t local login -k -c http://localhost:8080 -u admin -p $password  >/dev/null 2>&1
+    fly -t local login -k -c http://localhost:8080 -u admin -p $password
     if [[ $? -ne 0 ]]; then
         echo "ERROR! Unable to login to Concourse using the fly CLI."
         exit 1

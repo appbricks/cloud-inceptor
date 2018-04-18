@@ -24,12 +24,12 @@ output "dmz_subnetwork" {
   value = "${google_compute_subnetwork.dmz.self_link}"
 }
 
-output "mgmt_network" {
-  value = "${google_compute_network.mgmt.self_link}"
+output "admin_network" {
+  value = "${google_compute_network.admin.self_link}"
 }
 
-output "mgmt_subnetwork" {
-  value = "${google_compute_subnetwork.mgmt.self_link}"
+output "admin_subnetwork" {
+  value = "${google_compute_subnetwork.admin.self_link}"
 }
 
 #

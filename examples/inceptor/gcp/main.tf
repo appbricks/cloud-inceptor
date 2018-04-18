@@ -35,6 +35,15 @@ module "bootstrap" {
   # Local file path to write SSH private key for bastion instance
   ssh_key_file_path = "${path.module}"
 
+  # VPN Port
+  vpn_server_port = "2295"
+
+  # Concourse Port
+  concourse_server_port = "8080"
+
+  # Whether to allow SSH access to bastion server
+  bastion_allow_public_ssh = "false"
+
   #
   # Bootstrap pipeline
   #

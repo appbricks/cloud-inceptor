@@ -30,10 +30,10 @@ module "config" {
   bastion_nic1_lan_cidr   = "${var.dmz_subnet_cidrs[0]}"
 
   bastion_nic2_private_ip  = "${aws_network_interface.bastion-private.private_ips[0]}"
-  bastion_nic2_netmask     = "${cidrnetmask(var.mgmt_subnet_cidrs[0])}"
+  bastion_nic2_netmask     = "${cidrnetmask(var.admin_subnet_cidrs[0])}"
   bastion_nic2_lan_cidr    = "${var.vpc_cidr}"
   bastion_nic2_lan_netmask = "${cidrnetmask(var.vpc_cidr)}"
-  bastion_nic2_lan_gateway = "${cidrhost(var.mgmt_subnet_cidrs[0], 1)}"
+  bastion_nic2_lan_gateway = "${cidrhost(var.admin_subnet_cidrs[0], 1)}"
 
   squidproxy_server_port = "${var.squidproxy_server_port}"
 
