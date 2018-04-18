@@ -1,5 +1,8 @@
 #!/bin/bash
 
+SCRIPT_HOME=$(cd $(dirname "$(ls -l $0 | awk '{ print $NF }')") && pwd)
+source $SCRIPT_HOME/common
+
 echo -e "\n**** Restarting Concourse workers ****"
 
 CONCOURSE_HOME=/data/concourse
@@ -7,20 +10,7 @@ CONCOURSE_HOME=/data/concourse
 CONCOURSE_URL=http://$(docker ps -a | grep docker_concourse-web_1 | sed 's|.* \([0-9]*\.[0-9]*\.[0-9]*\.[0-9]:[0-9]*\)->.*|\1|')
 CONCOURSE_PASSWORD=$(cat /root/bootstrap-vars.yml | awk '/concourse_password:/{ print $2 }')
 
-i=0
-curl -f -L "$CONCOURSE_URL" >/dev/null 2>&1
-while [[ $? -ne 0 && $i -lt 12 ]]; do
-    
-    i=$(($i+1))
-    echo "Waiting for Concourse to startup..."
-    sleep 5
-
-    curl -f -L "$CONCOURSE_URL" >/dev/null 2>&1
-done
-if [[ $? -ne 0 ]]; then 
-    echo "ERROR! Concourse is still not running after 60 seconds."
-    exit 1
-fi
+wait_for_url "Concourse" "$CONCOURSE_URL"
 
 sudo -S -u concourse /bin/sh -l <<EOF
 cd $CONCOURSE_HOME/docker
@@ -29,6 +19,7 @@ docker-compose down
 docker-compose up -d --force-recreate
 EOF
 
+wait_for_url "Concourse" "$CONCOURSE_URL"
 sudo su - root -c "fly -t default login -u admin -p $CONCOURSE_PASSWORD"
 
 i=0
