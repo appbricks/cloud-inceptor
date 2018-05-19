@@ -136,7 +136,7 @@ echo -e "\nautos3_url: http://minio:9000" >> /root/bootstrap-vars.yml
 echo -e "autos3_access_key: $autos3_access_key" >> /root/bootstrap-vars.yml
 echo -e "autos3_secret_key: $autos3_secret_key" >> /root/bootstrap-vars.yml
 
-sudo -i -- fly --target default login --insecure \
+sudo -i -- fly --target local login --insecure \
     --concourse-url $CONCOURSE_URL \
     --username=admin \
     --password=$config_concourse_password \
@@ -144,9 +144,9 @@ sudo -i -- fly --target default login --insecure \
 
 s=$(head -1 /root/bootstrap.yml)
 if [[ $s == "---" ]]; then
-    sudo -i -- fly --target default set-pipeline -n -p bootstrap \
+    sudo -i -- fly --target local set-pipeline -n -p bootstrap \
         -c /root/bootstrap.yml -l /root/bootstrap-vars.yml
-    sudo -i -- fly --target default unpause-pipeline -p bootstrap
+    sudo -i -- fly --target local unpause-pipeline -p bootstrap
 fi
 
 touch /root/.concourse_installed
