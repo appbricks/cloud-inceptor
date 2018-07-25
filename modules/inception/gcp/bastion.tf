@@ -47,6 +47,10 @@ resource "google_compute_instance" "bastion" {
     user-data          = "${module.config.bastion_cloud_init_config}"
     user-data-encoding = "base64"
   }
+
+  lifecycle {
+    ignore_changes = ["metadata"]
+  }
 }
 
 #
