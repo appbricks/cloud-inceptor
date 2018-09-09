@@ -3,7 +3,7 @@
 #
 
 module "bootstrap" {
-  source = "../../../modules/bootstrap/gcp"
+  source = "../../../modules/bootstrap-automation/gcp"
 
   #
   # Company information used in certificate creation
@@ -42,7 +42,7 @@ module "bootstrap" {
   concourse_server_port = "8080"
 
   # Whether to allow SSH access to bastion server
-  bastion_allow_public_ssh = "false"
+  bastion_allow_public_ssh = "true"
 
   #
   # Bootstrap pipeline
