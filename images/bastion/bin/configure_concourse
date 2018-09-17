@@ -12,6 +12,8 @@ CONCOURSE_HOME=/data/concourse
 userdel concourse >/dev/null 2>&1
 useradd concourse -p $(openssl rand -base64 32) -d /opt/concourse -G docker
 
+prune_worker=$(sudo -i -- /bin/sh -c 'if [ -e /data/concourse/database/base ]; then echo yes; fi')
+
 rm -fr $CONCOURSE_HOME/keys
 
 mkdir -p \
@@ -150,6 +152,23 @@ if [[ $s == "---" ]]; then
     sudo -i -- fly --target local set-pipeline -n -p bootstrap \
         -c /root/bootstrap.yml -l /root/bootstrap-vars.yml
     sudo -i -- fly --target local unpause-pipeline -p bootstrap
+fi
+
+if [[ $prune_worker == "yes" ]]; then
+
+    i=0
+    while [[ -z $stalled && $i -lt 12 ]]; do
+
+        echo "watching for stalled workers to prune..."
+        i=$(($i+1))
+        sleep 5
+        
+        stalled=$(sudo -i -- fly --target local workers | awk '/stalled/{ print $1 }')
+        for s in $stalled; do
+            echo "pruning stalled worker: $s"
+            sudo -i -- fly --target local prune-worker -w $s
+        done
+    done
 fi
 
 touch /root/.concourse_installed

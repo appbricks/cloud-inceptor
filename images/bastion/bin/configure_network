@@ -151,6 +151,10 @@ if [[ -n "$config_server_admin_passwd" ]]; then
     service sshd restart
 fi
 
+# Fix to remove "mesg: ttyname failed: Inappropriate ioctl for device" 
+# from output when executing commands with 'sudo -i'
+sed -i 's/^mesg n || true$/tty -s \&\& mesg n/' /root/.profile
+
 set +ex
 
 touch /root/.network_installed
