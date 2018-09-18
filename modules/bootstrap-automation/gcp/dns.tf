@@ -30,22 +30,36 @@ resource "google_dns_record_set" "vpc" {
 }
 
 #
-# Bastion instance DNS
+# VPC Bastion instance DNS
 #
-resource "google_dns_record_set" "bastion-admin" {
-  name         = "admin-${local.bastion_fqdn}."
+resource "google_dns_record_set" "vpc-admin" {
+  name = "${length(var.bastion_host_name) == 0 
+    ? var.vpc_name : var.bastion_host_name}.${var.vpc_dns_zone}."
+
   managed_zone = "${google_dns_managed_zone.vpc.name}"
 
-  type    = "A"
-  ttl     = "300"
-  rrdatas = ["${var.bastion_allow_public_ssh == "false" ? google_compute_address.bastion-admin.address : google_compute_address.bastion-public.address}"]
+  type = "A"
+  ttl  = "300"
+
+  rrdatas = ["${var.bastion_allow_public_ssh == "false" 
+    ? google_compute_address.bastion-admin.address 
+    : google_compute_address.bastion-public.address}"]
 }
 
-resource "google_dns_record_set" "bastion-public" {
-  name         = "${local.bastion_fqdn}."
+resource "google_dns_record_set" "vpc-public" {
+  name         = "${var.vpc_dns_zone}."
   managed_zone = "${google_dns_managed_zone.vpc.name}"
 
   type    = "A"
   ttl     = "300"
   rrdatas = ["${google_compute_address.bastion-public.address}"]
+}
+
+resource "google_dns_record_set" "vpc-mx" {
+  name         = "${var.vpc_dns_zone}."
+  managed_zone = "${google_dns_managed_zone.vpc.name}"
+
+  type    = "MX"
+  ttl     = "300"
+  rrdatas = ["1 ${google_dns_record_set.vpc-public.name}"]
 }

@@ -32,6 +32,11 @@ apt-get install -y apache2 apache2-utils libapache2-mod-authnz-external pwauth
 systemctl stop apache2
 systemctl disable apache2
 
+# SMTP
+apt-get install postfix
+systemctl stop postfix
+systemctl disable postfix
+
 # Squid Proxy
 apt-get install -y squid3
 systemctl stop squid

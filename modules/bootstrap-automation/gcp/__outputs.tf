@@ -40,11 +40,11 @@ output "vpc_dns_zone_name" {
 # Bastion resource attributes
 #
 output "bastion_fqdn" {
-  value = "${google_dns_record_set.bastion-public.name}"
+  value = "${google_dns_record_set.vpc-public.name}"
 }
 
 output "bastion_admin_fqdn" {
-  value = "${google_dns_record_set.bastion-admin.name}"
+  value = "${google_dns_record_set.vpc-admin.name}"
 }
 
 output "bastion_admin_password" {
