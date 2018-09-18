@@ -26,6 +26,7 @@ module "config" {
 
   vpc_name     = "${var.vpc_name}"
   vpc_dns_zone = "${var.vpc_dns_zone}"
+  vpc_cidr     = "${var.vpc_cidr}"
 
   dmz_network      = "${google_compute_network.dmz.self_link}"
   dmz_subnetwork   = "${google_compute_subnetwork.dmz.self_link}"
@@ -62,6 +63,10 @@ module "config" {
   vpn_network_dns        = "${length(var.vpn_network_dns) == 0 ? google_compute_subnetwork.admin.gateway_address: var.vpn_network_dns}"
   vpn_tunnel_all_traffic = "${var.vpn_tunnel_all_traffic}"
   vpn_users              = "${var.vpn_users}"
+
+  smtp_relay_host    = "${var.smtp_relay_host}"
+  smtp_relay_port    = "${var.smtp_relay_port}"
+  smtp_relay_api_key = "${var.smtp_relay_api_key}"
 
   concourse_server_port    = "${var.concourse_server_port}"
   concourse_admin_password = "${var.concourse_admin_password}"

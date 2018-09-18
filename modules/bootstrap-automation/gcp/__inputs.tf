@@ -177,6 +177,21 @@ variable "bootstrap_pipeline_vars" {
 }
 
 #
+# Configure SMTP
+#
+variable "smtp_relay_host" {
+  default = ""
+}
+
+variable "smtp_relay_port" {
+  default = ""
+}
+
+variable "smtp_relay_api_key" {
+  default = ""
+}
+
+#
 # Squid Proxy port
 #
 variable "squidproxy_server_port" {

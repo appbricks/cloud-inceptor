@@ -51,6 +51,10 @@ variable "vpc_dns_zone" {
   type = "string"
 }
 
+variable "vpc_cidr" {
+  type = "string"
+}
+
 variable "dmz_network" {
   type = "string"
 }
@@ -182,13 +186,6 @@ variable "vpn_users" {
 }
 
 #
-# Bastion inception instance Squid Proxy configuration
-#
-variable "squidproxy_server_port" {
-  type = "string"
-}
-
-#
 # Bastion inception instance Concourse configuration
 #
 variable "concourse_server_port" {
@@ -204,5 +201,27 @@ variable "bootstrap_pipeline_file" {
 }
 
 variable "bootstrap_pipeline_vars" {
+  type = "string"
+}
+
+#
+# Bastion inception instance SMTP configuration
+#
+variable "smtp_relay_host" {
+  default = ""
+}
+
+variable "smtp_relay_port" {
+  default = ""
+}
+
+variable "smtp_relay_api_key" {
+  default = ""
+}
+
+#
+# Bastion inception instance Squid Proxy configuration
+#
+variable "squidproxy_server_port" {
   type = "string"
 }

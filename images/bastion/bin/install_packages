@@ -33,7 +33,7 @@ systemctl stop apache2
 systemctl disable apache2
 
 # SMTP
-apt-get install postfix
+apt-get install -y postfix libsasl2-modules postfix-policyd-spf-python mailutils
 systemctl stop postfix
 systemctl disable postfix
 

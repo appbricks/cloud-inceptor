@@ -75,6 +75,7 @@ runcmd:
 - /root/mount-data-volume.sh
 - mv /root/bastion-config.yml /root/config.yml
 - /root/.bin/configure_network 2>&1 | tee -a /var/log/configure_network.log
+- /root/.bin/configure_smtp 2>&1 | tee -a /var/log/configure_smtp.log
 - /root/.bin/configure_openvpn 2>&1 | tee -a /var/log/configure_openvpn.log
 - /root/.bin/configure_squidproxy 2>&1 | tee -a /var/log/configure_squidproxy.log
 - /root/.bin/configure_concourse 2>&1 | tee -a /var/log/configure_concourse.log
@@ -126,6 +127,12 @@ server:
   admin_passwd: ${random_string.bastion-admin-password.result}
   docker_mount_path: /data
 
+smtp:
+  relay_host: ${var.smtp_relay_host}
+  relay_port: ${var.smtp_relay_port}
+  relay_api_key: ${var.smtp_relay_api_key}
+  networks: ${var.vpc_cidr}
+
 openvpn:
   port: ${var.vpn_server_port}
   protocol: ${var.vpn_protocol}
@@ -138,7 +145,7 @@ openvpn:
   vpn_cert:
     name: ${var.vpc_name}_VPN
     org: ${var.organization_name}
-    email: admin@${var.vpc_dns_zone}
+    email: ${var.bastion_admin_user}@${var.vpc_dns_zone}
     city: ${var.locality}
     province: ${var.province}
     country: ${var.country}

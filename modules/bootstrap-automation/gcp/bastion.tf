@@ -12,6 +12,7 @@ resource "google_compute_instance" "bastion" {
   tags = [
     "bastion-ssh",
     "bastion-vpn",
+    "bastion-smtp",
     "bastion-proxy",
     "bastion-deny-vpc",
     "bastion-deny-dmz",
@@ -34,6 +35,8 @@ resource "google_compute_instance" "bastion" {
 
     access_config = [{
       nat_ip = "${google_compute_address.bastion-public.address}"
+
+      # public_ptr_domain_name = "${google_dns_record_set.vpc-public.name}"
     }]
   }
 
@@ -145,6 +148,23 @@ resource "google_compute_firewall" "bastion-vpn" {
   direction     = "INGRESS"
   source_ranges = ["0.0.0.0/0"]
   target_tags   = ["bastion-vpn"]
+}
+
+resource "google_compute_firewall" "bastion-smtp" {
+  count = "${length(var.smtp_relay_host) == 0 ? 0 : 1 }"
+
+  name    = "${var.vpc_name}-bastion-smtp"
+  network = "${google_compute_network.dmz.self_link}"
+
+  allow {
+    protocol = "tcp"
+    ports    = ["25"]
+  }
+
+  priority      = "500"
+  direction     = "INGRESS"
+  source_ranges = ["0.0.0.0/0"]
+  target_tags   = ["bastion-smtp"]
 }
 
 resource "google_compute_firewall" "bastion-proxy" {

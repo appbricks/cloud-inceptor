@@ -4,6 +4,18 @@ SCRIPT_HOME=$(cd $(dirname "$(ls -l $0 | awk '{ print $NF }')") && pwd)
 source $SCRIPT_HOME/common
 
 #
+# Setup hostname to map to domain
+#
+if [[ -n $config_server_fqdn ]]; then
+    echo "$config_server_fqdn" > /etc/hostname
+    hostname $config_server_fqdn
+
+    sed -i \
+        "s|^$config_server_private_ip.*$|$config_server_private_ip  ${config_server_fqdn}  ${config_server_fqdn%%.*}|" \
+        /etc/hosts
+fi
+
+#
 # Configure NICS
 #
 
