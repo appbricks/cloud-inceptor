@@ -12,7 +12,8 @@ resource "google_compute_instance" "bastion" {
   tags = [
     "bastion-ssh",
     "bastion-vpn",
-    "bastion-smtp",
+    "bastion-smtp-ext",
+    "bastion-smtp-int",
     "bastion-proxy",
     "bastion-deny-vpc",
     "bastion-deny-dmz",
@@ -150,10 +151,10 @@ resource "google_compute_firewall" "bastion-vpn" {
   target_tags   = ["bastion-vpn"]
 }
 
-resource "google_compute_firewall" "bastion-smtp" {
+resource "google_compute_firewall" "bastion-smtp-ext" {
   count = "${length(var.smtp_relay_host) == 0 ? 0 : 1 }"
 
-  name    = "${var.vpc_name}-bastion-smtp"
+  name    = "${var.vpc_name}-bastion-smtp-ext"
   network = "${google_compute_network.dmz.self_link}"
 
   allow {
@@ -164,7 +165,24 @@ resource "google_compute_firewall" "bastion-smtp" {
   priority      = "500"
   direction     = "INGRESS"
   source_ranges = ["0.0.0.0/0"]
-  target_tags   = ["bastion-smtp"]
+  target_tags   = ["bastion-smtp-ext"]
+}
+
+resource "google_compute_firewall" "bastion-smtp-int" {
+  count = "${length(var.smtp_relay_host) == 0 ? 0 : 1 }"
+
+  name    = "${var.vpc_name}-bastion-smtp-int"
+  network = "${google_compute_network.admin.self_link}"
+
+  allow {
+    protocol = "tcp"
+    ports    = ["2525"]
+  }
+
+  priority      = "500"
+  direction     = "INGRESS"
+  source_ranges = ["${var.vpn_network}", "${var.vpc_cidr}"]
+  target_tags   = ["bastion-smtp-int"]
 }
 
 resource "google_compute_firewall" "bastion-proxy" {

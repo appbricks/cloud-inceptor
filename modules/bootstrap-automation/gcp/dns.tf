@@ -56,6 +56,18 @@ resource "google_dns_record_set" "vpc-admin" {
     : google_compute_address.bastion-public.address}"]
 }
 
+resource "google_dns_record_set" "vpc-mail" {
+  count = "${length(var.smtp_relay_host) == 0 ? 0 : 1 }"
+
+  name         = "mail.${var.vpc_dns_zone}."
+  managed_zone = "${google_dns_managed_zone.vpc.name}"
+
+  type = "A"
+  ttl  = "300"
+
+  rrdatas = ["${google_compute_address.bastion-admin.address}"]
+}
+
 resource "google_dns_record_set" "vpc-mx" {
   count = "${length(var.smtp_relay_host) == 0 ? 0 : 1 }"
 
