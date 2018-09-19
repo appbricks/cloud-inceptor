@@ -131,7 +131,7 @@ smtp:
   relay_host: ${var.smtp_relay_host}
   relay_port: ${var.smtp_relay_port}
   relay_api_key: ${var.smtp_relay_api_key}
-  networks: ${var.vpc_cidr}
+  networks: ${var.vpc_cidr} ${var.bastion_public_ip}
 
 openvpn:
   port: ${var.vpn_server_port}
