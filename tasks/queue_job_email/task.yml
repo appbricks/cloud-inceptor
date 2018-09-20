@@ -36,11 +36,11 @@ run:
     source job_info/job_info
     echo "SUBJECT='${SUBJECT_PRE} - ${BUILD_PIPELINE_NAME}/${BUILD_JOB_NAME}/${BUILD_NAME}'" >> job_info/job_info
 
-    mc cp job_info/job_info auto/$BUCKET/$EMAIL_QUEUE/job_email-$(cat /proc/sys/kernel/random/uuid)
+    mc cp job_info/job_info auto/$BUCKET/$EMAIL_QUEUE_PATH/job_email-$(cat /proc/sys/kernel/random/uuid)
 
 params:
   BUCKET:
-  EMAIL_QUEUE:
+  EMAIL_QUEUE_PATH:
   AUTOS3_URL:
   AUTOS3_ACCESS_KEY:
   AUTOS3_SECRET_KEY:
