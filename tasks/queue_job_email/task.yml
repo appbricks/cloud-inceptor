@@ -21,8 +21,20 @@ run:
   - |
     mc config host add auto $AUTOS3_URL $AUTOS3_ACCESS_KEY $AUTOS3_SECRET_KEY
 
+    # The job info file must have the following variables
+    # retrieve from the job execution for which an email
+    # needs to be sent.
+    #
+    # BUILD_ID=...
+    # BUILD_NAME=...
+    # BUILD_JOB_NAME=...
+    # BUILD_PIPELINE_NAME=...
+    # BUILD_TEAM_NAME=...
+    # ATC_EXTERNAL_URL=...
+    #
+
     source job_info/job_info
-    echo "SUBJECT='${SUBJECT_PRE} - ${BUILD_PIPELINE_NAME}/${BUILD_JOB_NAME}/${BUILD_NAME}'" > job_info/job_info
+    echo "SUBJECT='${SUBJECT_PRE} - ${BUILD_PIPELINE_NAME}/${BUILD_JOB_NAME}/${BUILD_NAME}'" >> job_info/job_info
 
     mc cp job_info/job_info auto/$BUCKET/$UPLOAD_PATH/job_email-$(cat /proc/sys/kernel/random/uuid)
 
