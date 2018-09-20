@@ -1,0 +1,47 @@
+---
+
+#
+# The task will toggle the state of the environment
+#
+
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: appbricks/automation-tools
+
+inputs:
+- name: upload_path
+
+run:
+  path: /bin/bash
+  args:
+  - -c
+  - |
+    mc config host add auto $AUTOS3_URL $AUTOS3_ACCESS_KEY $AUTOS3_SECRET_KEY
+    
+    cat <<EOF > job_email
+    SUBJECT='$SUBJECT'
+    BUILD_ID='$BUILD_ID'
+    BUILD_NAME='$BUILD_NAME'
+    BUILD_JOB_NAME='$BUILD_JOB_NAME'
+    BUILD_PIPELINE_NAME='$BUILD_PIPELINE_NAME'
+    BUILD_TEAM_NAME='$BUILD_TEAM_NAME'
+    ATC_EXTERNAL_URL='$ATC_EXTERNAL_URL'
+    EOF
+
+    mc cp job_email auto/$BUCKET/job_email-$(cat /proc/sys/kernel/random/uuid)
+
+params:
+  BUCKET:
+  AUTOS3_URL:
+  AUTOS3_ACCESS_KEY:
+  AUTOS3_SECRET_KEY:
+  SUBJECT:
+  BUILD_ID:
+  BUILD_NAME:
+  BUILD_JOB_NAME:
+  BUILD_PIPELINE_NAME:
+  BUILD_TEAM_NAME:
+  ATC_EXTERNAL_URL:
