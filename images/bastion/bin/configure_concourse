@@ -144,7 +144,7 @@ echo -e "\nautos3_url: 'http://minio:9000'" >> /root/bootstrap-vars.yml
 echo -e "autos3_access_key: '$autos3_access_key'" >> /root/bootstrap-vars.yml
 echo -e "autos3_secret_key: '$autos3_secret_key'" >> /root/bootstrap-vars.yml
 
-if [[ -e .smtp_installed ]]; then
+if [[ -e /root/.smtp_installed ]]; then
     echo -e "\ncaps_email: 'caps@$config_server_fqdn'" >> /root/bootstrap-vars.yml
     echo -e "smtp_host: '$config_server_fqdn'" >> /root/bootstrap-vars.yml
     echo -e "smtp_port: '25'" >> /root/bootstrap-vars.yml
