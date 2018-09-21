@@ -19,6 +19,8 @@ run:
   args:
   - -c
   - |
+    set -euo pipefail
+    
     mc config host add auto $AUTOS3_URL $AUTOS3_ACCESS_KEY $AUTOS3_SECRET_KEY
 
     # The job info file must have the following variables
