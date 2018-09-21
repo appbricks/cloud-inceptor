@@ -13,7 +13,7 @@ for email in $emails; do
   ./mc cp $email job_info
   source job_info
 
-  job_output=$(fly -t local watch -j $BUILD_PIPELINE_NAME/$BUILD_JOB_NAME -b $BUILD_NAME)
+  job_output=$(./fly -t default watch -j $BUILD_PIPELINE_NAME/$BUILD_JOB_NAME -b $BUILD_NAME)
   echo -e "$job_output" | ./ansi2html.sh --bg=dark --palette=tango > email_body
 
   echo "
