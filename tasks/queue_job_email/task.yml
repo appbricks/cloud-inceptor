@@ -36,7 +36,8 @@ run:
     #
 
     source job_info/job_info
-    echo "SUBJECT='${SUBJECT_PRE} - ${BUILD_PIPELINE_NAME}/${BUILD_JOB_NAME}/${BUILD_NAME}'" >> job_info/job_info
+    echo "export JOB_STATUS='${JOB_STATUS}'" >> job_info/job_info
+    echo "export SUBJECT='${SUBJECT_PRE} - ${BUILD_PIPELINE_NAME}/${BUILD_JOB_NAME}/${BUILD_NAME}'" >> job_info/job_info
 
     mc cp job_info/job_info auto/$BUCKET/$EMAIL_QUEUE_PATH/job_email-$(cat /proc/sys/kernel/random/uuid)
 
@@ -47,3 +48,4 @@ params:
   AUTOS3_ACCESS_KEY:
   AUTOS3_SECRET_KEY:
   SUBJECT_PRE:
+  JOB_STATUS:

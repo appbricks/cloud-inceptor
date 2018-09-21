@@ -1,0 +1,32 @@
+---
+
+#
+# The task will toggle the state of the environment
+#
+
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: pcfseceng/email-resource
+
+inputs:
+- name: automation
+
+run:
+  path: automation/lib/inceptor/tasks/prepare_job_email/task.sh
+
+params:
+  CONCOURSE_URL:
+  CONCOURSE_USER:
+  CONCOURSE_PASSWORD:
+  AUTOS3_URL:
+  AUTOS3_ACCESS_KEY:
+  AUTOS3_SECRET_KEY:
+  BUCKET:
+  EMAIL_QUEUE_PATH:
+  SMTP_HOST:
+  SMTP_PORT:
+  EMAIL_FROM:
+  EMAIL_TO:
