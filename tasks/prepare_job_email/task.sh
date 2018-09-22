@@ -34,7 +34,7 @@ for email in $emails; do
   \"params\": {
     \"headers\": \"emails/headers\"
     \"subject_text\": \"$SUBJECT\",
-    \"body\": \"emails/email_body_$1.html\"
+    \"body\": \"emails/email_body_$i.html\"
   },
   \"source\": {
     \"smtp\": {
