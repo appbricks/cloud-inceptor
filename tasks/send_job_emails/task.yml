@@ -19,3 +19,6 @@ run:
   path: automation/lib/inceptor/tasks/send_job_emails/task.sh
 
 params:
+  AUTOS3_URL:
+  AUTOS3_ACCESS_KEY:
+  AUTOS3_SECRET_KEY:
