@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Convert ANSI (terminal) colours and attributes to HTML
 
