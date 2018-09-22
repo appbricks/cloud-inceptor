@@ -31,7 +31,7 @@ for email in $emails; do
   cat <<EOF > emails/email_payload_$i.json
 {
   "params": {
-    "headers": "emails/headers"
+    "headers": "emails/headers",
     "subject_text": "$SUBJECT",
     "body": "emails/email_body_$i.html"
   },
