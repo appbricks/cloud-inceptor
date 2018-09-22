@@ -48,6 +48,6 @@ for email in $emails; do
 }
 EOF
 
-  # ./mc rm $email
+  ./mc rm $email
   i=$(($i+1))
 done
