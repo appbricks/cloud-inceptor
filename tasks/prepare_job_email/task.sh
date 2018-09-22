@@ -1,12 +1,6 @@
 #!/bin/bash
 set -euo pipefail
 
-wget -O mc "http://dl.minio.io/client/mc/release/linux-amd64/mc" && chmod +x mc
-./mc config host add auto $AUTOS3_URL $AUTOS3_ACCESS_KEY $AUTOS3_SECRET_KEY
-
-wget -O fly "$CONCOURSE_URL/api/v1/cli?arch=amd64&platform=linux" && chmod +x fly
-./fly -t default login -c $CONCOURSE_URL -u ''$CONCOURSE_USER'' -p ''$CONCOURSE_PASSWORD''
-
 set -x
 
 cat <<EOF > emails/headers
@@ -15,13 +9,15 @@ Content-Type: text/html; charset="UTF-8"
 EOF
 
 i=0
-emails=$(./mc find auto/$BUCKET/$EMAIL_QUEUE_PATH --name "job_email-*" --exec "echo {}" 2>/dev/null)
+emails=$(mc find auto/$BUCKET/$EMAIL_QUEUE_PATH --name "job_email-*" --exec "echo {}" 2>/dev/null)
 for email in $emails; do
-  ./mc cp $email emails/job_info_$i
+  mc cp $email emails/job_info_$i
   source emails/job_info_$i
 
+  echo "export EMAIL_OBJECT='$email'" >> emails/job_info_$i
+
   set +xe
-  job_output=$(./fly -t default watch -j $BUILD_PIPELINE_NAME/$BUILD_JOB_NAME -b $BUILD_NAME)
+  job_output=$(fly -t default watch -j $BUILD_PIPELINE_NAME/$BUILD_JOB_NAME -b $BUILD_NAME)
   set -xe
 
   echo -e "$job_output" \
@@ -48,6 +44,5 @@ for email in $emails; do
 }
 EOF
 
-  ./mc rm $email
   i=$(($i+1))
 done
