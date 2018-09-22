@@ -2,6 +2,8 @@
 set -euo pipefail
 
 mc config host add auto $AUTOS3_URL $AUTOS3_ACCESS_KEY $AUTOS3_SECRET_KEY
+fly -t default login -c $CONCOURSE_URL -u ''$CONCOURSE_USER'' -p ''$CONCOURSE_PASSWORD''
+
 set -x
 
 cat <<EOF > emails/headers
