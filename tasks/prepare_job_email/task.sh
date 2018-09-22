@@ -43,7 +43,7 @@ for email in $emails; do
         "anonymous": true
     },
     "from": "$EMAIL_FROM",
-    "to": $EMAIL_TO
+    "to": $(if [[ "$EMAIL_TO" == \[* ]]; then echo $EMAIL_TO; else echo "[ \"$EMAIL_TO\" ]"; fi)
   }
 }
 EOF
