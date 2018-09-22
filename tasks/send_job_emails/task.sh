@@ -1,13 +1,13 @@
-    #!/bin/sh
-    set -xeuo pipefail
-    
-    for f in $(find emails -name "email_payload_*" -print); do
+#!/bin/sh
+set -xeuo pipefail
 
-      iext=${f##*_}
-      i=${iext%.*}
+for f in $(find emails -name "email_payload_*" -print); do
 
-      source emails/job_info_$i
-      echo -e "Sending notifiction with subject: $SUBJECT"
+  iext=${f##*_}
+  i=${iext%.*}
 
-      cat $f | /opt/resource/out $(pwd)
-    done
+  source emails/job_info_$i
+  echo -e "Sending notifiction with subject: $SUBJECT"
+
+  cat $f | /opt/resource/out $(pwd)
+done
