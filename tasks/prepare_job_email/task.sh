@@ -1,5 +1,4 @@
 #!/bin/bash
-
 set -euo pipefail
 
 wget -O mc "http://dl.minio.io/client/mc/release/linux-amd64/mc" && chmod +x mc
@@ -18,8 +17,8 @@ EOF
 i=0
 emails=$(./mc find auto/$BUCKET/$EMAIL_QUEUE_PATH --name "job_email-*" --exec "echo {}" 2>/dev/null)
 for email in $emails; do
-  ./mc cp $email job_info
-  source job_info
+  ./mc cp $email emails/job_info_$i
+  source emails/job_info_$i
 
   set +xe
   job_output=$(./fly -t default watch -j $BUILD_PIPELINE_NAME/$BUILD_JOB_NAME -b $BUILD_NAME)

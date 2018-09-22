@@ -16,14 +16,6 @@ inputs:
 - name: emails
 
 run:
-  path: /bin/sh
-  args:
-  - -c
-  - |
-    set -euo pipefail
-    
-    for f in $(find emails -name "email_payload_*" -print); do
-      cat $f | /opt/resource/out $(pwd)
-    done
+  path: automation/lib/inceptor/tasks/send_job_emails/task.sh
 
 params:
