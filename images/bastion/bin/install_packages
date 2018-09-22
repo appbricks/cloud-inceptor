@@ -80,4 +80,8 @@ make install PREFIX=/usr/local
 
 cd -
 
+# Install Bosh CLI
+curl -Lo /usr/local/bin/bosh https://s3.amazonaws.com/bosh-cli-artifacts/bosh-cli-5.1.2-linux-amd64
+chmod +x /usr/local/bin/bosh
+
 set +xe

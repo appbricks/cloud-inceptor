@@ -1,0 +1,29 @@
+- type: replace
+  path: /jobs/-
+  value:
+    name: notifications
+    public: false
+    serial: true
+    plan:
+    - get: automation
+    - task: prepare_job_email
+      file: automation/lib/inceptor/tasks/prepare_job_email/task.yml
+      params:
+        CONCOURSE_URL: ((concourse_url))
+        CONCOURSE_USER: ((concourse_user))
+        CONCOURSE_PASSWORD: ((concourse_password))
+        AUTOS3_URL: ((autos3_url))
+        AUTOS3_ACCESS_KEY: ((autos3_access_key))
+        AUTOS3_SECRET_KEY: ((autos3_secret_key))
+        BUCKET: pcf
+        EMAIL_QUEUE_PATH: email-queue
+        SMTP_HOST: ((smtp_host))
+        SMTP_PORT: ((smtp_port))
+        EMAIL_FROM: ((caps_email))
+        EMAIL_TO: ((notification_email))      
+    - task: send_job_emails
+      file: automation/lib/inceptor/tasks/send_job_emails/task.yml
+      params:
+        AUTOS3_URL: ((autos3_url))
+        AUTOS3_ACCESS_KEY: ((autos3_access_key))
+        AUTOS3_SECRET_KEY: ((autos3_secret_key))
