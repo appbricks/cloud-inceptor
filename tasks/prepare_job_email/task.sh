@@ -30,20 +30,20 @@ for email in $emails; do
 
   cat <<EOF > emails/email_payload_$i.json
 {
-  \"params\": {
-    \"headers\": \"emails/headers\"
-    \"subject_text\": \"$SUBJECT\",
-    \"body\": \"emails/email_body_$i.html\"
+  "params": {
+    "headers": "emails/headers"
+    "subject_text": "$SUBJECT",
+    "body": "emails/email_body_$i.html"
   },
-  \"source\": {
-    \"smtp\": {
-        \"skip_ssl_validation\": true,
-        \"host\": \"$SMTP_HOST\",
-        \"port\": \"$SMTP_PORT\",
-        \"anonymous\": true
+  "source": {
+    "smtp": {
+        "skip_ssl_validation": true,
+        "host": "$SMTP_HOST",
+        "port": "$SMTP_PORT",
+        "anonymous": true
     },
-    \"from\": \"$EMAIL_FROM\",
-    \"to\": $EMAIL_TO
+    "from": "$EMAIL_FROM",
+    "to": $EMAIL_TO
   }
 }
 EOF
