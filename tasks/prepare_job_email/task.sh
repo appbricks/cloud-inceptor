@@ -22,7 +22,7 @@ for email in $emails; do
   job_output=$(./fly -t default watch -j $BUILD_PIPELINE_NAME/$BUILD_JOB_NAME -b $BUILD_NAME)
   echo -e "$job_output" \
     | automation/lib/inceptor/tasks/prepare_job_email/ansi2html.sh --bg=dark --palette=tango \
-    > emails/email_body_$1.html
+    > emails/email_body_$i.html
 
   cat <<EOF > emails/email_payload_$i.json
 {
