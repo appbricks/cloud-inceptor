@@ -9,10 +9,13 @@ platform: linux
 image_resource:
   type: docker-image
   source:
-    repository: pcfseceng/email-resource
+    repository: appbricks/automation-tools
 
 inputs:
 - name: automation
+
+outputs:
+- name: emails
 
 run:
   path: automation/lib/inceptor/tasks/prepare_job_email/task.sh

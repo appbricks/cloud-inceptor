@@ -1,0 +1,29 @@
+---
+
+#
+# The task will toggle the state of the environment
+#
+
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: pcfseceng/email-resource
+
+inputs:
+- name: automation
+- name: emails
+
+run:
+  path: /bin/bash
+  args:
+  - -c
+  - |
+    set -euo pipefail
+    
+    for f in $(find emails -name "email_payload_*" -print); do
+      cat $f | /opt/resource/out $(pwd)
+    done
+
+params:

@@ -8,6 +8,12 @@ wget -O mc "http://dl.minio.io/client/mc/release/linux-amd64/mc" && chmod +x mc
 wget -O fly "$CONCOURSE_URL/api/v1/cli?arch=amd64&platform=linux" && chmod +x fly
 ./fly -t default login -c $CONCOURSE_URL -u ''$CONCOURSE_USER'' -p ''$CONCOURSE_PASSWORD''
 
+cat <<EOF > emails/headers
+MIME-version: 1.0
+Content-Type: text/html; charset="UTF-8"
+EOF
+
+i=0
 emails=$(./mc find auto/$BUCKET/$EMAIL_QUEUE_PATH --name "job_email-*" --exec "echo {}" 2>/dev/null)
 for email in $emails; do
   ./mc cp $email job_info
@@ -15,26 +21,29 @@ for email in $emails; do
 
   job_output=$(./fly -t default watch -j $BUILD_PIPELINE_NAME/$BUILD_JOB_NAME -b $BUILD_NAME)
   echo -e "$job_output" \
-    | automation/lib/inceptor/tasks/prepare_job_email/ansi2html.sh --bg=dark --palette=tango > email_body
+    | automation/lib/inceptor/tasks/prepare_job_email/ansi2html.sh --bg=dark --palette=tango \
+    > emails/email_body_$1.html
 
-  echo "
-  {
-    \"params\": {
-      \"headers\": \"automation/lib/inceptor/tasks/prepare_job_email/headers\"
-      \"subject_text\": \"$SUBJECT\",
-      \"body\": \"email_body\"
+  cat <<EOF > emails/email_payload_$i.json
+{
+  \"params\": {
+    \"headers\": \"emails/headers\"
+    \"subject_text\": \"$SUBJECT\",
+    \"body\": \"emails/email_body_$1.html\"
+  },
+  \"source\": {
+    \"smtp\": {
+        \"skip_ssl_validation\": true,
+        \"host\": \"$SMTP_HOST\",
+        \"port\": \"$SMTP_PORT\",
+        \"anonymous\": true
     },
-    \"source\": {
-      \"smtp\": {
-          \"skip_ssl_validation\": true,
-          \"host\": \"$SMTP_HOST\",
-          \"port\": \"$SMTP_PORT\",
-          \"anonymous\": true
-      },
-      \"from\": \"$EMAIL_FROM\",
-      \"to\": $EMAIL_TO
-    }
-  }" | /opt/resource/out $(pwd)
+    \"from\": \"$EMAIL_FROM\",
+    \"to\": $EMAIL_TO
+  }
+}
+EOF
 
-  ./mc rm $email
+  # ./mc rm $email
+  i=$(($i+1))
 done
