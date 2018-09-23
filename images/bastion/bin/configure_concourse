@@ -170,7 +170,6 @@ if [[ $s == "---" ]]; then
     fly --target local unpause-pipeline -p bootstrap
 BOOTSTRAP
 
-    rm /root/bootstrap-*.yml
 fi
 
 if [[ $prune_worker == "yes" ]]; then
