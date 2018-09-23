@@ -35,6 +35,8 @@
                 "sudo mv /tmp/bin/configure_* /root/.bin",
                 "sudo mv /tmp/bin/restart_* /root/.bin",
                 "sudo mv /tmp/bin/*_vpn_user /root/.bin",
+                "sudo mv /tmp/bin/patch_*.sh /root/.bin",
+                "sudo mv /tmp/bin/*.yml /root/.bin",
                 "sudo rm -rf /var/lib/apt/lists/*",
                 "sudo rm -fr /tmp/*"
             ]

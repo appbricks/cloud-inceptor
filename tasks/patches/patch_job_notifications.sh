@@ -1,9 +1,22 @@
 #!/bin/bash
+
+if [[ $# < 1 ]]; then
+  echo -e "\nUSAGE: /patch_job_notifications.sh <PATH_TO_PIPELINE_YML> [ <SUBJECT_HEADING> ]\n"
+  exit 1
+fi
+
+if [[ -z $2 ]]; then
+  subject_heading="automation job "
+else
+  subject_heading="$2 "
+fi
+
 set -euo pipefail
 
 pipeline=$(cat $1)
 jobs=$(echo -e "$pipeline" \
-  | awk '/# alert on:/{ print $3 }')
+  | awk '/- task: notify on (.*) (success|failure)/{ print $5 }' \
+  | uniq)
 
 [[ -n $jobs ]] || exit 0
 
@@ -60,30 +73,29 @@ EOF
 
 for j in $(echo -e "$jobs"); do 
 
-  alert_on_success=$(echo -e "$pipeline" | awk "/$j\s+# alert on:.*success.*/{ print \"y\" }")
-  alert_on_failure=$(echo -e "$pipeline" | awk "/$j\s+# alert on:.*failure.*/{ print \"y\" }")
+  alert_on_success=$(echo -e "$pipeline" | awk "/- task: notify on $j success/{ print \"y\" }")
+  alert_on_failure=$(echo -e "$pipeline" | awk "/- task: notify on $j failure/{ print \"y\" }")
 
   if [[ -n $alert_on_success ]]; then
 
     cat <<EOF >> notification-patch.yml
 - type: replace
-  path: /jobs/name=$j/on_success?
+  path: /jobs/name=$j/on_success?/do?
   value:
-    do:
-    - get: job_info
-    - task: job_failed_alert
-      file: automation/lib/inceptor/tasks/queue_job_email/task.yml
-      params: 
-        BUCKET: pcf
-        EMAIL_QUEUE_PATH: email-queue
-        AUTOS3_URL: ((autos3_url))
-        AUTOS3_ACCESS_KEY: ((autos3_access_key))
-        AUTOS3_SECRET_KEY: ((autos3_secret_key))
-        SUBJECT_PRE: ((vpc_name)) bootstrap FAILED
-        JOB_STATUS: succeeded
-    - put: notification
-      params: 
-        options: 'trigger-job -j bootstrap/notifications'
+  - get: job_info
+  - task: job_failed_alert
+    file: automation/lib/inceptor/tasks/queue_job_email/task.yml
+    params: 
+      BUCKET: pcf
+      EMAIL_QUEUE_PATH: email-queue
+      AUTOS3_URL: ((autos3_url))
+      AUTOS3_ACCESS_KEY: ((autos3_access_key))
+      AUTOS3_SECRET_KEY: ((autos3_secret_key))
+      SUBJECT_PRE: ((vpc_name)) ${subject_heading}FAILED
+      JOB_STATUS: succeeded
+  - put: notification
+    params: 
+      options: 'trigger-job -j bootstrap/notifications'
 
 EOF
 
@@ -93,23 +105,22 @@ EOF
 
     cat <<EOF >> notification-patch.yml
 - type: replace
-  path: /jobs/name=$j/on_failure?
+  path: /jobs/name=$j/on_failure?/do?
   value:
-    do:
-    - get: job_info
-    - task: job_failed_alert
-      file: automation/lib/inceptor/tasks/queue_job_email/task.yml
-      params: 
-        BUCKET: pcf
-        EMAIL_QUEUE_PATH: email-queue
-        AUTOS3_URL: ((autos3_url))
-        AUTOS3_ACCESS_KEY: ((autos3_access_key))
-        AUTOS3_SECRET_KEY: ((autos3_secret_key))
-        SUBJECT_PRE: ((vpc_name)) bootstrap FAILED
-        JOB_STATUS: failed
-    - put: notification
-      params: 
-        options: 'trigger-job -j bootstrap/notifications'
+  - get: job_info
+  - task: job_failed_alert
+    file: automation/lib/inceptor/tasks/queue_job_email/task.yml
+    params: 
+      BUCKET: pcf
+      EMAIL_QUEUE_PATH: email-queue
+      AUTOS3_URL: ((autos3_url))
+      AUTOS3_ACCESS_KEY: ((autos3_access_key))
+      AUTOS3_SECRET_KEY: ((autos3_secret_key))
+      SUBJECT_PRE: ((vpc_name)) ${subject_heading}SUCCEEDED
+      JOB_STATUS: failed
+  - put: notification
+    params: 
+      options: 'trigger-job -j bootstrap/notifications'
 
 EOF
 
