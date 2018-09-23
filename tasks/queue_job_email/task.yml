@@ -12,7 +12,7 @@ image_resource:
     repository: appbricks/automation-tools
 
 inputs:
-- name: job_info
+- name: job-info
 
 run:
   path: /bin/bash
@@ -35,11 +35,11 @@ run:
     # ATC_EXTERNAL_URL=...
     #
 
-    source job_info/job_info
-    echo "export JOB_STATUS='${JOB_STATUS}'" >> job_info/job_info
-    echo "export SUBJECT='${SUBJECT_PRE} - ${BUILD_PIPELINE_NAME}/${BUILD_JOB_NAME}/${BUILD_NAME}'" >> job_info/job_info
+    source job-info/job_info
+    echo "export JOB_STATUS='${JOB_STATUS}'" >> job-info/job_info
+    echo "export SUBJECT='${SUBJECT_PRE} - ${BUILD_PIPELINE_NAME}/${BUILD_JOB_NAME}/${BUILD_NAME}'" >> job-info/job_info
 
-    mc cp job_info/job_info auto/$BUCKET/$EMAIL_QUEUE_PATH/job_email-$(cat /proc/sys/kernel/random/uuid)
+    mc cp job-info/job_info auto/$BUCKET/$EMAIL_QUEUE_PATH/job_email-$(cat /proc/sys/kernel/random/uuid)
 
 params:
   BUCKET:
