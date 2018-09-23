@@ -42,14 +42,14 @@ cat <<'EOF' > notification-patch.yml
 - type: replace
   path: /resources?/-
   value:
-    name: job_info
+    name: job-info
     type: smuggler
     source:
       commands:
         check: |
           echo "$(date +%s)" > ${SMUGGLER_OUTPUT_DIR}/versions
         in: |
-          cat <<EOF > $SMUGGLER_DESTINATION_DIR/job_info
+          cat <<EOF > $SMUGGLER_DESTINATION_DIR/job-info
           export BUILD_ID='${BUILD_ID}'
           export BUILD_NAME='${BUILD_NAME}'
           export BUILD_JOB_NAME='${BUILD_JOB_NAME}'
@@ -76,13 +76,19 @@ for j in $(echo -e "$jobs"); do
   alert_on_success=$(echo -e "$pipeline" | awk "/- task: notify on $j success/{ print \"y\" }")
   alert_on_failure=$(echo -e "$pipeline" | awk "/- task: notify on $j failure/{ print \"y\" }")
 
+  cat <<EOF >>
+- type: replace
+  path: /jobs/name=$j/plan/0:before
+  value:
+  - get: job-info
+EOF
+
   if [[ -n $alert_on_success ]]; then
 
     cat <<EOF >> notification-patch.yml
 - type: replace
   path: /jobs/name=$j/on_success?/do?
   value:
-  - get: job_info
   - task: job_succeeded_alert
     file: automation/lib/inceptor/tasks/queue_job_email/task.yml
     params: 
@@ -107,7 +113,6 @@ EOF
 - type: replace
   path: /jobs/name=$j/on_failure?/do?
   value:
-  - get: job_info
   - task: job_failed_alert
     file: automation/lib/inceptor/tasks/queue_job_email/task.yml
     params: 
