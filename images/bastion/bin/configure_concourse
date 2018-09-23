@@ -158,13 +158,19 @@ sudo -i -- fly --target local login --insecure \
 
 s=$(head -1 /root/bootstrap.yml)
 if [[ $s == "---" ]]; then
-    /root/.bin/patch_job_notifications.sh /root/bootstrap.yml bootstrap > bootstrap-1.yml
-    bosh interpolate -o  /root/.bin/notifications_job_patch.yml bootstrap-1.yml > bootstrap.yml
-    rm bootstrap-1.yml
 
-    sudo -i -- fly --target local set-pipeline -n -p bootstrap \
-        -c /root/bootstrap.yml -l /root/bootstrap-vars.yml
-    sudo -i -- fly --target local unpause-pipeline -p bootstrap
+    sudo -i -- <<BOOTSTRAP
+    set -ex
+
+    /root/.bin/patch_job_notifications.sh /root/bootstrap.yml bootstrap > bootstrap-1.yml
+    bosh interpolate -o /root/.bin/notifications_job_patch.yml bootstrap-1.yml > /root/bootstrap-2.yml
+
+    fly --target local set-pipeline -n -p bootstrap \
+        -c /root/bootstrap-2.yml -l /root/bootstrap-vars.yml
+    fly --target local unpause-pipeline -p bootstrap
+BOOTSTRAP
+
+    rm /root/bootstrap-*.yml
 fi
 
 if [[ $prune_worker == "yes" ]]; then
