@@ -83,7 +83,7 @@ for j in $(echo -e "$jobs"); do
   path: /jobs/name=$j/on_success?/do?
   value:
   - get: job_info
-  - task: job_failed_alert
+  - task: job_succeeded_alert
     file: automation/lib/inceptor/tasks/queue_job_email/task.yml
     params: 
       BUCKET: pcf
@@ -91,7 +91,7 @@ for j in $(echo -e "$jobs"); do
       AUTOS3_URL: ((autos3_url))
       AUTOS3_ACCESS_KEY: ((autos3_access_key))
       AUTOS3_SECRET_KEY: ((autos3_secret_key))
-      SUBJECT_PRE: ((vpc_name)) ${subject_heading}FAILED
+      SUBJECT_PRE: ((vpc_name)) ${subject_heading}SUCCEEDED
       JOB_STATUS: succeeded
   - put: notification
     params: 
@@ -116,7 +116,7 @@ EOF
       AUTOS3_URL: ((autos3_url))
       AUTOS3_ACCESS_KEY: ((autos3_access_key))
       AUTOS3_SECRET_KEY: ((autos3_secret_key))
-      SUBJECT_PRE: ((vpc_name)) ${subject_heading}SUCCEEDED
+      SUBJECT_PRE: ((vpc_name)) ${subject_heading}FAILED
       JOB_STATUS: failed
   - put: notification
     params: 
@@ -128,4 +128,17 @@ EOF
 
 done
 
-bosh interpolate -o notification-patch.yml $1
+set +e
+which bosh 2>&1 > /dev/null
+if [ $? -ne 0 ]; then
+    which bosh-cli 2>&1 > /dev/null
+    if [ $? -ne 0 ]; then
+        echo "ERROR! Unable to find bosh cli."
+        exit 1
+    fi
+    set -e
+    bosh-cli interpolate -o notification-patch.yml $1
+else
+    set -e
+    bosh interpolate -o notification-patch.yml $1
+fi
