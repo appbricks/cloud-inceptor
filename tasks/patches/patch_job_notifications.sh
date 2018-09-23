@@ -76,11 +76,11 @@ for j in $(echo -e "$jobs"); do
   alert_on_success=$(echo -e "$pipeline" | awk "/- task: notify on $j success/{ print \"y\" }")
   alert_on_failure=$(echo -e "$pipeline" | awk "/- task: notify on $j failure/{ print \"y\" }")
 
-  cat <<EOF >>
+  cat <<EOF >> notification-patch.yml
 - type: replace
   path: /jobs/name=$j/plan/0:before
   value:
-  - get: job-info
+    get: job-info
 EOF
 
   if [[ -n $alert_on_success ]]; then
