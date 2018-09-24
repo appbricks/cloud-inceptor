@@ -18,7 +18,10 @@ jobs=$(echo -e "$pipeline" \
   | awk '/- task: notify on (.*) (success|failure)/{ print $5 }' \
   | uniq)
 
-[[ -n $jobs ]] || exit 0
+if [[ -z $jobs ]]; then
+  cat $pipeline
+  exit 0
+fi
 
 cat <<'EOF' > notification-patch.yml
 - type: replace
