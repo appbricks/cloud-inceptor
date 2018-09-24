@@ -19,7 +19,7 @@ jobs=$(echo -e "$pipeline" \
   | uniq)
 
 if [[ -z $jobs ]]; then
-  cat $pipeline
+  echo $pipeline
   exit 0
 fi
 
