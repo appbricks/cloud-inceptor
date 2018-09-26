@@ -71,15 +71,15 @@ for j in $(echo -e "$jobs"); do
       smuggler_debug: true
       commands:
         check: |
-          echo "$(date +%s)" > ${SMUGGLER_OUTPUT_DIR}/versions
+          echo "\$(date +%s)" > \${SMUGGLER_OUTPUT_DIR}/versions
         in: |
-          cat <<EOF > ${SMUGGLER_DESTINATION_DIR}/job_info
-          export BUILD_ID='${BUILD_ID}'
-          export BUILD_NAME='${BUILD_NAME}'
-          export BUILD_JOB_NAME='${BUILD_JOB_NAME}'
-          export BUILD_PIPELINE_NAME='${BUILD_PIPELINE_NAME}'
-          export BUILD_TEAM_NAME='${BUILD_TEAM_NAME}'
-          export ATC_EXTERNAL_URL='${ATC_EXTERNAL_URL}'
+          cat <<EOF > \${SMUGGLER_DESTINATION_DIR}/job_info
+          export BUILD_ID='\${BUILD_ID}'
+          export BUILD_NAME='\${BUILD_NAME}'
+          export BUILD_JOB_NAME='\${BUILD_JOB_NAME}'
+          export BUILD_PIPELINE_NAME='\${BUILD_PIPELINE_NAME}'
+          export BUILD_TEAM_NAME='\${BUILD_TEAM_NAME}'
+          export ATC_EXTERNAL_URL='\${ATC_EXTERNAL_URL}'
           EOF
 
 - type: replace
