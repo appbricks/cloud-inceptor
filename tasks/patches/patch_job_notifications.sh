@@ -53,7 +53,7 @@ cat <<'EOF' > notification-patch.yml
         check: |
           echo "$(date +%s)" > ${SMUGGLER_OUTPUT_DIR}/versions
         in: |
-          cat <<EOF > $SMUGGLER_DESTINATION_DIR/job_info
+          cat <<EOF > ${SMUGGLER_DESTINATION_DIR}/job_info
           export BUILD_ID='${BUILD_ID}'
           export BUILD_NAME='${BUILD_NAME}'
           export BUILD_JOB_NAME='${BUILD_JOB_NAME}'
