@@ -65,7 +65,7 @@ for j in $(echo -e "$jobs"); do
 - type: replace
   path: /resources?/-
   value:
-    name: job-info-$j
+    name: $j-job-info
     type: smuggler
     source:
       smuggler_debug: true
@@ -85,7 +85,7 @@ for j in $(echo -e "$jobs"); do
 - type: replace
   path: /jobs/name=$j/plan/0:before
   value:
-    get: job-info-$j
+    get: $j-job-info
 EOF
 
   if [[ -n $alert_on_success ]]; then
@@ -96,7 +96,7 @@ EOF
   value:
   - task: job_succeeded_alert
     file: automation/lib/inceptor/tasks/queue_job_email/task.yml
-    input_mapping: {job-info: job-info-$j}
+    input_mapping: {job-info: $j-job-info}
     params: 
       BUCKET: pcf
       EMAIL_QUEUE_PATH: email-queue
