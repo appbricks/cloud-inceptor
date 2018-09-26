@@ -45,7 +45,27 @@ cat <<'EOF' > notification-patch.yml
 - type: replace
   path: /resources?/-
   value:
-    name: job-info
+    name: notification
+    type: fly
+    source:
+      url: ((concourse_url))
+      username: ((concourse_user))
+      password: ((concourse_password))
+      team: main
+
+EOF
+
+for j in $(echo -e "$jobs"); do 
+
+  alert_on_success=$(echo -e "$pipeline" | awk "/- task: notify on $j success/{ print \"y\" }")
+  alert_on_failure=$(echo -e "$pipeline" | awk "/- task: notify on $j failure/{ print \"y\" }")
+
+  cat <<EOF >> notification-patch.yml
+
+- type: replace
+  path: /resources?/-
+  value:
+    name: job-info-$j
     type: smuggler
     source:
       smuggler_debug: true
@@ -63,28 +83,9 @@ cat <<'EOF' > notification-patch.yml
           EOF
 
 - type: replace
-  path: /resources?/-
-  value:
-    name: notification
-    type: fly
-    source:
-      url: ((concourse_url))
-      username: ((concourse_user))
-      password: ((concourse_password))
-      team: main
-
-EOF
-
-for j in $(echo -e "$jobs"); do 
-
-  alert_on_success=$(echo -e "$pipeline" | awk "/- task: notify on $j success/{ print \"y\" }")
-  alert_on_failure=$(echo -e "$pipeline" | awk "/- task: notify on $j failure/{ print \"y\" }")
-
-  cat <<EOF >> notification-patch.yml
-- type: replace
   path: /jobs/name=$j/plan/0:before
   value:
-    get: job-info
+    get: job-info-$j
 EOF
 
   if [[ -n $alert_on_success ]]; then
@@ -95,6 +96,7 @@ EOF
   value:
   - task: job_succeeded_alert
     file: automation/lib/inceptor/tasks/queue_job_email/task.yml
+    input_mapping: {job-info: job-info-$j}
     params: 
       BUCKET: pcf
       EMAIL_QUEUE_PATH: email-queue
