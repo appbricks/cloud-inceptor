@@ -48,6 +48,7 @@ cat <<'EOF' > notification-patch.yml
     name: job-info
     type: smuggler
     source:
+      smuggler_debug: true
       commands:
         check: |
           echo "$(date +%s)" > ${SMUGGLER_OUTPUT_DIR}/versions
