@@ -121,6 +121,7 @@ EOF
   value:
   - task: job_failed_alert
     file: automation/lib/inceptor/tasks/queue_job_email/task.yml
+    input_mapping: {job-info: $j-job-info}
     params: 
       BUCKET: pcf
       EMAIL_QUEUE_PATH: email-queue
