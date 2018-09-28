@@ -3,7 +3,7 @@
 #
 
 resource "google_compute_instance" "bastion" {
-  name         = "${var.vpc_name}-bastion"
+  name         = "${element(split(".", var.vpc_dns_zone), 0)}"
   machine_type = "${var.bastion_instance_type}"
   zone         = "${data.google_compute_zones.available.names[0]}"
 
