@@ -1,0 +1,133 @@
+{
+  "variables": {
+    "iso_url": "",
+    "iso_checksum": "",
+    "iso_checksum_type": "",
+    "esxi_remote_host": "{{env `VMW_ESX_HOST`}}",
+    "esxi_remote_username": "{{env `VMW_ESX_USERNAME`}}",
+    "esxi_remote_password": "{{env `VMW_ESX_PASSWORD`}}",
+    "vcenter_host": "{{env `VMW_VCENTER_HOST`}}",
+    "vcenter_username": "{{env `VMW_VCENTER_USERNAME`}}",
+    "vcenter_password": "{{env `VMW_VCENTER_PASSWORD`}}",
+    "vcenter_insecure": "true",
+    "vcenter_datacenter": "{{env `VMW_VCENTER_DATACENTER`}}",
+    "vcenter_datastore": "{{env `VMW_VCENTER_DATASTORE`}}",
+    "vcenter_templates_folder": "{{env `VMW_VCENTER_TEMPLATES_FOLDER`}}",
+    "vm_name": "",
+    "vm_disk_adapter_type": "scsi",
+    "vm_disk_type": "thin",
+    "vm_disk_size": "10240",
+    "vm_guest_os_type": "ubuntu-64",
+    "vm_memory": "1024",
+    "vm_vcpu": "1",
+    "vm_network": "VM Network",
+    "boot_command_prefix": "",
+    "build_dir": ""
+  },
+  "builders": [
+    {
+      "boot_command": [
+        "{{ user `boot_command_prefix` }}",
+        "/install/vmlinuz <wait>",
+        "auto <wait>",
+        "console-setup/ask_detect=false <wait>",
+        "console-setup/layoutcode=us <wait>",
+        "console-setup/modelcode=pc105 <wait>",
+        "debconf/frontend=noninteractive <wait>",
+        "debian-installer=en_US <wait>",
+        "fb=false <wait>",
+        "initrd=/install/initrd.gz <wait>",
+        "kbd-chooser/method=us <wait>",
+        "keyboard-configuration/layout=USA <wait>",
+        "keyboard-configuration/variant=USA <wait>",
+        "locale=en_US <wait>",
+        "netcfg/get_domain=vm <wait>",
+        "netcfg/get_hostname=packer <wait>",
+        "grub-installer/bootdev=/dev/sda <wait>",
+        "noapic <wait>",
+        "preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg <wait>",
+        "-- <wait>",
+        "<enter><wait>"
+      ],
+      "name": "{{ user `vm_name` }}",
+      "output_directory": "{{user `build_dir`}}/.build/images",
+      "format": "ova",
+      "http_directory": "{{user `build_dir`}}/packer/http",
+      "iso_url": "{{ user `iso_url` }}",
+      "iso_checksum": "{{ user `iso_checksum` }}",
+      "iso_checksum_type": "{{ user `iso_checksum_type` }}",
+      "remote_host": "{{ user `esxi_remote_host` }}",
+      "remote_username": "{{ user `esxi_remote_username` }}",
+      "remote_password": "{{ user `esxi_remote_password` }}",
+      "remote_datastore": "{{ user `vcenter_datastore` }}",
+      "remote_type": "esx5",
+      "type": "vmware-iso",
+      "keep_registered": "true",
+      "vm_name": "{{ user `vm_name` }}",
+      "guest_os_type": "{{ user `vm_guest_os_type` }}",
+      "ssh_username": "ubuntu",
+      "ssh_password": "1ncept0r",
+      "ssh_wait_timeout": "60m",
+      "vnc_disable_password": "true",
+      "shutdown_command": "echo '/sbin/halt -h -p' > shutdown.sh; echo 'packer'|sudo -S bash 'shutdown.sh'",
+      "vmdk_name": "{{ user `vm_name` }}",
+      "disk_size": "{{ user `vm_disk_size` }}",
+      "disk_type_id": "{{ user `vm_disk_type` }}",
+      "disk_adapter_type": "{{ user ` vm_disk_adapter_type` }}",
+      "vmx_data": {
+        "memsize": "{{ user `vm_memory` }}",
+        "numvcpus": "{{ user `vm_vcpu` }}",
+        "ethernet0.networkName": "{{ user `vm_network` }}",
+        "ethernet0.present": "TRUE",
+        "ethernet0.startConnected": "TRUE",
+        "ethernet0.virtualDev": "vmxnet3",
+        "ethernet0.addressType": "generated",
+        "ethernet0.wakeOnPcktRcv": "FALSE"
+      }
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "scripts": [
+        "{{user `build_dir`}}/scripts/vmware/base.sh",
+        "{{user `build_dir`}}/scripts/vmware/vmware.sh",
+        "{{user `build_dir`}}/scripts/vmware/cleanup.sh"
+      ]
+    },
+    {
+      "type": "file",
+      "source": "{{user `build_dir`}}/scripts/config",
+      "destination": "/tmp/inceptor-scripts"
+    },
+    {
+      "type": "shell",
+      "expect_disconnect": "true",
+      "inline": [
+        "sudo chmod 0755 /tmp/inceptor-scripts/*",
+        "sudo /tmp/inceptor-scripts/install_packages",
+        "sudo rm /tmp/inceptor-scripts/install_packages",
+        "sudo mv /tmp/inceptor-scripts/rc.local /etc/rc.local",
+        "sudo mv /tmp/inceptor-scripts /root/.bin",
+        "sudo rm -rf /var/lib/apt/lists/*",
+        "sudo rm -fr /tmp/*"
+      ]
+    }
+  ],
+  "post-processors": [
+    {
+      "host": "{{ user `vcenter_host` }}",
+      "datacenter": "{{ user `vcenter_datacenter` }}",
+      "insecure": "{{ user `vcenter_insecure`}}",
+      "username": "{{ user `vcenter_username` }}",
+      "password": "{{ user `vcenter_password` }}",
+      "type": "vsphere-template",
+      "folder": "{{ user `vcenter_templates_folder` }}"
+    },
+    {
+      "type": "manifest",
+      "output": "manifest.json",
+      "strip_path": true
+    }
+  ]
+}

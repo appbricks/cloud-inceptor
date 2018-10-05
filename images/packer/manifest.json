@@ -1,0 +1,94 @@
+{
+  "builds": [
+    {
+      "name": "appbricks-inceptor-bastion",
+      "builder_type": "vmware-iso",
+      "build_time": 1538684499,
+      "files": [
+        {
+          "name": "appbricks-inceptor-bastion-disk1.vmdk",
+          "size": 924749824
+        },
+        {
+          "name": "appbricks-inceptor-bastion-file1.iso",
+          "size": 8684
+        },
+        {
+          "name": "appbricks-inceptor-bastion.mf",
+          "size": 250
+        },
+        {
+          "name": "appbricks-inceptor-bastion.ovf",
+          "size": 8959
+        }
+      ],
+      "artifact_id": "appbricks-inceptor-bastion",
+      "packer_run_uuid": "8ee2241c-8bf2-3e8f-bc0b-1a20cb50b807"
+    },
+    {
+      "name": "appbricks-inceptor-bastion",
+      "builder_type": "vmware-iso",
+      "build_time": 1538686115,
+      "files": [
+        {
+          "name": "appbricks-inceptor-bastion-disk1.vmdk",
+          "size": 862312448
+        },
+        {
+          "name": "appbricks-inceptor-bastion-file1.iso",
+          "size": 8684
+        },
+        {
+          "name": "appbricks-inceptor-bastion.mf",
+          "size": 250
+        },
+        {
+          "name": "appbricks-inceptor-bastion.ovf",
+          "size": 8959
+        }
+      ],
+      "artifact_id": "appbricks-inceptor-bastion",
+      "packer_run_uuid": "33754afc-8177-7bb1-8cbb-00dc7fcbc248"
+    },
+    {
+      "name": "appbricks-inceptor-bastion",
+      "builder_type": "vmware-iso",
+      "build_time": 1538687281,
+      "files": [
+        {
+          "name": "appbricks-inceptor-bastion.ova",
+          "size": 810396160
+        }
+      ],
+      "artifact_id": "appbricks-inceptor-bastion",
+      "packer_run_uuid": "9e8f606f-6315-9bc5-0b88-4b0f620ba879"
+    },
+    {
+      "name": "appbricks-inceptor-bastion",
+      "builder_type": "vmware-iso",
+      "build_time": 1538750076,
+      "files": [
+        {
+          "name": "appbricks-inceptor-bastion.ova",
+          "size": 1444859904
+        }
+      ],
+      "artifact_id": "appbricks-inceptor-bastion",
+      "packer_run_uuid": "d7247ccc-14a2-1b3b-902c-41e84988c866"
+    },
+    {
+      "name": "appbricks-inceptor-bastion",
+      "builder_type": "vmware-iso",
+      "build_time": 1538751471,
+      "files": [
+        {
+          "name": "appbricks-inceptor-bastion.ova",
+          "size": 1472147456
+        }
+      ],
+      "artifact_id": "appbricks-inceptor-bastion",
+      "packer_run_uuid": "e85020c0-c071-e7b7-3c74-048873d26eee"
+    }
+  ],
+  "last_run_uuid": "e85020c0-c071-e7b7-3c74-048873d26eee"
+}

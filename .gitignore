@@ -10,3 +10,4 @@
 *_key.*
 
 tmp/
+packer-cache/

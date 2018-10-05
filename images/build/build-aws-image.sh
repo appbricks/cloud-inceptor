@@ -1,5 +1,8 @@
 #!/bin/bash
 
+LOG_DIR=$(pwd)
+BUILD_DIR=$(cd $(dirname $BASH_SOURCE)/.. && pwd)
+
 UBUNTU_RELEASE=xenial
 IMAGE_NAME="appbricks-inceptor-bastion"
 
@@ -14,6 +17,8 @@ if [[ $? -ne 0 ]]; then
     "ERROR! The JQ CLI needs to be available in the system path. (https://stedolan.github.io/jq/download/)"
     exit 1
 fi
+
+set -euo pipefail
 
 function aws::build_ami() {
 
@@ -43,6 +48,7 @@ function aws::build_ami() {
     echo -e "\nBuilding AMI image '$image_name' in region $region using base AMI $ami..."
     cd $(dirname $packer_manifest)
     packer build \
+        -var "build_dir=$BUILD_DIR" \
         -var "region=$region" \
         -var "ami=$ami" \
         -var "name=$image_name" \
@@ -54,13 +60,11 @@ regions=${1:-$(aws ec2 describe-regions --output text | cut -f3)}
 base_amis=$(curl -sL https://cloud-images.ubuntu.com/query/$UBUNTU_RELEASE/server/released.txt \
     | awk '/release/&&/ebs-ssd/&&/amd64/&&/hvm/{ print $4 "|" $7 "|" $8 }')
 
-log_dir=${build_log_dir:-./}
-
 for r in $(echo "$regions"); do
     echo "Building AMI for region $r."
     aws::build_ami "$IMAGE_NAME" \
-        "$r" "$base_amis" "bastion/build-aws.json" 2>&1 \
-        | tee $log_dir/build-aws-$r.log &
+        "$r" "$base_amis" "$BUILD_DIR/packer/build-aws.json" 2>&1 \
+        | tee $LOG_DIR/build-aws-$r.log &
 done
 
 # Wait for all parallel jobs to finish

@@ -4,7 +4,8 @@
         "gcp_project_id": "{{env `GOOGLE_PROJECT`}}",
         "gcp_zone": "{{env `GOOGLE_ZONE`}}",
         "source_image_family": "",
-        "image_name": ""
+        "image_name": "",
+        "build_dir": ""
     },
     "builders": [
         {
@@ -22,22 +23,18 @@
     "provisioners": [
         {
             "type": "file",
-            "source": "bin",
-            "destination": "/tmp"
+            "source": "{{user `build_dir`}}/scripts/config",
+            "destination": "/tmp/inceptor-scripts"
         },
         {
             "type": "shell",
+            "expect_disconnect": "true",
             "inline": [
-                "sudo chmod 0755 /tmp/bin/*",
-                "sudo /tmp/bin/install_packages",
-                "sudo mv /tmp/bin/rc.local /etc/rc.local",
-                "sudo mkdir -p /root/.bin",
-                "sudo mv /tmp/bin/common /root/.bin",
-                "sudo mv /tmp/bin/configure_* /root/.bin",
-                "sudo mv /tmp/bin/restart_* /root/.bin",
-                "sudo mv /tmp/bin/*_vpn_user /root/.bin",
-                "sudo mv /tmp/bin/patch_*.sh /root/.bin",
-                "sudo mv /tmp/bin/*.yml /root/.bin",
+                "sudo chmod 0755 /tmp/inceptor-scripts/*",
+                "sudo /tmp/inceptor-scripts/install_packages",
+                "sudo rm /tmp/inceptor-scripts/install_packages",
+                "sudo mv /tmp/inceptor-scripts/rc.local /etc/rc.local",
+                "sudo mv /tmp/inceptor-scripts /root/.bin",
                 "sudo rm -rf /var/lib/apt/lists/*",
                 "sudo rm -fr /tmp/*"
             ]

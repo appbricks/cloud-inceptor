@@ -4,8 +4,9 @@ It installs the following packages to an Ubuntu cloud image.
 
 * OpenVPN
 * SquidProxy
-* Docker
+* SMTP
 * Concourse
+* Docker
 
 Each of the above tools will be configured on first boot. 
 
@@ -13,13 +14,41 @@ Each of the above tools will be configured on first boot.
 
 The images are built using [packer](http://packer.io/): 
 
-* To build an AWS AMI
+### Building an AWS AMI
 
-  ```
-  $ ./build-aws-image.sh us-west-1
-  ```
+Build the image by executing the following script. If a region is not provided then the image will be build for all regions.
 
-  > If region is not provided an AMI will be built for each region.
+```
+$ build/build-aws-image.sh us-west-1
+```
+
+> If region is not provided an AMI will be built for each region.
+
+### Building an GCP IMAGE
+
+Build the image by executing the following script.
+
+```
+$ build/build-gcp-image.sh us-west-1
+```
+
+### Building an VMware IMAGE
+
+To build a VMware OVA you will need to have access to a VSphere ESXi host and VCenter Server. Before you can begin you will need to ensure the following pre-requisites are met.
+
+Pre-Requisites
+
+* SSH access on the ESXi host you provide in the configuration
+* [OVFTool](https://www.vmware.com/support/developer/ovf/) installed locally
+* [govc](https://github.com/vmware/govmomi/) installed locally
+
+> On OS-X the OVF tool will install to "`/Applications/VMware Fusion.app/Contents/Library/VMware OVF Tool/ovftool`". If it is not in the system path then it needs to be mapped.
+
+Build the image by executing the following script.
+
+```
+$ build/build-vmware-image.sh
+```
 
 ## Configuring Services
 
