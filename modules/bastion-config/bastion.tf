@@ -168,19 +168,7 @@ data "template_file" "www-static-index" {
 }
 
 data "template_file" "bootstrap-pipeline-vars" {
-  template = <<PIPELINE_VARS
----
-${var.bootstrap_pipeline_vars}
-
-# VPC Variables
-environment: ${var.vpc_name}
-region: ${var.region}
-
-dmz_network: ${var.dmz_network}
-dmz_subnetwork: ${var.dmz_subnetwork}
-admin_network: ${var.admin_network}
-admin_subnetwork: ${var.admin_subnetwork}
-PIPELINE_VARS
+  template = "${var.bootstrap_pipeline_vars}"
 }
 
 resource "random_string" "bastion-admin-password" {

@@ -1,11 +1,4 @@
 #
-# Google Cloud Region
-#
-variable "region" {
-  type = "string"
-}
-
-#
 # Certificate Subject data for certificate creation
 #
 variable "company_name" {
@@ -52,22 +45,6 @@ variable "vpc_dns_zone" {
 }
 
 variable "vpc_cidr" {
-  type = "string"
-}
-
-variable "dmz_network" {
-  type = "string"
-}
-
-variable "dmz_subnetwork" {
-  type = "string"
-}
-
-variable "admin_network" {
-  type = "string"
-}
-
-variable "admin_subnetwork" {
   type = "string"
 }
 
@@ -144,7 +121,7 @@ variable "bastion_nic2_lan_gateway" {
 #
 
 variable "data_volume_name" {
-  type = "string"
+  default = ""
 }
 
 #
