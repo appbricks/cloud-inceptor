@@ -13,8 +13,6 @@
 module "config" {
   source = "../../../modules/bastion-config"
 
-  region = "${var.region}"
-
   company_name      = "${var.company_name}"
   organization_name = "${var.organization_name}"
   locality          = "${var.locality}"
@@ -28,11 +26,6 @@ module "config" {
   vpc_dns_zone = "${var.vpc_dns_zone}"
   vpc_cidr     = "${var.vpc_cidr}"
 
-  dmz_network      = "${google_compute_network.dmz.self_link}"
-  dmz_subnetwork   = "${google_compute_subnetwork.dmz.self_link}"
-  admin_network    = "${google_compute_network.admin.self_link}"
-  admin_subnetwork = "${google_compute_subnetwork.admin.self_link}"
-
   ssh_key_file_path = "${var.ssh_key_file_path}"
 
   bastion_fqdn      = "${var.vpc_dns_zone}"
@@ -42,8 +35,8 @@ module "config" {
   bastion_nic1_private_ip  = "${google_compute_address.bastion-dmz.address}"
   bastion_nic1_netmask     = "${cidrnetmask(google_compute_subnetwork.dmz.ip_cidr_range)}"
   bastion_nic1_lan_cidr    = "${google_compute_subnetwork.dmz.ip_cidr_range}"
-  bastion_nic1_lan_gateway = ""
   bastion_nic1_lan_netmask = ""
+  bastion_nic1_lan_gateway = ""
 
   bastion_nic2_private_ip  = "${google_compute_address.bastion-admin.address}"
   bastion_nic2_netmask     = "${cidrnetmask(google_compute_subnetwork.admin.ip_cidr_range)}"
@@ -71,5 +64,18 @@ module "config" {
   concourse_server_port    = "${var.concourse_server_port}"
   concourse_admin_password = "${var.concourse_admin_password}"
   bootstrap_pipeline_file  = "${var.bootstrap_pipeline_file}"
-  bootstrap_pipeline_vars  = "${var.bootstrap_pipeline_vars}"
+
+  bootstrap_pipeline_vars = <<PIPELINE_VARS
+---
+${var.bootstrap_pipeline_vars}
+
+# VPC Variables
+environment: ${var.vpc_name}
+region: ${var.region}
+
+dmz_network: ${var.dmz_network}
+dmz_subnetwork: ${var.dmz_subnetwork}
+admin_network: ${var.admin_network}
+admin_subnetwork: ${var.admin_subnetwork}
+PIPELINE_VARS
 }

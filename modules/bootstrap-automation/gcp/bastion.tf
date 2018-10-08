@@ -66,7 +66,7 @@ resource "google_compute_disk" "bastion-data-volume" {
   name = "${var.vpc_name}-bastion-data-volume"
   type = "pd-standard"
   zone = "${data.google_compute_zones.available.names[0]}"
-  size = "${var.bastion_concourse_vols_disk_size}"
+  size = "${var.bastion_data_disk_size}"
 }
 
 #

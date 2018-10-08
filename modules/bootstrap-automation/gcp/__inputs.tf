@@ -98,11 +98,7 @@ variable "bastion_root_disk_size" {
   default = 50
 }
 
-variable "bastion_concourse_vols_disk_size" {
-  default = 250
-}
-
-variable "bastion_concourse_data_disk_size" {
+variable "bastion_data_disk_size" {
   default = 250
 }
 
