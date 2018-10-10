@@ -162,11 +162,17 @@ if [[ $s == "---" ]]; then
     sudo -i -- <<BOOTSTRAP
     set -ex
 
-    /root/.bin/patch_job_notifications.sh /root/bootstrap.yml bootstrap > bootstrap-1.yml
-    bosh interpolate -o /root/.bin/notifications_job_patch.yml bootstrap-1.yml > /root/bootstrap-2.yml
+    if [[ -e /root/.smtp_installed ]]; then
+        /root/.bin/patch_job_notifications.sh /root/bootstrap.yml bootstrap > bootstrap-1.yml
+        bosh interpolate -o /root/.bin/notifications_job_patch.yml bootstrap-1.yml > /root/bootstrap-2.yml
 
-    fly --target local set-pipeline -n -p bootstrap \
-        -c /root/bootstrap-2.yml -l /root/bootstrap-vars.yml
+        fly --target local set-pipeline -n -p bootstrap \
+            -c /root/bootstrap-2.yml -l /root/bootstrap-vars.yml
+    else
+        fly --target local set-pipeline -n -p bootstrap \
+            -c /root/bootstrap.yml -l /root/bootstrap-vars.yml
+    fi
+
     fly --target local unpause-pipeline -p bootstrap
 BOOTSTRAP
 
