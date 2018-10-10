@@ -27,7 +27,7 @@ $build_dir/build/ssh_pass \
   "$VMW_ESX_USERNAME@$VMW_ESX_HOST" \
   "esxcli network firewall ruleset set --ruleset-id gdbserver --enabled true" > /dev/null
 
-iso_url="http://mirror.pnl.gov/releases/16.04/ubuntu-16.04.5-server-amd64.iso"
+iso_url="http://releases.ubuntu.com/16.04/ubuntu-16.04.5-server-amd64.iso"
 iso_checksum="c94de1cc2e10160f325eb54638a5b5aa38f181d60ee33dae9578d96d932ee5f8"
 iso_checksum_type="sha256"
 boot_command_prefix="<enter><wait><f6><esc><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>"

@@ -13,11 +13,30 @@ if [ -f /etc/debian_version ]; then
     sudo rm -r /var/lib/apt/lists/*
   fi
 
-  #update apt-cache
+  # Update apt-cache
   sudo apt-get update
 
-  #install packages
+  # Install packages
   sudo apt-get install -y python-minimal cloud-init git
+
+  # Ensure default ubuntu user password is not locked
+  sudo sed -i 's|lock_passwd: True|lock_passwd: False|' /etc/cloud/cloud.cfg
+
+  # Ensure interfaces are configurable via /etc/network/interfaces only
+  sudo bash -c "cat <<EOF >/etc/network/interfaces
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+# Source interfaces
+# Please check /etc/network/interfaces.d before changing this file
+# as interfaces may have been defined in /etc/network/interfaces.d
+# See LP: #1262951
+source /etc/network/interfaces.d/*.cfg
+EOF"
 
   # Check for /etc/rc.local and create if needed. This has been deprecated in
   # Debian 9 and later. So we need to resolve this in order to regenerate SSH host

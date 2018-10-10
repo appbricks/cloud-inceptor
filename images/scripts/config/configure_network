@@ -11,6 +11,10 @@ if [[ -n $config_server_fqdn ]]; then
     hostname $config_server_fqdn
 
     sed -i \
+        "s|^127.0.1.1.*$|127.0.1.1\t${config_server_fqdn}  ${config_server_fqdn%%.*}|" \
+        /etc/hosts
+
+    sed -i \
         "s|^$config_server_private_ip.*$|$config_server_private_ip  ${config_server_fqdn}  ${config_server_fqdn%%.*}|" \
         /etc/hosts
 fi
@@ -29,9 +33,14 @@ set -ex
 
 public_itf=$(ip a \
     | grep -B 5 "$config_server_private_ip" \
-    | awk '/^[0-9]*: (eth|ens?)[0-9]:/{ print substr($2,0,length($2)-1) }')
+    | awk '/^[0-9]*: (eth|ens?)[0-9]:/{ print substr($2,1,length($2)-1) }')
 
-itfs=( $(ip a | grep "^[0-9]*: " | awk '{ print substr($2,0,length($2)-1) }') )
+if [[ -z $public_itf ]]; then
+    # Remove cloud-config network setup
+    rm -f /etc/network/interfaces.d/50-cloud-init.cfg
+fi
+
+itfs=( $(ip a | grep "^[0-9]*: " | awk '{ print substr($2,1,length($2)-1) }') )
 i=0
 j=51
 
@@ -40,9 +49,7 @@ for n in $(echo $config_server_lan_interfaces | sed "s/,/ /g"); do
     i=$(($i+1))
     itf=${itfs[$i]}
     
-    ip=$(echo $n | awk -F'|' '{print $1}')
-    [[ -n $ip ]] || continue
-
+    ip=$(echo $n | awk -F'|' '{print $1}')    
     netmask=$(echo $n | awk -F'|' '{print $2}')
     lan_subnet=$(echo $n | awk -F'|' '{print $3}')
     lan_netmask=$(echo $n | awk -F'|' '{print $4}')
@@ -58,7 +65,7 @@ for n in $(echo $config_server_lan_interfaces | sed "s/,/ /g"); do
         if [[ -n $ip ]]; then        
             # Configure a static IP
 
-            if [[ -n lan_subnet && -n $lan_gateway ]]; then
+            if [[ -n $lan_subnet && -n $lan_gateway ]]; then
                 # Configure a static route
 
                 cat << ---EOF > /etc/network/interfaces.d/$j-$itf.cfg
