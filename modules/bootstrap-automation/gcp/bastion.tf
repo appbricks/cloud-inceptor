@@ -32,7 +32,7 @@ resource "google_compute_instance" "bastion" {
 
   network_interface {
     subnetwork = "${google_compute_subnetwork.dmz.self_link}"
-    address    = "${google_compute_address.bastion-dmz.address}"
+    network_ip = "${google_compute_address.bastion-dmz.address}"
 
     access_config = [{
       nat_ip = "${google_compute_address.bastion-public.address}"
@@ -43,11 +43,10 @@ resource "google_compute_instance" "bastion" {
 
   network_interface {
     subnetwork = "${google_compute_subnetwork.admin.self_link}"
-    address    = "${google_compute_address.bastion-admin.address}"
+    network_ip = "${google_compute_address.bastion-admin.address}"
   }
 
   metadata {
-    ssh-keys           = "${var.bastion_admin_user}:${module.config.bastion_openssh_public_key}"
     user-data          = "${module.config.bastion_cloud_init_config}"
     user-data-encoding = "base64"
   }

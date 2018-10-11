@@ -141,22 +141,35 @@ set -e
 systemctl restart docker
 
 #
-# Configure SSH Access
+# Configure Users and SSH Access
 #
+
+if [[ -e /data/users/etc ]]; then
+    cp -r /data/users/etc/* /etc
+else
+    mkdir -p /data/users/home
+    mkdir -p /data/users/etc
+    mkdir -p /data/users/etc/ssh
+fi
 
 if [[ -n "$config_server_admin_passwd" ]]; then
 
     admin_user=${config_server_admin_user:-admin}
     admin_password=$(mkpasswd "$config_server_admin_passwd")
+    user_home=/data/users/home/$admin_user
 
     set +e
     id $admin_user >/dev/null 2>&1
     if [[ $? -ne 0 ]]; then
-        useradd $admin_user -p $admin_password -m -d /home/$admin_user -s /bin/bash
+        useradd $admin_user -p $admin_password -m -d $user_home -s /bin/bash
     else
-        usermod $admin_user -p $admin_password
+        usermod $admin_user -p $admin_password -m -d $user_home -s /bin/bash
     fi
     adduser $admin_user sudo
+
+    mkdir -p $user_home/.ssh
+    echo "$config_server_admin_ssh_public_key" > \
+         $user_home/.ssh/authorized_keys
 
     # Remove any overrides that may 
     # allow passwordless sudos
@@ -166,7 +179,6 @@ if [[ -n "$config_server_admin_passwd" ]]; then
     [[ -n "$config_server_admin_ssh_port" ]] && \
         sed -i "s|^Port [0-9]*$|Port $config_server_admin_ssh_port|" /etc/ssh/sshd_config
 
-    echo -e "\nAllowUsers $admin_user" >> /etc/ssh/sshd_config
     service sshd restart
 fi
 

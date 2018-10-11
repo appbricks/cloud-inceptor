@@ -84,7 +84,7 @@ resource "google_dns_record_set" "jumpbox" {
 
   type    = "A"
   ttl     = "300"
-  rrdatas = ["${google_compute_instance.jumpbox.network_interface.0.address}"]
+  rrdatas = ["${google_compute_instance.jumpbox.network_interface.0.network_ip}"]
 }
 
 #

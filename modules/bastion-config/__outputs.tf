@@ -13,11 +13,6 @@ output "root_ca_cert" {
   value = "${local.root_ca_cert}"
 }
 
-# SSH key for logging into Bastion instance
-output "bastion_openssh_public_key" {
-  value = "${tls_private_key.bastion-ssh-key.public_key_openssh}"
-}
-
 # Cloud-Init configuration file setting 
 # up the Bastion instance on first boot
 output "bastion_cloud_init_config" {

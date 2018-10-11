@@ -27,6 +27,10 @@ apt-get install -y whois openvpn easy-rsa libpam-google-authenticator zip
 systemctl stop openvpn
 systemctl disable openvpn
 
+mkdir /usr/lib/openvpn/clients
+curl -L https://swupdate.openvpn.org/community/releases/openvpn-install-2.4.5-I601.exe \
+    -o /usr/lib/openvpn/clients/openvpn-install-2.4.5-I601.exe
+
 # Apache Web Server
 apt-get install -y apache2 apache2-utils libapache2-mod-authnz-external pwauth
 systemctl stop apache2
@@ -41,9 +45,6 @@ systemctl disable postfix
 apt-get install -y squid3
 systemctl stop squid
 systemctl disable squid
-
-curl -L https://swupdate.openvpn.org/community/releases/openvpn-install-2.4.5-I601.exe \
-    -o /etc/openvpn/openvpn-install-2.4.5-I601.exe
 
 # Docker Compose CLI
 curl -L https://github.com/docker/compose/releases/download/1.19.0/docker-compose-`uname -s`-`uname -m` \

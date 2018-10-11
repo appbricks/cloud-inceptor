@@ -14,12 +14,14 @@ fi
 
 user=$1
 userdel $user > /dev/null 2>&1
-rm -fr /home/$user
+rm -fr /data/home/$user
 
 if [[ -e /etc/apache2 ]]; then
-    rm -f /etc/apache2/users/$user.conf
+    rm -f /data/openvpn/apache2/users/$user.conf
     systemctl restart apache2
 fi
 
-set +e
+sed "/^AllowUsers $user$/d" /etc/ssh/sshd_config
+service sshd restart
 
+set +e

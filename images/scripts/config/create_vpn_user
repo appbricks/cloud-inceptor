@@ -11,9 +11,11 @@ if [[ -z "$1" ]]; then
     echo -e "\nUsage: create_vpn_user user [ password ]\n"
     exit 1
 fi
-user=$1
 
-if [[ -z "$2" && ! -e /home/$user ]]; then
+user=$1
+user_home=/data/users/home/$user
+
+if [[ -z "$2" && ! -e $user_home ]]; then
     echo -e "\nHome directory for $user does not exist. Please"
     echo -e "create the user or pass the password as the second"
     echo -e "argument to this script to create a new user.\n"
@@ -72,31 +74,36 @@ if [[ -n $2 ]]; then
     set +e
     userdel $user > /dev/null 2>&1
     set -e
-    rm -fr /home/$user
+    rm -fr $user_home
 
     password=$(mkpasswd "$2")
-    useradd $user -p $password -m -d /home/$user -s /bin/bash
+    useradd $user -p $password -m -d $user_home -s /bin/bash
 fi
+
+grep -q "^AllowUsers $user" /etc/ssh/sshd_config \
+    || echo -e "AllowUsers $user" >> /etc/ssh/sshd_config
+
+service sshd restart
 
 case "$config_openvpn_auth_strategy" in
     google_mfa)
-        google-authenticator -f -t -d -r 3 -R 30 -w 8 -l "${user}@${vpn_server_domain}" -s /home/$user/.google_authenticator
-        cp /home/$user/.google_authenticator /etc/openvpn/users/${user}/gauth.secret
+        google-authenticator -f -t -d -r 3 -R 30 -w 8 -l "${user}@${vpn_server_domain}" -s $user_home/.google_authenticator
+        cp $user_home/.google_authenticator /etc/openvpn/users/${user}/gauth.secret
         chown ubuntu:ubuntu /etc/openvpn/users/${user}/gauth.secret
         ;;
     *)
         ;;
 esac
 
-cp /etc/openvpn/users/${user}/*.zip /home/$user
-cp /etc/openvpn/openvpn-install-*.exe /home/$user
-chown -R $user:$user /home/$user
+cp /etc/openvpn/users/${user}/*.zip $user_home
+cp /usr/lib/openvpn/clients/openvpn-install-*.exe $user_home
+chown -R $user:$user $user_home
 
 if [[ -e /etc/apache2 ]]; then
 
-    mkdir -p /etc/apache2/users
-    cat << ---EOF > /etc/apache2/users/$user.conf
-<Directory /home/$user>
+    mkdir -p /data/openvpn/apache2/users
+    cat << ---EOF > /data/openvpn/apache2/users/$user.conf
+<Directory $user_home>
     AuthType Basic
     AuthName "Restricted Area"
     AuthBasicProvider external
@@ -108,5 +115,12 @@ if [[ -e /etc/apache2 ]]; then
 
     systemctl restart apache2
 fi
+
+# Backup all system user files
+cp /etc/passwd /data/users/etc
+cp /etc/shadow /data/users/etc
+cp /etc/group /data/users/etc
+cp /etc/gshadow /data/users/etc
+cp /etc/ssh/sshd_config /data/users/etc/ssh
 
 set +e
