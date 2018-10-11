@@ -167,6 +167,8 @@ if [[ ! -e $OPENVPN_CONFIG/ta.key ]]; then
 else
     rm -fr /etc/openvpn
     ln -s $OPENVPN_CONFIG /etc/openvpn
+
+    iptables-restore < /etc/openvpn/iptables-dump.ipt
 fi
 
 cat /dev/null > /var/log/syslog
