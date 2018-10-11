@@ -26,8 +26,11 @@ function gcp::build_image() {
     local packer_manifest=$3
 
     echo -e "\nDeleting image with name '$image_name'..."
+
+    set +e
     gcloud compute images list --filter="name=$image_name" | grep "$image_name" >/dev/null 2>&1
     [[ $? -eq 0 ]] && gcloud compute images delete -q "$image_name"
+    set -e
 
     echo -e "\nBuilding image '$IMAGE_NAME' using source image family '$SOURCE_IMAGE_FAMILY'..."
     cd $(dirname $packer_manifest)
