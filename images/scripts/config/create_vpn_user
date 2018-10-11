@@ -78,6 +78,10 @@ if [[ -n $2 ]]; then
 
     password=$(mkpasswd "$2")
     useradd $user -p $password -m -d $user_home -s /bin/bash
+
+    if [[ -n $3 ]]; then
+        echo "$3" > $user_home/.ssh/authorized_keys
+    fi
 fi
 
 grep -q "^AllowUsers $user" /etc/ssh/sshd_config \
