@@ -13,6 +13,42 @@ apt-get -y \
     --allow-downgrades --allow-remove-essential --allow-change-held-packages \
     dist-upgrade
 
+# Disable sshguard if it is installed
+if [[ -e /etc/sshguard/ ]]; then
+    systemctl stop sshguard
+    systemctl disable sshguard
+fi
+
+# NTP
+apt-get install -y -q \
+    --allow-downgrades \
+    --allow-remove-essential \
+    --allow-change-held-packages \
+    ntp
+
+# PowerDNS
+apt-get install -y -q \
+    --allow-downgrades \
+    --allow-remove-essential \
+    --allow-change-held-packages \
+    pdns-server pdns-backend-sqlite3
+
+systemctl stop pdns.service
+systemctl disable pdns.service
+
+# Need give some time for PDNS service to
+# stop otherwise recursor install fails
+sleep 5
+
+apt-get install -y -q \
+    --allow-downgrades \
+    --allow-remove-essential \
+    --allow-change-held-packages \
+    pdns-recursor
+
+systemctl stop pdns-recursor.service
+systemctl disable pdns-recursor.service
+
 # Docker
 curl -fsSL https://get.docker.com/gpg | sudo apt-key add -
 curl -fsSL https://get.docker.com/ | sh

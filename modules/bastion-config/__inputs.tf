@@ -44,6 +44,10 @@ variable "vpc_dns_zone" {
   type = "string"
 }
 
+variable "vpc_internal_dns_zones" {
+  type = "list"
+}
+
 variable "vpc_cidr" {
   type = "string"
 }
@@ -67,6 +71,13 @@ variable "bastion_use_fqdn" {
 }
 
 variable "bastion_public_ip" {
+  type = "string"
+}
+
+#
+# DNS resolvers for the Bastion server
+#
+variable "bastion_dns" {
   type = "string"
 }
 
@@ -147,10 +158,6 @@ variable "vpn_protocol" {
 }
 
 variable "vpn_network" {
-  type = "string"
-}
-
-variable "vpn_network_dns" {
   type = "string"
 }
 

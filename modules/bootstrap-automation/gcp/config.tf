@@ -22,15 +22,18 @@ module "config" {
   root_ca_key  = "${var.root_ca_key}"
   root_ca_cert = "${var.root_ca_cert}"
 
-  vpc_name     = "${var.vpc_name}"
-  vpc_dns_zone = "${var.vpc_dns_zone}"
-  vpc_cidr     = "${var.vpc_cidr}"
+  vpc_name               = "${var.vpc_name}"
+  vpc_dns_zone           = "${var.vpc_dns_zone}"
+  vpc_internal_dns_zones = "${var.vpc_internal_dns_zones}"
+  vpc_cidr               = "${var.vpc_cidr}"
 
   ssh_key_file_path = "${var.ssh_key_file_path}"
 
   bastion_fqdn      = "${var.vpc_dns_zone}"
   bastion_use_fqdn  = "${var.bastion_use_fqdn}"
   bastion_public_ip = "${google_compute_address.bastion-public.address}"
+
+  bastion_dns = "${length(var.bastion_dns) == 0 ? google_compute_subnetwork.admin.gateway_address: var.bastion_dns}"
 
   bastion_nic1_private_ip  = "${google_compute_address.bastion-dmz.address}"
   bastion_nic1_netmask     = "${cidrnetmask(google_compute_subnetwork.dmz.ip_cidr_range)}"
@@ -53,7 +56,6 @@ module "config" {
   vpn_server_port        = "${var.vpn_server_port}"
   vpn_protocol           = "${var.vpn_protocol}"
   vpn_network            = "${var.vpn_network}"
-  vpn_network_dns        = "${length(var.vpn_network_dns) == 0 ? google_compute_subnetwork.admin.gateway_address: var.vpn_network_dns}"
   vpn_tunnel_all_traffic = "${var.vpn_tunnel_all_traffic}"
   vpn_users              = "${var.vpn_users}"
 

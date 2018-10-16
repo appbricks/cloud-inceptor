@@ -56,6 +56,10 @@ variable "vpc_dns_zone" {
   type = "string"
 }
 
+variable "vpc_internal_dns_zones" {
+  default = []
+}
+
 variable "vpc_cidr" {
   default = "10.0.0.0/16"
 }
@@ -111,6 +115,13 @@ variable "bastion_use_fqdn" {
 }
 
 #
+# DNS resolvers for the  server
+#
+variable "bastion_dns" {
+  default = ""
+}
+
+#
 # Bastion access configuration
 #
 variable "bastion_admin_ssh_port" {
@@ -138,10 +149,6 @@ variable "vpn_protocol" {
 
 variable "vpn_network" {
   default = "192.168.111.0/24"
-}
-
-variable "vpn_network_dns" {
-  default = ""
 }
 
 variable "vpn_tunnel_all_traffic" {

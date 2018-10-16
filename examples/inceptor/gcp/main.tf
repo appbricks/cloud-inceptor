@@ -28,6 +28,8 @@ module "bootstrap" {
   # DNS Name for VPC will be 'test.gcp.appbricks.cloud'
   vpc_dns_zone = "test.gcp.appbricks.cloud"
 
+  vpc_internal_dns_zones = ["appbricks.local"]
+
   # Name of parent zone 'gcp.appbricks.cloud' to which the 
   # name server records of the 'vpc_dns_zone' will be added.
   dns_managed_zone_name = "gcp-appbricks-cloud"

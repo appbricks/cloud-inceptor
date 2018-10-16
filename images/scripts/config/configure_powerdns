@@ -1,0 +1,85 @@
+#!/bin/bash
+SCRIPT_HOME=$(cd $(dirname "$(ls -l $0 | awk '{ print $NF }')") && pwd)
+source $SCRIPT_HOME/common
+
+if [[ -z $config_powerdns_dns_zones \
+    || -z $config_powerdns_api_key ]]; then
+    echo "Skipping Power DNS setup as DNS configuration is incomplete."
+    exit 0
+fi
+
+set -xo pipefail
+
+PDNS_DATA_DIR=/data/powerdns
+mkdir -p $PDNS_DATA_DIR
+
+groupadd pdns > /dev/null 2>&1
+useradd -m -g pdns pdns > /dev/null 2>&1
+
+if [[ ! -e $PDNS_DATA_DIR/pdns.sqlite3 ]]; then
+    mv /var/lib/powerdns/pdns.sqlite3 $PDNS_DATA_DIR
+    chown -R pdns:pdns $PDNS_DATA_DIR
+fi
+
+set -e
+
+allowed_subnets=${config_powerdns_allowed_subnets:-0.0.0.0/0}
+
+# Configure the Authoritative server to listen on the loopback address
+sed -i "s|# local-ipv6=::|local-ipv6=|" /etc/powerdns/pdns.conf
+sed -i "s|# local-address=0.0.0.0|local-address=127.0.0.1|" /etc/powerdns/pdns.conf
+sed -i "s|# local-port=53|local-port=5300|" /etc/powerdns/pdns.conf
+
+# Allow DNS updates on the Authoritative server
+sed -i "s|# dnsupdate=no|dnsupdate=yes|" /etc/powerdns/pdns.conf
+sed -i "s|# allow-dnsupdate-from=127.0.0.0/8,::1|allow-dnsupdate-from=${allowed_subnets}|" /etc/powerdns/pdns.conf
+
+# Configure API server on the Authoritative server
+sed -i "s|# webserver=no|webserver=yes|" /etc/powerdns/pdns.conf
+sed -i "s|# webserver-address=127.0.0.1|webserver-address=127.0.0.1|" /etc/powerdns/pdns.conf
+sed -i "s|# webserver-port=8081|webserver-port=8888|" /etc/powerdns/pdns.conf
+sed -i "s|# api=no|api=yes|" /etc/powerdns/pdns.conf
+sed -i "s|# api-key=|api-key=${config_powerdns_api_key}|" /etc/powerdns/pdns.conf
+sed -i "s|# api-logfile=/var/log/pdns.log|api-logfile=/var/log/pdns.log|" /etc/powerdns/pdns.conf
+
+# Configure SQL Lite backend for the Authoritative server
+sed -i "s|gsqlite3-database=.*|gsqlite3-database=$PDNS_DATA_DIR/pdns.sqlite3|" /etc/powerdns/pdns.d/pdns.local.gsqlite3.conf
+echo "gsqlite3-pragma-synchronous=0" >> /etc/powerdns/pdns.d/pdns.local.gsqlite3.conf
+
+# Configure the recursor
+sed -i "s|local-address=127.0.0.1|local-address=0.0.0.0|" /etc/powerdns/recursor.conf
+sed -i "s|# local-port=53|local-port=53|" /etc/powerdns/recursor.conf
+sed -i "s|# forward-zones-file=.*|forward-zones-file=/etc/powerdns/forward-zones.conf|" /etc/powerdns/recursor.conf
+
+rm /etc/powerdns/bindbackend.conf
+rm /etc/powerdns/pdns.d/pdns.simplebind.conf
+
+echo "nameserver $config_powerdns_ns_ip" > /etc/resolvconf/resolv.conf.d/head
+resolvconf -u
+
+systemctl enable pdns.service
+systemctl start pdns.service
+
+first=Y
+for zone in $config_powerdns_dns_zones; do
+
+    if [[ -n $first ]]; then 
+        echo "$zone=127.0.0.1:5300" > /etc/powerdns/forward-zones.conf
+        unset first
+    else
+        echo "$zone=127.0.0.1:5300" >> /etc/powerdns/forward-zones.conf
+    fi
+
+    set +e
+    pdnsutil list-zone $zone > /dev/null 2>&1
+    if [[ $? -eq 1 ]]; then
+        pdnsutil create-zone $zone ns1.$zone
+        pdnsutil add-record $zone ns1 A $config_powerdns_ns_ip
+    fi
+    set -e
+done
+
+systemctl enable pdns-recursor.service
+systemctl start pdns-recursor.service
+
+touch /root/.powerdns_installed

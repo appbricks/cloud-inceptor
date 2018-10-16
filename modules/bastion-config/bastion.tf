@@ -75,10 +75,13 @@ runcmd:
 - /root/mount-data-volume.sh
 - mv /root/bastion-config.yml /root/config.yml
 - /root/.bin/configure_network 2>&1 | tee -a /var/log/configure_network.log
+- /root/.bin/configure_powerdns 2>&1 | tee -a /var/log/configure_powerdns.log
 - /root/.bin/configure_smtp 2>&1 | tee -a /var/log/configure_smtp.log
 - /root/.bin/configure_openvpn 2>&1 | tee -a /var/log/configure_openvpn.log
 - /root/.bin/configure_squidproxy 2>&1 | tee -a /var/log/configure_squidproxy.log
 - /root/.bin/configure_concourse 2>&1 | tee -a /var/log/configure_concourse.log
+- chmod 0600 /var/log/configure_*.log
+- chmod 0600 /var/log/cloud-init*.log
 
 network:
   config: disabled
@@ -122,11 +125,18 @@ server:
       var.bastion_nic2_lan_netmask,
       var.bastion_nic2_lan_gateway
     ))}'
+  dns_resolvers: ${var.bastion_dns}
   admin_ssh_port: ${var.bastion_admin_ssh_port}
   admin_user: ${var.bastion_admin_user}
   admin_passwd: ${random_string.bastion-admin-password.result}
   admin_ssh_public_key: ${tls_private_key.bastion-ssh-key.public_key_openssh}
   docker_mount_path: /data
+
+powerdns:
+  dns_zones: ${join(" ", var.vpc_internal_dns_zones)}
+  allowed_subnets: ${var.vpc_cidr},${var.vpn_network}
+  ns_ip: ${length(var.bastion_nic2_private_ip) > 0 ? var.bastion_nic2_private_ip : var.bastion_nic1_private_ip}
+  api_key: ${random_string.powerdns-api-key.result}
 
 smtp:
   relay_host: ${var.smtp_relay_host}
@@ -139,7 +149,6 @@ openvpn:
   protocol: ${var.vpn_protocol}
   subnet: ${var.vpn_network}
   netmask: ${cidrnetmask(var.vpn_network)}
-  dns_servers: ${var.vpn_network_dns}
   server_domain: ${var.vpc_dns_zone}
   server_description: ${var.vpc_name}-vpn
   tunnel_all_traffic: ${var.vpn_tunnel_all_traffic}
@@ -173,6 +182,11 @@ data "template_file" "bootstrap-pipeline-vars" {
 }
 
 resource "random_string" "bastion-admin-password" {
+  length  = 32
+  special = false
+}
+
+resource "random_string" "powerdns-api-key" {
   length  = 32
   special = false
 }

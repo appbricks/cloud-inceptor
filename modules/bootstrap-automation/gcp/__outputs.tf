@@ -51,6 +51,12 @@ output "bastion_admin_password" {
   value = "${module.config.bastion_admin_password}"
 }
 
+# The api-key required to adminster the 
+# internal zone managed by powerdns
+output "powerdns_api_key" {
+  value = "${module.config.powerdns_api_key}"
+}
+
 #
 # Default SSH key to use within VPC
 #

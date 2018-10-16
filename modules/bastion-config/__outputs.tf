@@ -23,3 +23,9 @@ output "bastion_cloud_init_config" {
 output "bastion_admin_password" {
   value = "${random_string.bastion-admin-password.result}"
 }
+
+# The api-key required to adminster the 
+# internal zone managed by powerdns
+output "powerdns_api_key" {
+  value = "${random_string.powerdns-api-key.result}"
+}
