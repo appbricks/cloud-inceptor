@@ -37,6 +37,23 @@ data "vsphere_virtual_machine" "bastion-template" {
   datacenter_id = "${data.vsphere_datacenter.dc.id}"
 }
 
+data "vsphere_virtual_machine" "jumpbox-template" {
+  count = "${length(var.deploy_jumpbox) > 0 ? 1 : 0}"
+
+  name          = "/${var.datacenter}/vm/${var.jumpbox_template_path}"
+  datacenter_id = "${data.vsphere_datacenter.dc.id}"
+}
+
+#
+# VCenter folder for VPC
+#
+
+resource "vsphere_folder" "vpc" {
+  path          = "${var.vpc_name}"
+  type          = "vm"
+  datacenter_id = "${data.vsphere_datacenter.dc.id}"
+}
+
 #
 # Default SSH Key Pair
 #

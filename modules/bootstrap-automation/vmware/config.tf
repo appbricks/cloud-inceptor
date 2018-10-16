@@ -32,15 +32,19 @@ module "config" {
   root_ca_key  = "${var.root_ca_key}"
   root_ca_cert = "${var.root_ca_cert}"
 
-  vpc_name     = "${var.vpc_name}"
-  vpc_dns_zone = "${var.vpc_dns_zone}"
-  vpc_cidr     = "${var.vpc_cidr}"
+  vpc_name                 = "${var.vpc_name}"
+  vpc_cidr                 = "${var.vpc_cidr}"
+  vpc_dns_zone             = "${var.vpc_dns_zone}"
+  vpc_internal_dns_zones   = "${var.vpc_internal_dns_zones}"
+  vpc_internal_dns_records = []
 
   ssh_key_file_path = "${var.ssh_key_file_path}"
 
   bastion_fqdn      = "${var.vpc_dns_zone}"
   bastion_use_fqdn  = "${var.bastion_use_fqdn}"
   bastion_public_ip = "${local.bastion_public_ip}"
+
+  bastion_dns = "${length(var.bastion_dns) == 0 ? "8.8.8.8": var.bastion_dns}"
 
   bastion_nic1_private_ip  = "${local.has_dmz_network ? var.bastion_dmz_ip : var.bastion_admin_ip}"
   bastion_nic1_netmask     = "${cidrnetmask(local.has_dmz_network ? var.dmz_network_cidr : var.admin_network_cidr)}"
@@ -62,7 +66,6 @@ module "config" {
   vpn_server_port          = "${var.vpn_server_port}"
   vpn_protocol             = "${var.vpn_protocol}"
   vpn_network              = "${var.vpn_network}"
-  vpn_network_dns          = "${length(var.vpn_network_dns) == 0 ? "8.8.8.8": var.vpn_network_dns}"
   vpn_tunnel_all_traffic   = "${var.vpn_tunnel_all_traffic}"
   vpn_users                = "${var.vpn_users}"
   smtp_relay_host          = "${var.smtp_relay_host}"

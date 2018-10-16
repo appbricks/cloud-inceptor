@@ -32,7 +32,8 @@ iso_checksum="c94de1cc2e10160f325eb54638a5b5aa38f181d60ee33dae9578d96d932ee5f8"
 iso_checksum_type="sha256"
 boot_command_prefix="<enter><wait><f6><esc><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs><bs>"
 
-image_name="appbricks-inceptor-bastion"
+type=${1:-inceptor}
+image_name="appbricks-$type"
 
 set +e
 govc vm.destroy "/lab/vm/Discovered virtual machine/$image_name" > /dev/null 2>&1
@@ -49,7 +50,7 @@ packer build \
   -var "iso_checksum_type=$iso_checksum_type" \
   -var "boot_command_prefix=$boot_command_prefix" \
   -var "vm_name=$image_name" \
-  build-vmware.json 2>&1 \
-  | tee $log_dir/build-vmware.log
+  build-vmware-$type.json 2>&1 \
+  | tee $log_dir/build-vmware-$type.log
 
 cd -

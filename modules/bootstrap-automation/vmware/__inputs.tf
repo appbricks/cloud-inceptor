@@ -46,12 +46,20 @@ variable "vpc_name" {
   type = "string"
 }
 
+variable "vpc_cidr" {
+  type = "string"
+}
+
 variable "vpc_dns_zone" {
   type = "string"
 }
 
-variable "vpc_cidr" {
-  type = "string"
+variable "vpc_internal_dns_zones" {
+  default = []
+}
+
+variable "vpc_internal_dns_records" {
+  default = []
 }
 
 #
@@ -108,7 +116,7 @@ variable "bastion_instance_cpus" {
 }
 
 variable "bastion_template_path" {
-  default = "/templates/appbricks-inceptor-bastion"
+  default = "/templates/appbricks-inceptor"
 }
 
 variable "bastion_root_disk_size" {
@@ -140,6 +148,13 @@ variable "bastion_admin_ip" {
 }
 
 #
+# DNS resolvers for the  server
+#
+variable "bastion_dns" {
+  default = ""
+}
+
+#
 # Bastion access configuration
 #
 variable "bastion_admin_ssh_port" {
@@ -167,10 +182,6 @@ variable "vpn_protocol" {
 
 variable "vpn_network" {
   default = "192.168.111.0/24"
-}
-
-variable "vpn_network_dns" {
-  default = ""
 }
 
 variable "vpn_tunnel_all_traffic" {
@@ -230,6 +241,22 @@ variable "deploy_jumpbox" {
   default = "true"
 }
 
+variable "jumpbox_instance_memory" {
+  default = "1024"
+}
+
+variable "jumpbox_instance_cpus" {
+  default = "1"
+}
+
 variable "jumpbox_data_disk_size" {
   default = "160"
+}
+
+variable "jumpbox_admin_ip" {
+  default = ""
+}
+
+variable "jumpbox_template_path" {
+  default = "/templates/appbricks-ubuntu"
 }
