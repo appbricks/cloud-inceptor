@@ -2,8 +2,19 @@
 # Jumpbox
 #
 
+locals {
+  local_dns = "${length(var.vpc_internal_dns_zones) > 0 
+    ? element(var.vpc_internal_dns_zones, 0) : ""}"
+
+  jumpbox_dns = "${var.deploy_jumpbox == "true" && length(local.local_dns) > 0 
+    ? format("jumpbox.%s", local.local_dns) : ""}"
+
+  jumpbox_dns_record = "${length(local.jumpbox_dns) > 0 
+    ? format("%s:%s", local.jumpbox_dns, google_compute_address.jumpbox.address) : ""}"
+}
+
 resource "google_compute_instance" "jumpbox" {
-  count = "${var.deploy_jumpbox == "true" ? 1 : 0}"
+  count = "${length(local.jumpbox_dns) > 0 ? 1 : 0}"
 
   name         = "${var.vpc_name}-jumpbox"
   machine_type = "f1-micro"
@@ -29,6 +40,7 @@ resource "google_compute_instance" "jumpbox" {
 
   network_interface {
     subnetwork = "${google_compute_subnetwork.admin.self_link}"
+    network_ip = "${google_compute_address.jumpbox.address}"
   }
 
   metadata {
@@ -49,6 +61,12 @@ USER_DATA
   }
 }
 
+resource "google_compute_address" "jumpbox" {
+  name         = "ipv4-address"
+  address_type = "INTERNAL"
+  subnetwork   = "${google_compute_subnetwork.admin.self_link}"
+}
+
 #
 # Jumpbox data volume
 #
@@ -64,33 +82,10 @@ data "template_file" "mount-jumpbox-data-volume" {
 }
 
 resource "google_compute_disk" "jumpbox-data-disk" {
-  count = "${var.deploy_jumpbox == "true" ? 1 : 0}"
+  count = "${length(local.jumpbox_dns) > 0 ? 1 : 0}"
 
   name = "${var.vpc_name}-jumpbox-data-disk"
   type = "pd-standard"
   zone = "${data.google_compute_zones.available.names[0]}"
   size = "${var.jumpbox_data_disk_size}"
-}
-
-#
-# Jumpbox DNS
-#
-
-resource "google_dns_record_set" "jumpbox" {
-  count = "${var.deploy_jumpbox == "true" ? 1 : 0}"
-
-  name         = "jumpbox.${google_dns_managed_zone.vpc.dns_name}"
-  managed_zone = "${google_dns_managed_zone.vpc.name}"
-
-  type    = "A"
-  ttl     = "300"
-  rrdatas = ["${google_compute_instance.jumpbox.network_interface.0.network_ip}"]
-}
-
-#
-# Output
-#
-
-output "jumpbox-fqdn" {
-  value = "jumpbox.${google_dns_managed_zone.vpc.dns_name}"
 }

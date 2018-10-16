@@ -79,6 +79,18 @@ for zone in $config_powerdns_dns_zones; do
     set -e
 done
 
+for dns_mapping in $config_powerdns_dns_records; do
+    
+    address=${dns_mapping##*:}
+    name=${dns_mapping%%:*}
+    zone=${name#*.}
+    host=${name%%.*}
+
+    set +e
+    pdnsutil add-record $zone $host A $address
+    set -e
+done
+
 systemctl enable pdns-recursor.service
 systemctl start pdns-recursor.service
 

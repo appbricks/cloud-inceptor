@@ -22,10 +22,11 @@ module "config" {
   root_ca_key  = "${var.root_ca_key}"
   root_ca_cert = "${var.root_ca_cert}"
 
-  vpc_name               = "${var.vpc_name}"
-  vpc_dns_zone           = "${var.vpc_dns_zone}"
-  vpc_internal_dns_zones = "${var.vpc_internal_dns_zones}"
-  vpc_cidr               = "${var.vpc_cidr}"
+  vpc_name                 = "${var.vpc_name}"
+  vpc_cidr                 = "${var.vpc_cidr}"
+  vpc_dns_zone             = "${var.vpc_dns_zone}"
+  vpc_internal_dns_zones   = "${var.vpc_internal_dns_zones}"
+  vpc_internal_dns_records = "${concat(var.vpc_internal_dns_records, list(local.jumpbox_dns_record))}"
 
   ssh_key_file_path = "${var.ssh_key_file_path}"
 

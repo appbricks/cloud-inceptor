@@ -100,10 +100,6 @@ data "template_file" "mount-data-volume" {
   }
 }
 
-output "xxx" {
-  value = "${data.template_file.bastion-config.rendered}"
-}
-
 data "template_file" "bastion-config" {
   template = <<CONFIG
 ---
@@ -134,6 +130,7 @@ server:
 
 powerdns:
   dns_zones: ${join(" ", var.vpc_internal_dns_zones)}
+  dns_records: ${join(" ", var.vpc_internal_dns_records)}
   allowed_subnets: ${var.vpc_cidr},${var.vpn_network}
   ns_ip: ${length(var.bastion_nic2_private_ip) > 0 ? var.bastion_nic2_private_ip : var.bastion_nic1_private_ip}
   api_key: ${random_string.powerdns-api-key.result}

@@ -28,6 +28,9 @@ module "bootstrap" {
   # DNS Name for VPC will be 'test.gcp.appbricks.cloud'
   vpc_dns_zone = "test.gcp.appbricks.cloud"
 
+  # Local DNS zone. This could also be the same as the public
+  # which will enable setting up a split DNS of the public zone
+  # for names to map to external and internal addresses.
   vpc_internal_dns_zones = ["appbricks.local"]
 
   # Name of parent zone 'gcp.appbricks.cloud' to which the 
@@ -45,6 +48,11 @@ module "bootstrap" {
 
   # Whether to allow SSH access to bastion server
   bastion_allow_public_ssh = "true"
+
+  # Whether to deploy a jumpbox in the admin network. The
+  # jumpbox will be deployed only if a local DNS zone is
+  # provided and the DNS will be jumpbox.[first local zone].
+  deploy_jumpbox = "true"
 
   #
   # Bootstrap pipeline

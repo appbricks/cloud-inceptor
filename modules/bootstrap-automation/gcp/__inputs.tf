@@ -56,10 +56,6 @@ variable "vpc_dns_zone" {
   type = "string"
 }
 
-variable "vpc_internal_dns_zones" {
-  default = []
-}
-
 variable "vpc_cidr" {
   default = "10.0.0.0/16"
 }
@@ -70,6 +66,14 @@ variable "vpc_subnet_bits" {
 
 variable "vpc_subnet_start" {
   default = 200
+}
+
+variable "vpc_internal_dns_zones" {
+  default = []
+}
+
+variable "vpc_internal_dns_records" {
+  default = []
 }
 
 variable "dmz_cidr" {

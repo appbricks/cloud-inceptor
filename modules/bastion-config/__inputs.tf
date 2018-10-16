@@ -40,6 +40,10 @@ variable "vpc_name" {
   type = "string"
 }
 
+variable "vpc_cidr" {
+  type = "string"
+}
+
 variable "vpc_dns_zone" {
   type = "string"
 }
@@ -48,8 +52,8 @@ variable "vpc_internal_dns_zones" {
   type = "list"
 }
 
-variable "vpc_cidr" {
-  type = "string"
+variable "vpc_internal_dns_records" {
+  type = "list"
 }
 
 #
