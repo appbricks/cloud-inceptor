@@ -76,9 +76,9 @@ ${var.bootstrap_pipeline_vars}
 environment: ${var.vpc_name}
 region: ${var.region}
 
-dmz_network      = "${google_compute_network.dmz.self_link}"
-dmz_subnetwork   = "${google_compute_subnetwork.dmz.self_link}"
-admin_network    = "${google_compute_network.admin.self_link}"
-admin_subnetwork = "${google_compute_subnetwork.admin.self_link}"
+dmz_network: "${google_compute_network.dmz.self_link}"
+dmz_subnetwork: "${google_compute_subnetwork.dmz.self_link}"
+admin_network: "${google_compute_network.admin.self_link}"
+admin_subnetwork: "${google_compute_subnetwork.admin.self_link}"
 PIPELINE_VARS
 }

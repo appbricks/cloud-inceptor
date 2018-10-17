@@ -16,6 +16,15 @@ output "root_ca_cert" {
 #
 # Bastion resource attributes
 #
+
+output "bastion_fqdn" {
+  value = "${local.has_dmz_network ? var.bastion_dmz_ip : var.bastion_admin_ip}"
+}
+
+output "bastion_admin_fqdn" {
+  value = "${var.bastion_admin_ip}"
+}
+
 output "bastion_admin_password" {
   value = "${module.config.bastion_admin_password}"
 }
