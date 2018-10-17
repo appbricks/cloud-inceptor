@@ -72,15 +72,46 @@ data "template_cloudinit_config" "jumpbox-cloudinit" {
   part {
     content = <<USER_DATA
 #cloud-config
+users:
+  - default
+
+system_info:
+  default_user:
+   name: ubuntu
+   gecos: Ubuntu
+   lock_passwd: False
+   home: /home/ubuntu
+   shell: /bin/bash
+   ssh_authorized_keys:
+   - ${tls_private_key.default-ssh-key.public_key_openssh}
+   groups: [ubuntu, adm, cdrom, sudo, dip, plugdev, lpadmin, sambashare]
+
 network:
-  version: 1
-  config:
-    - type: physical
-      name: ens160
-      subnets:
-        - type: static
-          address: ${var.jumpbox_admin_ip}
-          gateway: ${var.admin_network_gateway}
+  config: disabled
+  
+runcmd:
+- |
+  set -x
+  rm -f /etc/network/interfaces.d/*
+
+  # Setup LAN network interface
+  interface=$(ip a | awk '/^[0-9]+: (eth|ens?)[0-9]+:/{ print substr($2,1,length($2)-1) }')
+  ifdown $interface
+  ip addr flush dev $interface
+
+  cat << ---EOF > /etc/network/interfaces.d/99-$interface.cfg
+  auto $interface
+  iface $interface inet static
+    address ${var.jumpbox_admin_ip}
+    netmask ${cidrnetmask(var.admin_network_cidr)}
+    gateway ${var.admin_network_gateway}
+  ---EOF
+  ifup $interface
+
+  echo "nameserver ${var.bastion_admin_ip}" > /etc/resolvconf/resolv.conf.d/head
+  echo "search ${element(var.vpc_internal_dns_zones, 0)}" >> /etc/resolvconf/resolv.conf.d/head
+  resolvconf -u
+
 USER_DATA
   }
 }

@@ -30,9 +30,12 @@ module "bootstrap" {
   dmz_network_cidr    = "192.168.100.0/24"
   dmz_network_gateway = "192.168.100.2"
 
-  admin_network         = "Admin Network"
-  admin_network_cidr    = "192.168.101.0/24"
-  admin_network_gateway = "192.168.101.1"
+  admin_network      = "Admin Network"
+  admin_network_cidr = "192.168.101.0/24"
+
+  # Since the VMware vCenter admin network is 
+  # not routed gateway should be left empty
+  # admin_network_gateway = "192.168.101.1"
 
   vpc_name     = "inceptor"
   vpc_dns_zone = "test.vmw.appbricks.cloud"
@@ -57,9 +60,8 @@ module "bootstrap" {
 
   # Whether to allow SSH access to bastion server
   bastion_allow_public_ssh = "true"
-
-  bastion_dmz_ip   = "192.168.100.20"
-  bastion_admin_ip = "192.168.101.5"
+  bastion_dmz_ip           = "192.168.100.20"
+  bastion_admin_ip         = "192.168.101.5"
 
   # Whether to deploy a jumpbox in the admin network. The
   # jumpbox will be deployed only if a local DNS zone is
