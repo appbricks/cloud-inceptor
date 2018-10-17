@@ -36,7 +36,7 @@ sed -i "s|# allow-dnsupdate-from=127.0.0.0/8,::1|allow-dnsupdate-from=${allowed_
 
 # Configure API server on the Authoritative server
 sed -i "s|# webserver=no|webserver=yes|" /etc/powerdns/pdns.conf
-sed -i "s|# webserver-address=127.0.0.1|webserver-address=127.0.0.1|" /etc/powerdns/pdns.conf
+sed -i "s|# webserver-address=127.0.0.1|webserver-address=${config_powerdns_ns_ip}|" /etc/powerdns/pdns.conf
 sed -i "s|# webserver-port=8081|webserver-port=8888|" /etc/powerdns/pdns.conf
 sed -i "s|# api=no|api=yes|" /etc/powerdns/pdns.conf
 sed -i "s|# api-key=|api-key=${config_powerdns_api_key}|" /etc/powerdns/pdns.conf
@@ -47,7 +47,7 @@ sed -i "s|gsqlite3-database=.*|gsqlite3-database=$PDNS_DATA_DIR/pdns.sqlite3|" /
 echo "gsqlite3-pragma-synchronous=0" >> /etc/powerdns/pdns.d/pdns.local.gsqlite3.conf
 
 # Configure the recursor
-sed -i "s|local-address=127.0.0.1|local-address=0.0.0.0|" /etc/powerdns/recursor.conf
+sed -i "s|local-address=127.0.0.1|local-address=$config_powerdns_ns_ip|" /etc/powerdns/recursor.conf
 sed -i "s|# local-port=53|local-port=53|" /etc/powerdns/recursor.conf
 sed -i "s|# forward-zones-file=.*|forward-zones-file=/etc/powerdns/forward-zones.conf|" /etc/powerdns/recursor.conf
 
