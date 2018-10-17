@@ -99,13 +99,13 @@ function configure_openvpn() {
     # Allow established traffic to pass back and forth
     iptables -I FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
 
-    itfs=( $(ip a | grep "^[0-9]*:" | awk '{ print substr($2,0,length($2)-1) }') )
+    itfs=( $(ip a | awk '/^[0-9]+: (eth|ens?)[0-9]+:/{ print substr($2,1,length($2)-1) }') )
     i=0
 
     for n in $(echo $config_server_lan_interfaces | sed "s/,/ /g"); do
 
-        i=$(($i+1))
         itf=${itfs[$i]}
+        i=$(($i+1))
 
         netmask=$(echo $n | awk -F'|' '{print $2}')
         lan_subnet=$(echo $n | awk -F'|' '{print $3}')
