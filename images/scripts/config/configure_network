@@ -33,7 +33,7 @@ set -ex
 
 public_itf=$(ip a \
     | grep -B 5 "$config_server_private_ip" \
-    | awk '/^[0-9]*: (eth|ens?)[0-9]:/{ print substr($2,1,length($2)-1) }')
+    | awk '/^[0-9]+: (eth|ens?)[0-9]+:/{ print substr($2,1,length($2)-1) }')
 
 if [[ -z $public_itf ]]; then
     # Remove cloud-config network setup
