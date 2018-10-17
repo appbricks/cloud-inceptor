@@ -71,6 +71,9 @@ write_files:
   path: /root/bootstrap-vars.yml
   permissions: '0644'
 
+network:
+  config: disabled
+
 runcmd: 
 - /root/mount-data-volume.sh
 - mv /root/bastion-config.yml /root/config.yml
@@ -82,9 +85,6 @@ runcmd:
 - /root/.bin/configure_concourse 2>&1 | tee -a /var/log/configure_concourse.log
 - chmod 0600 /var/log/configure_*.log
 - chmod 0600 /var/log/cloud-init*.log
-
-network:
-  config: disabled
 
 USER_DATA
   }
