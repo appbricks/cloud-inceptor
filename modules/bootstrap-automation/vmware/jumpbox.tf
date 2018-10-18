@@ -95,18 +95,18 @@ runcmd:
   rm -f /etc/network/interfaces.d/*
 
   # Setup LAN network interface
-  interface=$(ip a | awk '/^[0-9]+: (eth|ens?)[0-9]+:/{ print substr($2,1,length($2)-1) }')
-  ifdown $interface
-  ip addr flush dev $interface
+  itf=$(ip a | awk '/^[0-9]+: (eth|ens?)[0-9]+:/{ print substr($2,1,length($2)-1) }')
+  ifdown $itf
+  ip addr flush dev $itf
 
-  cat << ---EOF > /etc/network/interfaces.d/99-$interface.cfg
-  auto $interface
-  iface $interface inet static
+  cat << ---EOF > /etc/network/interfaces.d/99-$itf.cfg
+  auto $itf
+  iface $itf inet static
     address ${var.jumpbox_admin_ip}
     netmask ${cidrnetmask(var.admin_network_cidr)}
     gateway ${var.admin_network_gateway}
   ---EOF
-  ifup $interface
+  ifup $itf
 
   echo "nameserver ${var.bastion_admin_ip}" > /etc/resolvconf/resolv.conf.d/head
   echo "search ${element(var.vpc_internal_dns_zones, 0)}" >> /etc/resolvconf/resolv.conf.d/head
