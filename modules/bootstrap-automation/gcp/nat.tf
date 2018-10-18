@@ -32,9 +32,13 @@ resource "google_compute_instance" "nat-gateway-admin" {
 
   metadata_startup_script = <<EOF
 #!/bin/bash -xe
+
 sysctl -w net.ipv4.ip_forward=1
 sed -i= 's/^[# ]*net.ipv4.ip_forward=[[:digit:]]/net.ipv4.ip_forward=1/g' /etc/sysctl.conf
-iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+
+itf=$(ip a | awk '/^[0-9]+: (eth|ens?)[0-9]+:/{ print substr($2,1,length($2)-1) }')
+iptables -t nat -A POSTROUTING -o $itf -j MASQUERADE
+
 apt-get update
 apt-get upgrade
 EOF
