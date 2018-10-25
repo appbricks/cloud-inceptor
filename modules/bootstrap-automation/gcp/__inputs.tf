@@ -183,6 +183,28 @@ variable "bootstrap_pipeline_vars" {
   default = ""
 }
 
+# Path to cloud inceptor repository provided as input 
+# to concourse tasks. This is required to be able to 
+# locate tasks such as notifications found in that
+# repository. This path should be from the build 
+# root of the concourse build container and the
+# first element would typically be the name of
+# the concourse automation repository resource path.
+variable "pipeline_automation_path" {
+  default = "automation"
+}
+
+# S3 bucket where automation related artifacts
+# will be persisted.
+variable "automation_data_bucket" {
+  default = "auto"
+}
+
+# Email to send concourse job notifications to
+variable "notification_email" {
+  default = ""
+}
+
 #
 # Configure SMTP
 #

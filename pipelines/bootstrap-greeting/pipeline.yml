@@ -1,7 +1,14 @@
 ---
 jobs:
 - name: bootstrap
+  on_success:
+    do:
+    - task: notify on bootstrap success
+  on_failure:
+    do:
+    - task: notify on bootstrap failure
   plan:
+  - get: automation
   - task: initialize
     config:
       platform: linux
@@ -146,7 +153,37 @@ jobs:
         AUTOS3_ACCESS_KEY: ((autos3_access_key))
         AUTOS3_SECRET_KEY: ((autos3_secret_key))
 
+- name: failing-job
+  on_failure:
+    do:
+    - task: notify on failing-job failure
+  plan:
+  - get: automation
+  - task: fail
+    config:
+      platform: linux
+      image_resource:
+        type: docker-image
+        source: {repository: alpine}
+      run:
+        path: /bin/sh
+        args:
+        - -c
+        - |
+          set -e
+          
+          apk add figlet --update-cache >>out.log 2>&1
+          figlet -cw 160 "FAIL!"
+
+          exit 1
+
 resources:
+
+- name: automation
+  type: git
+  source:
+    uri: https://github.com/appbricks/cloud-inceptor
+    branch: master
 
 - name: hello-message
   type: s3

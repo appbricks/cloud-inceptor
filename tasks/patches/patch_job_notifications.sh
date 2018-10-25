@@ -95,10 +95,10 @@ EOF
   path: /jobs/name=$j/on_success?/do?
   value:
   - task: job_succeeded_alert
-    file: automation/lib/inceptor/tasks/queue_job_email/task.yml
+    file: ((pipeline_automation_path))/tasks/queue_job_email/task.yml
     input_mapping: {job-info: $j-job-info}
     params: 
-      BUCKET: pcf
+      BUCKET: ((automation_data_bucket))
       EMAIL_QUEUE_PATH: email-queue
       AUTOS3_URL: ((autos3_url))
       AUTOS3_ACCESS_KEY: ((autos3_access_key))
@@ -120,10 +120,10 @@ EOF
   path: /jobs/name=$j/on_failure?/do?
   value:
   - task: job_failed_alert
-    file: automation/lib/inceptor/tasks/queue_job_email/task.yml
+    file: ((pipeline_automation_path))/tasks/queue_job_email/task.yml
     input_mapping: {job-info: $j-job-info}
     params: 
-      BUCKET: pcf
+      BUCKET: ((automation_data_bucket))
       EMAIL_QUEUE_PATH: email-queue
       AUTOS3_URL: ((autos3_url))
       AUTOS3_ACCESS_KEY: ((autos3_access_key))

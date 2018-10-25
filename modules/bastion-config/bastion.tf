@@ -161,8 +161,12 @@ openvpn:
   users: '${var.vpn_users}'
 
 concourse:
-  port: ${length(var.concourse_server_port) == 0 ? "" : "127.0.0.1:${var.concourse_server_port}"}
+  port: ${length(var.concourse_server_port) == 0 ? "" : "${var.concourse_server_port}"}
   password: ${var.concourse_admin_password}
+  vpc_name: ${var.vpc_name}
+  pipeline_automation_path: '${var.pipeline_automation_path}'
+  automation_data_bucket: '${var.automation_data_bucket}'
+  notification_email: '${var.notification_email}'
 CONFIG
 }
 

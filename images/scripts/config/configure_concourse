@@ -136,6 +136,11 @@ fi
 
 chmod +x /usr/local/bin/fly
 
+echo -e "\nvpc_name: '$config_concourse_vpc_name'" >> /root/bootstrap-vars.yml
+echo -e "pipeline_automation_path: $config_concourse_pipeline_automation_path" >> /root/bootstrap-vars.yml
+echo -e "automation_data_bucket: $config_concourse_automation_data_bucket" >> /root/bootstrap-vars.yml
+echo -e "notification_email: '$config_concourse_notification_email'" >> /root/bootstrap-vars.yml
+
 echo -e "\nconcourse_url: 'http://concourse-web:8080'" >> /root/bootstrap-vars.yml
 echo -e "concourse_user: 'admin'" >> /root/bootstrap-vars.yml
 echo -e "concourse_password: '$config_concourse_password'" >> /root/bootstrap-vars.yml
@@ -168,9 +173,9 @@ if [[ $s == "---" ]]; then
     sudo -i -- <<BOOTSTRAP
     set -ex
 
-    if [[ -e /root/.smtp_installed ]]; then
+    if [[ -n $config_concourse_notification_email ]]; then
         /root/.bin/patch_job_notifications.sh /root/bootstrap.yml bootstrap > bootstrap-1.yml
-        bosh interpolate -o /root/.bin/notifications_job_patch.yml bootstrap-1.yml > /root/bootstrap-2.yml
+        bosh interpolate -l /root/bootstrap-vars.yml -o /root/.bin/notifications_job_patch.yml bootstrap-1.yml > /root/bootstrap-2.yml
 
         fly --target local set-pipeline -n -p bootstrap \
             -c /root/bootstrap-2.yml -l /root/bootstrap-vars.yml

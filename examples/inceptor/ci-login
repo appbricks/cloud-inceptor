@@ -23,7 +23,7 @@ if [[ $1 == login ]]; then
         -L 8080:127.0.0.1:8080 -N &
 
     sleep 2
-    fly -t local login -k -c http://localhost:8080 -u admin -p $password
+    fly -t local login -k -c http://127.0.0.1:8080 -u admin -p $password
     if [[ $? -ne 0 ]]; then
         echo "ERROR! Unable to login to Concourse using the fly CLI."
         exit 1
@@ -31,7 +31,7 @@ if [[ $1 == login ]]; then
 
     fly -t local sync >/dev/null 2>&1
 
-    echo -e "\nThe Concourse UI is available via the following URL: http://localhost:8080\n"
+    echo -e "\nThe Concourse UI is available via the following URL: http://127.0.0.1:8080\n"
 
 elif [[ $1 == logout ]]; then
     ps -ef | awk '/8080\:127\.0\.0\.1\:8080/{ print $2 }' | sudo xargs kill -15

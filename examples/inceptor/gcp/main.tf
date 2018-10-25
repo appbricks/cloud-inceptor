@@ -1,4 +1,24 @@
 #
+# External variables
+#
+
+variable "smtp_relay_host" {
+  default = ""
+}
+
+variable "smtp_relay_port" {
+  default = ""
+}
+
+variable "smtp_relay_api_key" {
+  default = ""
+}
+
+variable "notification_email" {
+  default = ""
+}
+
+#
 # Bootstrap an base environment named "inceptor"
 #
 
@@ -49,10 +69,20 @@ module "bootstrap" {
   # Whether to allow SSH access to bastion server
   bastion_allow_public_ssh = "true"
 
+  # If the SMTP relay settings are provided then
+  # and SMTP server will be setup which will send
+  # notifications when builds fail
+  smtp_relay_host = "${var.smtp_relay_host}"
+
+  smtp_relay_port    = "${var.smtp_relay_port}"
+  smtp_relay_api_key = "${var.smtp_relay_api_key}"
+
   # Whether to deploy a jumpbox in the admin network. The
   # jumpbox will be deployed only if a local DNS zone is
   # provided and the DNS will be jumpbox.[first local zone].
   deploy_jumpbox = "true"
+
+  notification_email = "${var.notification_email}"
 
   #
   # Bootstrap pipeline
