@@ -16,7 +16,7 @@ inputs:
 - name: emails
 
 run:
-  path: /bin/bash
+  path: /bin/sh
   args:
   - -c
   - |
