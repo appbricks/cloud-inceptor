@@ -165,7 +165,6 @@ concourse:
   password: ${var.concourse_admin_password}
   vpc_name: ${var.vpc_name}
   pipeline_automation_path: '${var.pipeline_automation_path}'
-  automation_data_bucket: '${var.automation_data_bucket}'
   notification_email: '${var.notification_email}'
 CONFIG
 }

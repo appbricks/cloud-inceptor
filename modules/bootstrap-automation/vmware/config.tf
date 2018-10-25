@@ -76,7 +76,6 @@ module "config" {
   bootstrap_pipeline_file  = "${var.bootstrap_pipeline_file}"
 
   pipeline_automation_path = "${var.pipeline_automation_path}"
-  automation_data_bucket   = "${var.automation_data_bucket}"
   notification_email       = "${var.notification_email}"
 
   bootstrap_pipeline_vars = <<PIPELINE_VARS

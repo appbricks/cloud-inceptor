@@ -2,14 +2,6 @@
 SCRIPT_HOME=$(cd $(dirname "$(ls -l $0 | awk '{ print $NF }')") && pwd)
 source $SCRIPT_HOME/common
 
-if [[ -z $config_smtp_relay_host \
-    || -z $config_smtp_relay_port \
-    || -z $config_smtp_relay_api_key ]]; then
-
-    echo "Skipping SMTP setup as some required configuration attributes are missing."
-    exit 0
-fi
-
 mkdir -p /var/mail
 chmod 777 /var/mail
 
@@ -28,12 +20,17 @@ postconf -e "masquerade_domains = \$mydomain"
 postconf -e "mydestination = \$myhostname, \$mydomain, localhost.localdomain, localhost"
 postconf -e "mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128 $config_smtp_networks"
 
-postconf -e "relayhost = [$config_smtp_relay_host]:$config_smtp_relay_port"
-postconf -e "smtp_tls_security_level = encrypt"
-postconf -e "smtp_sasl_auth_enable = yes"
-postconf -e "smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd"
-postconf -e "smtp_sasl_security_options = noanonymous"
-postconf -e "header_size_limit = 4096000"
+if [[ -n $config_smtp_relay_host \
+    && -n $config_smtp_relay_port \
+    && -n $config_smtp_relay_api_key ]]; then
+
+    postconf -e "relayhost = [$config_smtp_relay_host]:$config_smtp_relay_port"
+    postconf -e "smtp_tls_security_level = encrypt"
+    postconf -e "smtp_sasl_auth_enable = yes"
+    postconf -e "smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd"
+    postconf -e "smtp_sasl_security_options = noanonymous"
+    postconf -e "header_size_limit = 4096000"
+fi
 
 postconf -e "mail_spool_directory = /var/mail"
 postconf -e "home_mailbox = .mail/"

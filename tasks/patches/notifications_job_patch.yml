@@ -17,7 +17,7 @@
         AUTOS3_SECRET_KEY: ((autos3_secret_key))
         SMTP_HOST: ((smtp_host))
         SMTP_PORT: ((smtp_port))
-        EMAIL_FROM: ((caps_email))
+        EMAIL_FROM: ((automation_email))
         EMAIL_TO: ((notification_email))      
     - task: send_job_emails
       file: ((pipeline_automation_path))/tasks/send_job_emails/task.yml

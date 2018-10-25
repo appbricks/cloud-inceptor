@@ -200,12 +200,6 @@ variable "pipeline_automation_path" {
   type = "string"
 }
 
-# S3 bucket where automation related artifacts
-# will be persisted.
-variable "automation_data_bucket" {
-  default = "auto"
-}
-
 # Email to send concourse job notifications to
 variable "notification_email" {
   type = "string"

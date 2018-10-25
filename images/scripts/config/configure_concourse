@@ -9,8 +9,8 @@ fi
 
 CONCOURSE_HOME=/data/concourse
 
-userdel caps > /dev/null 2>&1
-useradd caps -p $(openssl rand -base64 32) -m -d /home/$user -s /bin/bash
+userdel automation > /dev/null 2>&1
+useradd automation -p $(openssl rand -base64 32) -m -d /data/users/home/automation -s /bin/bash
 
 userdel concourse >/dev/null 2>&1
 useradd concourse -p $(openssl rand -base64 32) -d /opt/concourse -G docker
@@ -156,7 +156,7 @@ if [[ -e /root/.powerdns_installed ]]; then
 fi
 
 if [[ -e /root/.smtp_installed ]]; then
-    echo -e "\ncaps_email: 'caps@$config_server_fqdn'" >> /root/bootstrap-vars.yml
+    echo -e "\nautomation_email: 'automation@$config_server_fqdn'" >> /root/bootstrap-vars.yml
     echo -e "smtp_host: '$config_server_fqdn'" >> /root/bootstrap-vars.yml
     echo -e "smtp_port: '25'" >> /root/bootstrap-vars.yml
 fi
