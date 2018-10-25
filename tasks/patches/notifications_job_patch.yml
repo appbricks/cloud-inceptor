@@ -15,8 +15,6 @@
         AUTOS3_URL: ((autos3_url))
         AUTOS3_ACCESS_KEY: ((autos3_access_key))
         AUTOS3_SECRET_KEY: ((autos3_secret_key))
-        BUCKET: ((automation_data_bucket))
-        EMAIL_QUEUE_PATH: email-queue
         SMTP_HOST: ((smtp_host))
         SMTP_PORT: ((smtp_port))
         EMAIL_FROM: ((caps_email))

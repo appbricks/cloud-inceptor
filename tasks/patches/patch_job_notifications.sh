@@ -98,8 +98,6 @@ EOF
     file: ((pipeline_automation_path))/tasks/queue_job_email/task.yml
     input_mapping: {job-info: $j-job-info}
     params: 
-      BUCKET: ((automation_data_bucket))
-      EMAIL_QUEUE_PATH: email-queue
       AUTOS3_URL: ((autos3_url))
       AUTOS3_ACCESS_KEY: ((autos3_access_key))
       AUTOS3_SECRET_KEY: ((autos3_secret_key))
@@ -123,8 +121,6 @@ EOF
     file: ((pipeline_automation_path))/tasks/queue_job_email/task.yml
     input_mapping: {job-info: $j-job-info}
     params: 
-      BUCKET: ((automation_data_bucket))
-      EMAIL_QUEUE_PATH: email-queue
       AUTOS3_URL: ((autos3_url))
       AUTOS3_ACCESS_KEY: ((autos3_access_key))
       AUTOS3_SECRET_KEY: ((autos3_secret_key))
