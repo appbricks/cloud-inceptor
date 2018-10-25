@@ -22,7 +22,7 @@ if [[ $1 == login ]]; then
         -i $2/bastion-admin-ssh-key.pem bastion-admin@$host \
         -L 8080:127.0.0.1:8080 -N &
 
-    sleep 2
+    sleep 5
     fly -t local login -k -c http://127.0.0.1:8080 -u admin -p $password
     if [[ $? -ne 0 ]]; then
         echo "ERROR! Unable to login to Concourse using the fly CLI."
