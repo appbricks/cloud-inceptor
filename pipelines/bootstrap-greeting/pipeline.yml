@@ -182,7 +182,7 @@ resources:
 - name: automation
   type: git
   source:
-    uri: https://github.com/appbricks/cloud-inceptor
+    uri: https://github.com/mevansam/cloud-inceptor
     branch: master
 
 - name: hello-message
