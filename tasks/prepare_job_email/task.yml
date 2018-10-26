@@ -54,11 +54,13 @@ run:
     a browser page via the following link to navigate to the job
     execution output view.</p>
 
+    <h2>
     Pipeline Job: 
     <a target="_blank" 
       href="$ATC_EXTERNAL_URL/teams/${BUILD_TEAM_NAME}/pipelines/${BUILD_PIPELINE_NAME}/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}">
       ${BUILD_PIPELINE_NAME}/${BUILD_JOB_NAME}/${BUILD_NAME}
     </a>
+    </h2>
     <br/><br/>
     EOV
 
