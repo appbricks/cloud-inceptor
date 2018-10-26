@@ -45,6 +45,8 @@ run:
 
       if [ "$JOB_STATUS" == "failed" ]; then
 
+        set +e
+
         read -r -d '' email_header << EOV
     <h1><font color="red">Automation Job Execution Failed</font></h1>
     <p>Log in to the automation Concourse UI via the command line
@@ -59,7 +61,7 @@ run:
     </a>
     EOV
 
-        set +xe
+        set +x
         job_output=$(fly -t default watch -j $BUILD_PIPELINE_NAME/$BUILD_JOB_NAME -b $BUILD_NAME)
         set -xe
 
