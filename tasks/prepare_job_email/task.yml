@@ -43,11 +43,50 @@ run:
 
       echo "export EMAIL_OBJECT='$email'" >> emails/job_info_$i
 
-      set +xe
-      job_output=$(fly -t default watch -j $BUILD_PIPELINE_NAME/$BUILD_JOB_NAME -b $BUILD_NAME)
-      set -xe
+      if [ "$JOB_STATUS" == "failed" ]; then
 
-      echo "$job_output=$" | terminal-to-html -preview > emails/email_body_$i.html
+        read -r -d '' email_header << EOV
+    <h1><font color="red">Automation Job Execution Failed</font></h1>
+    <p>Log in to the automation Concourse UI via the command line
+    utility "<code>caps-ci login</code>". Once logged in you can launch
+    a browser page via the following link to navigate to the job
+    execution output view.</p>
+
+    Pipeline Job: 
+    <a target="_blank" 
+      href="$ATC_EXTERNAL_URL/teams/${BUILD_TEAM_NAME}/pipelines/${BUILD_PIPELINE_NAME}/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}">
+      ${BUILD_PIPELINE_NAME}/${BUILD_JOB_NAME}/${BUILD_NAME}
+    </a>
+    EOV
+
+        set +xe
+        job_output=$(fly -t default watch -j $BUILD_PIPELINE_NAME/$BUILD_JOB_NAME -b $BUILD_NAME)
+        set -xe
+
+        echo "$job_output=$" | terminal-to-html -preview > emails/email_body_$i.html
+        sed -i -e "s|<body>|<body>$(echo $email_header | tr '\n' ' ')|" emails/email_body_$i.html
+      else
+
+        cat <<EOF > emails/email_body_$i.html
+    <html>
+      <body>
+        <h1><font color="green">Automation Job Execution Succeeded</font></h1>
+        <p>Log in to the automation Concourse UI via the command line
+        utility "<code>caps-ci login</code>". Once logged in you can launch
+        a browser page via the following link to navigate to the job
+        execution output view.</p>
+
+        Pipeline Job: 
+        <a target="_blank" 
+          href="$ATC_EXTERNAL_URL/teams/${BUILD_TEAM_NAME}/pipelines/${BUILD_PIPELINE_NAME}/jobs/${BUILD_JOB_NAME}/builds/${BUILD_NAME}">
+          ${BUILD_PIPELINE_NAME}/${BUILD_JOB_NAME}/${BUILD_NAME}
+        </a>
+      </body>
+    </html>
+    EOF
+
+      fi
+
       cat <<EOF > emails/email_payload_$i.json
     {
       "params": {
