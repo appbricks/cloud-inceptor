@@ -62,7 +62,9 @@ run:
     EOV
 
         set +x
-        job_output=$(fly -t default watch -j $BUILD_PIPELINE_NAME/$BUILD_JOB_NAME -b $BUILD_NAME)
+        job_output=$(fly -t default watch -j $BUILD_PIPELINE_NAME/$BUILD_JOB_NAME -b $BUILD_NAME \
+          | sed '/^source job-info\/job_info/,/^\started bootstrap\/notifications.*/{/^#/!{/^\$/!d;};}' \
+          | head -n -17)
         set -xe
 
         echo "$job_output=$" | terminal-to-html -preview > emails/email_body_$i.html
