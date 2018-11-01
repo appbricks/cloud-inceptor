@@ -32,7 +32,7 @@ resource "google_compute_instance" "bastion" {
 
   network_interface {
     subnetwork = "${google_compute_subnetwork.dmz.self_link}"
-    network_ip = "${google_compute_address.bastion-dmz.address}"
+    address    = "${google_compute_address.bastion-dmz.address}"
 
     access_config = [{
       nat_ip = "${google_compute_address.bastion-public.address}"
@@ -43,7 +43,7 @@ resource "google_compute_instance" "bastion" {
 
   network_interface {
     subnetwork = "${google_compute_subnetwork.admin.self_link}"
-    network_ip = "${google_compute_address.bastion-admin.address}"
+    address    = "${google_compute_address.bastion-admin.address}"
   }
 
   metadata {

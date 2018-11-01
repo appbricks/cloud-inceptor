@@ -40,7 +40,7 @@ resource "google_compute_instance" "jumpbox" {
 
   network_interface {
     subnetwork = "${google_compute_subnetwork.admin.self_link}"
-    network_ip = "${google_compute_address.jumpbox.address}"
+    address    = "${google_compute_address.jumpbox.address}"
   }
 
   metadata {
