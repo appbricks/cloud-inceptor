@@ -67,7 +67,7 @@ run:
           | head -n -17)
         set -xe
 
-        echo "$job_output=$" | terminal-to-html -preview > emails/email_body_$i.html
+        echo "$job_output" | terminal-to-html -preview > emails/email_body_$i.html
         sed -i -e "s|<body>|<body>$(echo $email_header | tr '\n' ' ')|" emails/email_body_$i.html
       else
 
