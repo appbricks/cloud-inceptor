@@ -38,8 +38,8 @@ postconf -e "home_mailbox = .mail/"
 postconf -e "policy-spf_time_limit = 3600s"
 postconf -e "smtpd_recipient_restrictions = permit_mynetworks,permit_sasl_authenticated,reject_unauth_destination,check_policy_service unix:private/policy-spf"
 
-s="2525      inet  n       -       y       -       -       smtpd"
-grep -q "^2525\s" /etc/postfix/master.cf \
+s="${config_smtp_internal_smtp_port}      inet  n       -       y       -       -       smtpd"
+grep -q "^${config_smtp_internal_smtp_port}\s" /etc/postfix/master.cf \
     && sed -i ":a;N;\$!ba;s|10025.*smtpd|$s|g" /etc/postfix/master.cf \
     || echo -e "$s" >> /etc/postfix/master.cf
 

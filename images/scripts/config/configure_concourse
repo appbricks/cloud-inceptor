@@ -157,8 +157,8 @@ fi
 
 if [[ -e /root/.smtp_installed ]]; then
     echo -e "\nautomation_email: 'automation@$config_server_fqdn'" >> /root/bootstrap-vars.yml
-    echo -e "smtp_host: '$config_server_fqdn'" >> /root/bootstrap-vars.yml
-    echo -e "smtp_port: '25'" >> /root/bootstrap-vars.yml
+    echo -e "smtp_host: '$config_smtp_internal_smtp_host'" >> /root/bootstrap-vars.yml
+    echo -e "smtp_port: '$config_smtp_internal_smtp_port'" >> /root/bootstrap-vars.yml
 fi
 
 sudo -i -- fly --target local login --insecure \

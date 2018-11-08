@@ -139,7 +139,9 @@ smtp:
   relay_host: ${var.smtp_relay_host}
   relay_port: ${var.smtp_relay_port}
   relay_api_key: ${var.smtp_relay_api_key}
-  networks: ${var.vpc_cidr} ${var.bastion_public_ip}
+  internal_smtp_host: ${length(var.bastion_nic2_private_ip) > 0 ? var.bastion_nic2_private_ip : var.bastion_nic1_private_ip}
+  internal_smtp_port: 2525
+  networks: 172.16.0.0/12 ${var.vpc_cidr} ${var.bastion_public_ip}
 
 openvpn:
   port: ${var.vpn_server_port}
