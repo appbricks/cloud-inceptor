@@ -50,7 +50,7 @@ resource "google_compute_route" "nat-route-admin" {
   name                   = "${var.vpc_name}-nat-route-admin-${count.index}"
   dest_range             = "0.0.0.0/0"
   network                = "${google_compute_network.admin.name}"
-  next_hop_instance      = "${google_compute_instance.nat-gateway-admin.name}"
+  next_hop_instance      = "${element(google_compute_instance.nat-gateway-admin.*.name, count.index)}"
   next_hop_instance_zone = "${data.google_compute_zones.available.names[count.index]}"
   priority               = 800
 
