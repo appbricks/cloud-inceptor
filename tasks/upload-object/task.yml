@@ -41,7 +41,7 @@ run:
     if [[ -z $CLEAN_UP_OLD_VERSIONS_ONLY ]]; then
       mc cp upload_path/$OBJECT_NAME auto/$BUCKET/$UPLOAD_PATH/$name-$version.$ext
     else
-      cp object_path/$OBJECT_NAME ./upload_object
+      cp upload_path/$OBJECT_NAME ./upload_object
     fi
 
 params:
