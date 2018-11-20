@@ -19,7 +19,7 @@ fi
 
 set -euo pipefail
 
-function gcp::build_image() {
+function google::build_image() {
 
     local image_name=$1
     local source_image_family=$2
@@ -45,6 +45,6 @@ function gcp::build_image() {
 gcloud auth activate-service-account --key-file=$GOOGLE_CREDENTIALS
 
 echo "Building image."
-gcp::build_image "$IMAGE_NAME" \
-    "$SOURCE_IMAGE_FAMILY" "$BUILD_DIR/packer/build-gcp.json" 2>&1 \
-    | tee $LOG_DIR/build-gcp.log
+google::build_image "$IMAGE_NAME" \
+    "$SOURCE_IMAGE_FAMILY" "$BUILD_DIR/packer/build-google.json" 2>&1 \
+    | tee $LOG_DIR/build-google.log

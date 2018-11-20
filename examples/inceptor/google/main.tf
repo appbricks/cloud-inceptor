@@ -23,7 +23,7 @@ variable "notification_email" {
 #
 
 module "bootstrap" {
-  source = "../../../modules/bootstrap-automation/gcp"
+  source = "../../../modules/bootstrap-automation/google"
 
   #
   # Company information used in certificate creation
