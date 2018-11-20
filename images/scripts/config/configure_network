@@ -3,6 +3,8 @@
 SCRIPT_HOME=$(cd $(dirname "$(ls -l $0 | awk '{ print $NF }')") && pwd)
 source $SCRIPT_HOME/common
 
+set -ex
+
 #
 # Setup hostname to map to domain
 #
@@ -20,16 +22,63 @@ if [[ -n $config_server_fqdn ]]; then
 fi
 
 #
+# Configure Users and SSH Access
+#
+
+if [[ -e /data/users/etc ]]; then
+    cp -r /data/users/etc/* /etc
+else
+    mkdir -p /data/users/home
+    mkdir -p /data/users/etc
+    mkdir -p /data/users/etc/ssh
+fi
+
+if [[ -n "$config_server_admin_passwd" ]]; then
+
+    admin_user=${config_server_admin_user:-admin}
+    admin_password=$(mkpasswd "$config_server_admin_passwd")
+    user_home=/data/users/home/$admin_user
+
+    set +e
+    id $admin_user >/dev/null 2>&1
+    if [[ $? -ne 0 ]]; then
+        useradd $admin_user -p $admin_password -m -d $user_home -s /bin/bash
+    else
+        usermod $admin_user -p $admin_password -m -d $user_home -s /bin/bash
+    fi
+    adduser $admin_user sudo
+
+    mkdir -p $user_home/.ssh
+    echo "$config_server_admin_ssh_public_key" > \
+         $user_home/.ssh/authorized_keys
+
+    # Remove any overrides that may 
+    # allow passwordless sudos
+    rm -fr /etc/sudoers.d/*
+    sed -i 's|%sudo ALL=(ALL:ALL) NOPASSWD:ALL|%sudo ALL=(ALL:ALL) ALL|' /etc/sudoers
+    
+    set -e
+    [[ -n "$config_server_admin_ssh_port" ]] && \
+        sed -i "s|^Port [0-9]*$|Port $config_server_admin_ssh_port|" /etc/ssh/sshd_config
+
+    service sshd restart
+fi
+
+# Fix to remove "mesg: ttyname failed: Inappropriate ioctl for device" 
+# from output when executing commands with 'sudo -i'
+sed -i 's/^mesg n || true$/tty -s \&\& mesg n/' /root/.profile
+
+#
 # Configure NICS
 #
 
+set +x
 echo -e "\n============================= Network Interfaces =============================="
 ip a
 echo -e "=================================== Routes ===================================="
 route -n
 echo -e "===============================================================================\n"
-
-set -ex
+set -x
 
 public_itf=$(ip a \
     | grep -B 5 "$config_server_private_ip" \
@@ -128,7 +177,7 @@ if [[ -n $config_server_docker_mount_path ]]; then
         cat << ---EOF > /etc/systemd/system/docker.service.d/docker.root.conf
 [Service]
 ExecStart=
-ExecStart=/usr/bin/dockerd --data-root $config_server_docker_mount_path/docker -H fd://
+ExecStart=/usr/bin/dockerd --data-root $config_server_docker_mount_path/docker
 ---EOF
 
         systemctl daemon-reload
@@ -140,53 +189,5 @@ fi
 set -e
 systemctl restart docker
 
-#
-# Configure Users and SSH Access
-#
-
-if [[ -e /data/users/etc ]]; then
-    cp -r /data/users/etc/* /etc
-else
-    mkdir -p /data/users/home
-    mkdir -p /data/users/etc
-    mkdir -p /data/users/etc/ssh
-fi
-
-if [[ -n "$config_server_admin_passwd" ]]; then
-
-    admin_user=${config_server_admin_user:-admin}
-    admin_password=$(mkpasswd "$config_server_admin_passwd")
-    user_home=/data/users/home/$admin_user
-
-    set +e
-    id $admin_user >/dev/null 2>&1
-    if [[ $? -ne 0 ]]; then
-        useradd $admin_user -p $admin_password -m -d $user_home -s /bin/bash
-    else
-        usermod $admin_user -p $admin_password -m -d $user_home -s /bin/bash
-    fi
-    adduser $admin_user sudo
-
-    mkdir -p $user_home/.ssh
-    echo "$config_server_admin_ssh_public_key" > \
-         $user_home/.ssh/authorized_keys
-
-    # Remove any overrides that may 
-    # allow passwordless sudos
-    rm -fr /etc/sudoers.d/*
-    sed -i 's|%sudo ALL=(ALL:ALL) NOPASSWD:ALL|%sudo ALL=(ALL:ALL) ALL|' /etc/sudoers
-    
-    set -e
-    [[ -n "$config_server_admin_ssh_port" ]] && \
-        sed -i "s|^Port [0-9]*$|Port $config_server_admin_ssh_port|" /etc/ssh/sshd_config
-
-    service sshd restart
-fi
-
-# Fix to remove "mesg: ttyname failed: Inappropriate ioctl for device" 
-# from output when executing commands with 'sudo -i'
-sed -i 's/^mesg n || true$/tty -s \&\& mesg n/' /root/.profile
-
 set +ex
-
 touch /root/.network_installed
