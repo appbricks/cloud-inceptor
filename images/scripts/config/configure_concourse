@@ -204,6 +204,10 @@ if [[ $prune_worker == "yes" ]]; then
             sudo -i -- fly --target local prune-worker -w $s
         done
     done
+
+    # Prune any unused docker volumes that
+    # were attached to pruned workers
+    docker volume prune
 fi
 
 touch /root/.concourse_installed
