@@ -1,5 +1,12 @@
 #!/bin/bash
 
+log_dir=$(pwd)
+build_dir=$(cd $(dirname $BASH_SOURCE)/.. && pwd)
+build_output_dir=$build_dir/.build
+
+type=${1:-inceptor}
+image_name="appbricks-$type"
+
 which ovftool >/dev/null 2>&1
 if [[ $? -ne 0 ]]; then
     "ERROR! The VMWare OVFTool has not been installed. You can download it from https://www.vmware.com/support/developer/ovf/."
@@ -13,13 +20,6 @@ if [[ $? -ne 0 ]]; then
 fi
 
 set -euo pipefail
-
-log_dir=$(pwd)
-build_dir=$(cd $(dirname $BASH_SOURCE)/.. && pwd)
-build_output_dir=$build_dir/.build
-
-type=${1:-inceptor}
-image_name="appbricks-$type"
 
 # URL Encode the vCenter username and password
 vc_username=$(echo "$VMW_VCENTER_USERNAME" \
