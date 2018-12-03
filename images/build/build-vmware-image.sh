@@ -1,5 +1,14 @@
 #!/bin/bash
 
+log_dir=$(pwd)
+build_dir=$(cd $(dirname $BASH_SOURCE)/.. && pwd)
+build_output_dir=$build_dir/.build
+
+type=${1:-inceptor}
+image_name="appbricks-$type"
+
+VMW_BUILD_PRESEED_URL=${VMW_BUILD_PRESEED_URL:-}
+
 which ovftool >/dev/null 2>&1
 if [[ $? -ne 0 ]]; then
     "ERROR! The VMWare OVFTool has not been installed. You can download it from https://www.vmware.com/support/developer/ovf/."
@@ -12,26 +21,20 @@ if [[ $? -ne 0 ]]; then
     exit 1
 fi
 
-VMW_BUILD_PRESEED_URL=${VMW_BUILD_PRESEED_URL:-}
+which expect >/dev/null 2>&1
+if [[ $? -eq 0 ]]; then
+	esx_host_update="$build_dir/build/ssh_pass '$VMW_ESX_PASSWORD' '$VMW_ESX_USERNAME@$VMW_ESX_HOST'"
+else
+	esx_host_update="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $VMW_ESX_USERNAME@$VMW_ESX_HOST"
+fi
 
 set -euo pipefail
 
-log_dir=$(pwd)
-build_dir=$(cd $(dirname $BASH_SOURCE)/.. && pwd)
-build_output_dir=$build_dir/.build
-
-type=${1:-inceptor}
-image_name="appbricks-$type"
-
-$build_dir/build/ssh_pass \
-  "$VMW_ESX_PASSWORD" \
-  "$VMW_ESX_USERNAME@$VMW_ESX_HOST" \
-  "esxcli system settings advanced set -o /Net/GuestIPHack -i 1" > /dev/null
-
-$build_dir/build/ssh_pass \
-  "$VMW_ESX_PASSWORD" \
-  "$VMW_ESX_USERNAME@$VMW_ESX_HOST" \
-  "esxcli network firewall ruleset set --ruleset-id gdbserver --enabled true" > /dev/null
+echo -e "\nUpdateing ESX Host for build. Please enter '$VMW_ESX_USERNAME' password if prompted.."
+$esx_host_update '
+	esxcli system settings advanced set -o /Net/GuestIPHack -i 1
+	esxcli network firewall ruleset set --ruleset-id gdbserver --enabled true
+' >/dev/null 2>&1
 
 rm -f $build_output_dir/images/${image_name}-*.ova
 
