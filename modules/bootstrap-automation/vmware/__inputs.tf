@@ -10,7 +10,11 @@ variable "clusters" {
   type = "list"
 }
 
-variable "datastore" {
+variable "ephemeral_datastore" {
+  type = "string"
+}
+
+variable "persistent_datastore" {
   type = "string"
 }
 

@@ -38,7 +38,7 @@ echo -e "Running: \n\novftool \\
   --net:\"Ethernet 1=$VMW_VCENTER_NETWORK\" \\
   --datastore=$VMW_VCENTER_DATASTORE \\
   --diskMode=thin \\
-  $build_output_dir/images/$image_name.ova \\
+  $build_output_dir/images/${image_name}-*.ova \\
   vi://$vc_username:$vc_password@$VMW_VCENTER_HOST/$VMW_VCENTER_DATACENTER/host/$VMW_VCENTER_CLUSTER"
 
 set +e
@@ -56,7 +56,7 @@ ovftool \
   --net:"VM Network=$VMW_VCENTER_NETWORK" \
   --datastore=$VMW_VCENTER_DATASTORE \
   --diskMode=thin \
-  $build_dir/images/$image_name.ova \
+  $build_output_dir/images/${image_name}-*.ova \
   vi://$vc_username:$vc_password@$VMW_VCENTER_HOST/$VMW_VCENTER_DATACENTER/host/$VMW_VCENTER_CLUSTER 2>&1 \
   | tee $log_dir/upload-vmware-$type.log
 

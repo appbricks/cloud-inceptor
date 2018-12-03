@@ -20,7 +20,7 @@ resource "vsphere_virtual_machine" "jumpbox" {
   folder = "/${var.datacenter}/vm/${vsphere_folder.vpc.path}"
 
   resource_pool_id = "${data.vsphere_compute_cluster.cl.*.resource_pool_id[0]}"
-  datastore_id     = "${data.vsphere_datastore.ds.id}"
+  datastore_id     = "${data.vsphere_datastore.eds.id}"
 
   memory   = "${var.jumpbox_instance_memory}"
   num_cpus = "${var.jumpbox_instance_cpus}"
@@ -136,7 +136,7 @@ resource "vsphere_virtual_disk" "jumpbox-data-disk" {
   size               = "${var.jumpbox_data_disk_size}"
   vmdk_path          = "/jumpbox/data.vmdk"
   datacenter         = "${data.vsphere_datacenter.dc.name}"
-  datastore          = "${data.vsphere_datastore.ds.name}"
+  datastore          = "${data.vsphere_datastore.pds.name}"
   type               = "thin"
   create_directories = "true"
 }

@@ -173,7 +173,7 @@ if [[ $s == "---" ]]; then
     sudo -i -- <<BOOTSTRAP
     set -ex
 
-    if [[ -n $config_concourse_notification_email ]]; then
+    if [[ -n '$config_concourse_notification_email' ]]; then
         /root/.bin/patch_job_notifications.sh /root/bootstrap.yml bootstrap > bootstrap-1.yml
         bosh interpolate -l /root/bootstrap-vars.yml -o /root/.bin/notifications_job_patch.yml bootstrap-1.yml > /root/bootstrap-2.yml
 

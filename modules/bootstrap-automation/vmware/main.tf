@@ -9,14 +9,17 @@ data "vsphere_datacenter" "dc" {
 data "vsphere_compute_cluster" "cl" {
   count = "${length(var.clusters)}"
 
-  name          = "${element(var.clusters, count.index)}"
+  name          = "${var.clusters[count.index]}"
   datacenter_id = "${data.vsphere_datacenter.dc.id}"
 }
 
-data "vsphere_datastore" "ds" {
-  count = "${length(var.datastore) == 0 ? 0 : 1 }"
+data "vsphere_datastore" "eds" {
+  name          = "${var.ephemeral_datastore}"
+  datacenter_id = "${data.vsphere_datacenter.dc.id}"
+}
 
-  name          = "${var.datastore}"
+data "vsphere_datastore" "pds" {
+  name          = "${var.persistent_datastore}"
   datacenter_id = "${data.vsphere_datacenter.dc.id}"
 }
 

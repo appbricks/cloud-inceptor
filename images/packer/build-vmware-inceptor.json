@@ -15,6 +15,7 @@
     "vm_memory": "1024",
     "vm_vcpu": "1",
     "vm_network": "{{env `VMW_ESX_NETWORK`}}",
+    "preseed_url": "http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg",
     "boot_command_prefix": "",
     "build_dir": ""
   },
@@ -39,7 +40,7 @@
         "netcfg/get_domain=appbricks.io <wait>",
         "netcfg/get_hostname=inceptor <wait>",
         "noapic <wait>",
-        "preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg <wait>",
+        "preseed/url={{ user `preseed_url` }} <wait>",
         "-- <wait>",
         "<enter><wait>"
       ],
@@ -61,7 +62,7 @@
       "ssh_password": "1ncept0r",
       "ssh_wait_timeout": "60m",
       "vnc_disable_password": "true",
-      "vm_name": "{{ user `vm_name` }}",
+      "vm_name": "{{ user `vm_name` }}-{{ timestamp }}",
       "vmdk_name": "{{ user `vm_name` }}",
       "disk_size": "{{ user `vm_disk_size` }}",
       "disk_type_id": "{{ user `vm_disk_type` }}",

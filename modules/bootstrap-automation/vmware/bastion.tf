@@ -8,7 +8,7 @@ resource "vsphere_virtual_machine" "bastion-1nic" {
   name = "${element(split(".", var.vpc_dns_zone), 0)}"
 
   resource_pool_id = "${data.vsphere_compute_cluster.cl.*.resource_pool_id[0]}"
-  datastore_id     = "${data.vsphere_datastore.ds.id}"
+  datastore_id     = "${data.vsphere_datastore.eds.id}"
 
   memory   = "${var.bastion_instance_memory}"
   num_cpus = "${var.bastion_instance_cpus}"
@@ -56,7 +56,7 @@ resource "vsphere_virtual_machine" "bastion-2nic" {
   folder = "/${var.datacenter}/vm/${vsphere_folder.vpc.path}"
 
   resource_pool_id = "${data.vsphere_compute_cluster.cl.*.resource_pool_id[0]}"
-  datastore_id     = "${data.vsphere_datastore.ds.id}"
+  datastore_id     = "${data.vsphere_datastore.eds.id}"
 
   memory   = "${var.bastion_instance_memory}"
   num_cpus = "${var.bastion_instance_cpus}"
@@ -111,7 +111,7 @@ resource "vsphere_virtual_disk" "bastion-data-disk" {
   size               = "${var.bastion_data_disk_size}"
   vmdk_path          = "/bastion/data.vmdk"
   datacenter         = "${data.vsphere_datacenter.dc.name}"
-  datastore          = "${data.vsphere_datastore.ds.name}"
+  datastore          = "${data.vsphere_datastore.pds.name}"
   type               = "thin"
   create_directories = "true"
 }
