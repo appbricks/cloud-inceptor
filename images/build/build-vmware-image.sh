@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -u
 
 log_dir=$(pwd)
 build_dir=$(cd $(dirname $BASH_SOURCE)/.. && pwd)
@@ -11,30 +11,35 @@ VMW_BUILD_PRESEED_URL=${VMW_BUILD_PRESEED_URL:-}
 
 which ovftool >/dev/null 2>&1
 if [[ $? -ne 0 ]]; then
-    "ERROR! The VMWare OVFTool has not been installed. You can download it from https://www.vmware.com/support/developer/ovf/."
-    exit 1
+  "ERROR! The VMWare OVFTool has not been installed. You can download it from https://www.vmware.com/support/developer/ovf/."
+  exit 1
 fi
 
 which govc >/dev/null 2>&1
 if [[ $? -ne 0 ]]; then
-    "ERROR! The GOVC CLI has not been installed. You can download it from https://github.com/vmware/govmomi/."
-    exit 1
+  "ERROR! The GOVC CLI has not been installed. You can download it from https://github.com/vmware/govmomi/."
+  exit 1
 fi
 
 which expect >/dev/null 2>&1
 if [[ $? -eq 0 ]]; then
-	esx_host_update="$build_dir/build/ssh_pass '$VMW_ESX_PASSWORD' '$VMW_ESX_USERNAME@$VMW_ESX_HOST'"
+
+  $build_dir/build/ssh_pass "$VMW_ESX_PASSWORD" "$VMW_ESX_USERNAME@$VMW_ESX_HOST" '
+    set -x
+    esxcli system settings advanced set -o /Net/GuestIPHack -i 1
+    esxcli network firewall ruleset set --ruleset-id gdbserver --enabled true' \
+  >$log_dir/build-vmware-$type.log
 else
-	esx_host_update="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $VMW_ESX_USERNAME@$VMW_ESX_HOST"
+
+  echo -e "\nUpdating ESX Host for build. Please enter '$VMW_ESX_USERNAME' password if prompted.."
+  ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $VMW_ESX_USERNAME@$VMW_ESX_HOST '
+    set -x
+    esxcli system settings advanced set -o /Net/GuestIPHack -i 1
+    esxcli network firewall ruleset set --ruleset-id gdbserver --enabled true' \
+  >$log_dir/build-vmware-$type.log
 fi
 
-set -euo pipefail
-
-echo -e "\nUpdating ESX Host for build. Please enter '$VMW_ESX_USERNAME' password if prompted.."
-$esx_host_update '
-	esxcli system settings advanced set -o /Net/GuestIPHack -i 1
-	esxcli network firewall ruleset set --ruleset-id gdbserver --enabled true
-' >/dev/null 2>&1
+set -eo pipefail
 
 rm -f $build_output_dir/images/${image_name}-*.ova
 
@@ -56,7 +61,7 @@ if [[ -n $VMW_BUILD_PRESEED_URL ]]; then
     -var "preseed_url=$VMW_BUILD_PRESEED_URL" \
     -var "vm_name=$image_name" \
     build-vmware-$type.json 2>&1 \
-    | tee $log_dir/build-vmware-$type.log
+    | tee -a $log_dir/build-vmware-$type.log
 else
   packer build \
     -var "build_dir=$build_dir" \
@@ -66,7 +71,7 @@ else
     -var "boot_command_prefix=$boot_command_prefix" \
     -var "vm_name=$image_name" \
     build-vmware-$type.json 2>&1 \
-    | tee $log_dir/build-vmware-$type.log
+    | tee -a $log_dir/build-vmware-$type.log
 fi
 
 cd -

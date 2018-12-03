@@ -1,6 +1,6 @@
 #!/usr/bin/expect -f
 #
-# syntax: sshnopassword password host command
+# syntax: ssh_pass password host command
  
 set password [lindex $argv 0]
 set host     [lindex $argv 1]
