@@ -30,7 +30,7 @@ fi
 
 set -euo pipefail
 
-echo -e "\nUpdateing ESX Host for build. Please enter '$VMW_ESX_USERNAME' password if prompted.."
+echo -e "\nUpdating ESX Host for build. Please enter '$VMW_ESX_USERNAME' password if prompted.."
 $esx_host_update '
 	esxcli system settings advanced set -o /Net/GuestIPHack -i 1
 	esxcli network firewall ruleset set --ruleset-id gdbserver --enabled true
