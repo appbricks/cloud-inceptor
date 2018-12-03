@@ -4,15 +4,9 @@
     "iso_checksum": "",
     "iso_checksum_type": "",
     "esxi_remote_host": "{{env `VMW_ESX_HOST`}}",
+    "esxi_datastore": "{{env `VMW_ESX_DATASTORE`}}",
     "esxi_remote_username": "{{env `VMW_ESX_USERNAME`}}",
     "esxi_remote_password": "{{env `VMW_ESX_PASSWORD`}}",
-    "vcenter_host": "{{env `VMW_VCENTER_HOST`}}",
-    "vcenter_username": "{{env `VMW_VCENTER_USERNAME`}}",
-    "vcenter_password": "{{env `VMW_VCENTER_PASSWORD`}}",
-    "vcenter_insecure": "true",
-    "vcenter_datacenter": "{{env `VMW_VCENTER_DATACENTER`}}",
-    "vcenter_datastore": "{{env `VMW_VCENTER_DATASTORE`}}",
-    "vcenter_templates_folder": "{{env `VMW_VCENTER_TEMPLATES_FOLDER`}}",
     "vm_name": "",
     "vm_disk_adapter_type": "scsi",
     "vm_disk_type": "thin",
@@ -20,7 +14,7 @@
     "vm_guest_os_type": "ubuntu-64",
     "vm_memory": "1024",
     "vm_vcpu": "1",
-    "vm_network": "VM Network",
+    "vm_network": "{{env `VMW_ESX_NETWORK`}}",
     "boot_command_prefix": "",
     "build_dir": ""
   },
@@ -61,8 +55,7 @@
       "remote_host": "{{ user `esxi_remote_host` }}",
       "remote_username": "{{ user `esxi_remote_username` }}",
       "remote_password": "{{ user `esxi_remote_password` }}",
-      "remote_datastore": "{{ user `vcenter_datastore` }}",
-      "keep_registered": "true",
+      "remote_datastore": "{{ user `esxi_datastore` }}",
       "guest_os_type": "{{ user `vm_guest_os_type` }}",
       "ssh_username": "ubuntu",
       "ssh_password": "1ncept0r",
@@ -114,22 +107,6 @@
         "sudo rm -rf /var/lib/apt/lists/*",
         "sudo rm -fr /tmp/*"
       ]
-    }
-  ],
-  "post-processors": [
-    {
-      "host": "{{ user `vcenter_host` }}",
-      "datacenter": "{{ user `vcenter_datacenter` }}",
-      "insecure": "{{ user `vcenter_insecure`}}",
-      "username": "{{ user `vcenter_username` }}",
-      "password": "{{ user `vcenter_password` }}",
-      "type": "vsphere-template",
-      "folder": "{{ user `vcenter_templates_folder` }}"
-    },
-    {
-      "type": "manifest",
-      "output": "manifest.json",
-      "strip_path": true
     }
   ]
 }
