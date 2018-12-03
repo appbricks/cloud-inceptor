@@ -15,7 +15,6 @@
     "vm_memory": "1024",
     "vm_vcpu": "1",
     "vm_network": "{{env `VMW_ESX_NETWORK`}}",
-    "preseed_url": "http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg",
     "boot_command_prefix": "",
     "build_dir": ""
   },
@@ -40,7 +39,7 @@
         "netcfg/get_domain=appbricks.io <wait>",
         "netcfg/get_hostname=inceptor <wait>",
         "noapic <wait>",
-        "preseed/url={{ user `preseed_url` }} <wait>",
+        "preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg <wait>",
         "-- <wait>",
         "<enter><wait>"
       ],

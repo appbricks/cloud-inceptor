@@ -7,8 +7,6 @@ build_output_dir=$build_dir/.build
 type=${1:-inceptor}
 image_name="appbricks-$type"
 
-VMW_BUILD_PRESEED_URL=${VMW_BUILD_PRESEED_URL:-}
-
 which ovftool >/dev/null 2>&1
 if [[ $? -ne 0 ]]; then
   "ERROR! The VMWare OVFTool has not been installed. You can download it from https://www.vmware.com/support/developer/ovf/."
@@ -50,28 +48,14 @@ boot_command_prefix="<enter><wait><f6><esc><bs><bs><bs><bs><bs><bs><bs><bs><bs><
 
 cd $build_dir/packer
 
-if [[ -n $VMW_BUILD_PRESEED_URL ]]; then
-
-  packer build \
-    -var "build_dir=$build_dir" \
-    -var "iso_url=$iso_url" \
-    -var "iso_checksum=$iso_checksum" \
-    -var "iso_checksum_type=$iso_checksum_type" \
-    -var "boot_command_prefix=$boot_command_prefix" \
-    -var "preseed_url=$VMW_BUILD_PRESEED_URL" \
-    -var "vm_name=$image_name" \
-    build-vmware-$type.json 2>&1 \
-    | tee -a $log_dir/build-vmware-$type.log
-else
-  packer build \
-    -var "build_dir=$build_dir" \
-    -var "iso_url=$iso_url" \
-    -var "iso_checksum=$iso_checksum" \
-    -var "iso_checksum_type=$iso_checksum_type" \
-    -var "boot_command_prefix=$boot_command_prefix" \
-    -var "vm_name=$image_name" \
-    build-vmware-$type.json 2>&1 \
-    | tee -a $log_dir/build-vmware-$type.log
-fi
+packer build \
+  -var "build_dir=$build_dir" \
+  -var "iso_url=$iso_url" \
+  -var "iso_checksum=$iso_checksum" \
+  -var "iso_checksum_type=$iso_checksum_type" \
+  -var "boot_command_prefix=$boot_command_prefix" \
+  -var "vm_name=$image_name" \
+  build-vmware-$type.json 2>&1 \
+  | tee -a $log_dir/build-vmware-$type.log
 
 cd -
