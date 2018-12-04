@@ -49,8 +49,10 @@ if [[ -n "$config_server_admin_passwd" ]]; then
     adduser $admin_user sudo
 
     mkdir -p $user_home/.ssh
-    echo "$config_server_admin_ssh_public_key" > \
-         $user_home/.ssh/authorized_keys
+    echo "$config_server_admin_ssh_public_key" \
+        > $user_home/.ssh/authorized_keys
+
+    chmod 0600 $user_home/.ssh/authorized_keys
 
     # Remove any overrides that may 
     # allow passwordless sudos
