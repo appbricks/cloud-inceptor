@@ -52,7 +52,7 @@ if [[ -n "$config_server_admin_passwd" ]]; then
     echo "$config_server_admin_ssh_public_key" \
         > $user_home/.ssh/authorized_keys
 
-    chmod 0600 $user_home/.ssh/authorized_keys
+    chmod -R 0644 $user_home/.ssh
 
     # Remove any overrides that may 
     # allow passwordless sudos
