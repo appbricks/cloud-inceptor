@@ -61,7 +61,7 @@
       "ssh_password": "1ncept0r",
       "ssh_wait_timeout": "60m",
       "vnc_disable_password": "true",
-      "vm_name": "{{ user `vm_name` }}",
+      "vm_name": "{{ user `vm_name` }}-{{ timestamp }}",
       "vmdk_name": "{{ user `vm_name` }}",
       "disk_size": "{{ user `vm_disk_size` }}",
       "disk_type_id": "{{ user `vm_disk_type` }}",
