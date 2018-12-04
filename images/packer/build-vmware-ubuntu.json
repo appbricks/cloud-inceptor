@@ -55,7 +55,7 @@
       "remote_host": "{{ user `esxi_remote_host` }}",
       "remote_username": "{{ user `esxi_remote_username` }}",
       "remote_password": "{{ user `esxi_remote_password` }}",
-      "remote_datastore": "{{ user `vcenter_datastore` }}",
+      "remote_datastore": "{{ user `esxi_datastore` }}",
       "guest_os_type": "{{ user `vm_guest_os_type` }}",
       "ssh_username": "ubuntu",
       "ssh_password": "1ncept0r",
