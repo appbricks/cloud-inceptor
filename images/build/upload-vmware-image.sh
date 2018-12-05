@@ -15,8 +15,11 @@ fi
 
 set -euo pipefail
 
+image_build=$(basename $(ls $build_output_dir/images/${image_name}-*.ova))
+build_vmname=${image_build%.*}
+
 set +e
-govc vm.destroy "/$VMW_VCENTER_DATACENTER/vm/Discovered virtual machine/$image_name" >/dev/null 2>&1
+govc vm.destroy "/$VMW_VCENTER_DATACENTER/vm/Discovered virtual machine/$build_vmname" >/dev/null 2>&1
 govc vm.destroy "/$VMW_VCENTER_DATACENTER/vm/$VMW_VCENTER_TEMPLATES_FOLDER/$image_name" >/dev/null 2>&1
 govc folder.create "/$VMW_VCENTER_DATACENTER/vm/$VMW_VCENTER_TEMPLATES_FOLDER" >/dev/null 2>&1
 set -e
