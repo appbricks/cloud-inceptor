@@ -19,15 +19,15 @@ variable "persistent_datastore" {
 }
 
 variable "dmz_network" {
-  type = "string"
+  default = ""
 }
 
 variable "dmz_network_cidr" {
-  type = "string"
+  default = ""
 }
 
 variable "dmz_network_gateway" {
-  type = "string"
+  default = ""
 }
 
 variable "admin_network" {
@@ -40,6 +40,10 @@ variable "admin_network_cidr" {
 
 variable "admin_network_gateway" {
   type = "string"
+}
+
+variable "vpn_server_port" {
+  default = "2295"
 }
 
 #
@@ -113,7 +117,7 @@ module "bootstrap" {
   ssh_key_file_path = "${path.module}"
 
   # VPN Port
-  vpn_server_port = "2295"
+  vpn_server_port = "${var.vpn_server_port}"
 
   # Concourse Port
   concourse_server_port = "8080"
@@ -123,8 +127,8 @@ module "bootstrap" {
 
   # Whether to allow SSH access to bastion server
   bastion_allow_public_ssh = "true"
-  bastion_dmz_ip           = "${cidrhost(var.dmz_network_cidr, 20)}"
-  bastion_admin_ip         = "${cidrhost(var.admin_network_cidr, 5)}"
+  bastion_dmz_ip           = "${length(var.dmz_network_cidr) > 0 ? cidrhost(var.dmz_network_cidr, 31) : ""}"
+  bastion_admin_ip         = "${cidrhost(var.admin_network_cidr, 31)}"
 
   # If the SMTP relay settings are provided then
   # and SMTP server will be setup which will send
@@ -141,7 +145,7 @@ module "bootstrap" {
   # provided and the DNS will be jumpbox.[first local zone].
   deploy_jumpbox = "true"
 
-  jumpbox_admin_ip = "${cidrhost(var.admin_network_cidr, 10)}"
+  jumpbox_admin_ip = "${cidrhost(var.admin_network_cidr, 32)}"
 
   #
   # Bootstrap pipeline
