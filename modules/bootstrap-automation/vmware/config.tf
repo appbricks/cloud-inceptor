@@ -48,7 +48,7 @@ module "config" {
 
   bastion_nic1_private_ip  = "${local.has_dmz_network ? var.bastion_dmz_ip : var.bastion_admin_ip}"
   bastion_nic1_netmask     = "${cidrnetmask(local.has_dmz_network ? var.dmz_network_cidr : var.admin_network_cidr)}"
-  bastion_nic1_lan_cidr    = "${local.has_dmz_network ? "0.0.0.0/0" : var.vpc_cidr}"
+  bastion_nic1_lan_cidr    = "0.0.0.0/0"
   bastion_nic1_lan_netmask = "${cidrnetmask(local.has_dmz_network ? var.dmz_network_cidr : var.vpc_cidr)}"
   bastion_nic1_lan_gateway = "${local.has_dmz_network ? var.dmz_network_gateway : var.admin_network_gateway}"
 

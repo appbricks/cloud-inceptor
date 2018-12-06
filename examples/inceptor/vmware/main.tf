@@ -46,6 +46,10 @@ variable "vpn_server_port" {
   default = "2295"
 }
 
+variable "deploy_jumpbox" {
+  default = "true"
+}
+
 #
 # Notifications
 #
@@ -64,6 +68,14 @@ variable "smtp_relay_api_key" {
 
 variable "notification_email" {
   default = ""
+}
+
+#
+# Local variables
+#
+
+locals {
+  has_dmz_network = "${length(var.dmz_network) > 0}"
 }
 
 #
@@ -127,7 +139,7 @@ module "bootstrap" {
 
   # Whether to allow SSH access to bastion server
   bastion_allow_public_ssh = "true"
-  bastion_dmz_ip           = "${length(var.dmz_network_cidr) > 0 ? cidrhost(var.dmz_network_cidr, 31) : ""}"
+  bastion_dmz_ip           = "${cidrhost(local.has_dmz_network ? var.dmz_network_cidr : "0.0.0.0/0", 31)}"
   bastion_admin_ip         = "${cidrhost(var.admin_network_cidr, 31)}"
 
   # If the SMTP relay settings are provided then
@@ -143,7 +155,7 @@ module "bootstrap" {
   # Whether to deploy a jumpbox in the admin network. The
   # jumpbox will be deployed only if a local DNS zone is
   # provided and the DNS will be jumpbox.[first local zone].
-  deploy_jumpbox = "true"
+  deploy_jumpbox = "${var.deploy_jumpbox}"
 
   jumpbox_admin_ip = "${cidrhost(var.admin_network_cidr, 32)}"
 
