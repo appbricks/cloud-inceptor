@@ -62,7 +62,7 @@ USER_DATA
 }
 
 resource "google_compute_address" "jumpbox" {
-  name         = "ipv4-address"
+  name         = "${var.vpc_name}-jumpbox"
   address_type = "INTERNAL"
   subnetwork   = "${google_compute_subnetwork.admin.self_link}"
 }
