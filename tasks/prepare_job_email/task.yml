@@ -50,12 +50,11 @@ run:
 
         read -r -d '' email_header << EOV
     <h1><font color="red">Automation Job Execution Failed</font></h1>
+    $message
     <p>Log in to the automation Concourse UI via the command line
     utility "<code>caps-ci login</code>". Once logged in you can launch
     a browser page via the following link to navigate to the job
     execution output view.</p>
-
-    $message
 
     Pipeline Job: 
     <a target="_blank" 
@@ -79,12 +78,11 @@ run:
     <html>
       <body>
         <h1><font color="green">Automation Job Execution Succeeded</font></h1>
+        $message
         <p>Log in to the automation Concourse UI via the command line
         utility "<code>caps-ci login</code>". Once logged in you can launch
         a browser page via the following link to navigate to the job
         execution output view.</p>
-
-        $message
 
         Pipeline Job: 
         <a target="_blank" 
