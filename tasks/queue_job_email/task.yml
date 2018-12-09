@@ -41,7 +41,7 @@ run:
     echo "export SUBJECT='${SUBJECT_PRE} - ${BUILD_PIPELINE_NAME}/${BUILD_JOB_NAME}/${BUILD_NAME}'" >> job-info/job_info
 
     if [[ -e job-info/job_message ]]; then
-      echo "export MESSAGE=$(cat job-info/job_message | base64)" >> job-info/job_info
+      echo "export MESSAGE='$(cat job-info/job_message | base64)'" >> job-info/job_info
     fi
 
     mc cp job-info/job_info auto/notifications/email-queue/job_email-$(cat /proc/sys/kernel/random/uuid)
