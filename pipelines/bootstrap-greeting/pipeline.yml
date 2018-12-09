@@ -182,8 +182,8 @@ jobs:
   on_failure:
     do:
     - task: failure-message
-      input_mapping: {job-info-in: bootstrap-job-info}
-      output_mapping: {job-info-out: bootstrap-job-info}
+      input_mapping: {job-info-in: failing-job-job-info}
+      output_mapping: {job-info-out: failing-job-job-info}
       config:
         platform: linux
         image_resource:
