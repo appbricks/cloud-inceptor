@@ -61,6 +61,7 @@ for j in $(echo -e "$jobs"); do
   alert_on_failure=$(echo -e "$pipeline" | awk "/- task: notify on $j failure/{ print \"y\" }")
 
   cat <<EOF >> notification-patch.yml
+
 - type: replace
   path: /resources?/-
   value:
@@ -90,6 +91,7 @@ EOF
   if [[ -n $alert_on_success ]]; then
 
     cat <<EOF >> notification-patch.yml
+
 - type: remove
   path: /jobs/name=$j/on_success/do/task=notify on $j success
 
@@ -119,6 +121,7 @@ EOF
   if [[ -n $alert_on_failure ]]; then
 
     cat <<EOF >> notification-patch.yml
+    
 - type: remove
   path: /jobs/name=$j/on_failure/do/task=notify on $j failure
 
