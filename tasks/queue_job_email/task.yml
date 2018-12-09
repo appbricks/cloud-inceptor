@@ -36,6 +36,10 @@ run:
     # MESSAGE=
     #
 
+    ls -alR
+
+    set -x
+
     source job-info/job_info
     echo "export JOB_STATUS='${JOB_STATUS}'" >> job-info/job_info
     echo "export SUBJECT='${SUBJECT_PRE} - ${BUILD_PIPELINE_NAME}/${BUILD_JOB_NAME}/${BUILD_NAME}'" >> job-info/job_info
