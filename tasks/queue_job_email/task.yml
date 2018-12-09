@@ -42,6 +42,8 @@ run:
 
     if [[ -e job-info/job_message ]]; then
       echo "export MESSAGE='$(cat job-info/job_message | base64)'" >> job-info/job_info
+    else
+      echo "export MESSAGE=''" >> job-info/job_info
     fi
 
     mc cp job-info/job_info auto/notifications/email-queue/job_email-$(cat /proc/sys/kernel/random/uuid)

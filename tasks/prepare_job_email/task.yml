@@ -38,7 +38,9 @@ run:
     emails=$(mc find auto/notifications/email-queue --name "job_email-*" --exec "echo {}" 2>/dev/null)
     for email in $emails; do
       mc cp $email emails/job_info_$i
+
       source emails/job_info_$i
+      message=$(echo "$MESSAGE" | base64 --decode)
 
       echo "export EMAIL_OBJECT='$email'" >> emails/job_info_$i
 
@@ -52,6 +54,8 @@ run:
     utility "<code>caps-ci login</code>". Once logged in you can launch
     a browser page via the following link to navigate to the job
     execution output view.</p>
+
+    $message
 
     Pipeline Job: 
     <a target="_blank" 
@@ -79,6 +83,8 @@ run:
         utility "<code>caps-ci login</code>". Once logged in you can launch
         a browser page via the following link to navigate to the job
         execution output view.</p>
+
+        $message
 
         Pipeline Job: 
         <a target="_blank" 
