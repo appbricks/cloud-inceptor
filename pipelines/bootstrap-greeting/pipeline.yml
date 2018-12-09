@@ -3,7 +3,32 @@ jobs:
 - name: bootstrap
   on_success:
     do:
+    - task: success-message
+      input_mapping: {job-info-in: bootstrap-job-info}
+      output_mapping: {job-info-out: bootstrap-job-info}
+      config:
+        platform: linux
+        image_resource:
+          type: docker-image
+          source: {repository: alpine}
+        inputs:
+        - name: job-info-in
+        outputs:
+        - name: job-info-out
+        run:
+          path: /bin/sh
+          args:
+          - -c
+          - |
+            cp job-info-in/* job-info-out
+            cat <<EOF > job-info-out/job_message
+            <hr/>
+            <p><large>Inceptor bootstrap testing @ $(date +"%A %Y-%m-%d %H:%M:%S")...</large></p>
+            <hr/>
+            EOF
+            
     - task: notify on bootstrap success
+
   on_failure:
     do:
     - task: notify on bootstrap failure
