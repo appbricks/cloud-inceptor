@@ -167,6 +167,8 @@ sudo -i -- fly --target local login --insecure \
     --password=$config_concourse_password \
     --team-name=main
 
+set -eo pipefail
+
 s=$(head -1 /root/bootstrap.yml)
 if [[ $s == "---" ]]; then
 
