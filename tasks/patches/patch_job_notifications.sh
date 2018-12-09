@@ -61,7 +61,6 @@ for j in $(echo -e "$jobs"); do
   alert_on_failure=$(echo -e "$pipeline" | awk "/- task: notify on $j failure/{ print \"y\" }")
 
   cat <<EOF >> notification-patch.yml
-
 - type: replace
   path: /resources?/-
   value:
@@ -91,10 +90,13 @@ EOF
   if [[ -n $alert_on_success ]]; then
 
     cat <<EOF >> notification-patch.yml
+- type: remove
+  path: /jobs/name=$j/on_success/do/task=notify on $j success
+
 - type: replace
-  path: /jobs/name=$j/on_success?/do?
+  path: /jobs/name=$j/on_success?/do?/-
   value:
-  - task: job_succeeded_alert
+    task: job_succeeded_alert
     file: ((pipeline_automation_path))/tasks/queue_job_email/task.yml
     input_mapping: {job-info: $j-job-info}
     params: 
@@ -103,10 +105,13 @@ EOF
       AUTOS3_SECRET_KEY: ((autos3_secret_key))
       SUBJECT_PRE: ((vpc_name)) ${subject_heading}SUCCEEDED
       JOB_STATUS: succeeded
-  - put: notification
+
+- type: replace
+  path: /jobs/name=$j/on_success?/do?/-
+  value:
+    put: notification
     params: 
       options: 'trigger-job -j bootstrap/notifications'
-
 EOF
 
   fi
@@ -114,10 +119,13 @@ EOF
   if [[ -n $alert_on_failure ]]; then
 
     cat <<EOF >> notification-patch.yml
+- type: remove
+  path: /jobs/name=$j/on_failure/do/task=notify on $j failure
+
 - type: replace
-  path: /jobs/name=$j/on_failure?/do?
+  path: /jobs/name=$j/on_failure?/do?/-
   value:
-  - task: job_failed_alert
+    task: job_failed_alert
     file: ((pipeline_automation_path))/tasks/queue_job_email/task.yml
     input_mapping: {job-info: $j-job-info}
     params: 
@@ -126,10 +134,13 @@ EOF
       AUTOS3_SECRET_KEY: ((autos3_secret_key))
       SUBJECT_PRE: ((vpc_name)) ${subject_heading}FAILED
       JOB_STATUS: failed
-  - put: notification
+
+- type: replace
+  path: /jobs/name=$j/on_failure?/do?/-
+  value:
+    put: notification
     params: 
       options: 'trigger-job -j bootstrap/notifications'
-
 EOF
 
   fi
