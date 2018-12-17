@@ -19,16 +19,16 @@ image_build=$(basename $(ls $build_output_dir/images/${image_name}-*.ova))
 build_vmname=${image_build%.*}
 
 set +e
-govc vm.destroy "/$VMW_VCENTER_DATACENTER/vm/Discovered virtual machine/$build_vmname" >/dev/null 2>&1
-govc vm.destroy "/$VMW_VCENTER_DATACENTER/vm/$VMW_VCENTER_TEMPLATES_FOLDER/$image_name" >/dev/null 2>&1
-govc folder.create "/$VMW_VCENTER_DATACENTER/vm/$VMW_VCENTER_TEMPLATES_FOLDER" >/dev/null 2>&1
+govc vm.destroy "/$VCENTER_DATACENTER/vm/Discovered virtual machine/$build_vmname" >/dev/null 2>&1
+govc vm.destroy "/$VCENTER_DATACENTER/vm/$VCENTER_TEMPLATES_FOLDER/$image_name" >/dev/null 2>&1
+govc folder.create "/$VCENTER_DATACENTER/vm/$VCENTER_TEMPLATES_FOLDER" >/dev/null 2>&1
 set -e
 
 govc import.spec \
   $build_output_dir/images/${image_name}-*.ova \
   | jq \
 	--arg image_name "$image_name" \
-	--arg network "$VMW_VCENTER_NETWORK" \
+	--arg network "$VCENTER_NETWORK" \
 	'del(.Deployment)
 	| .Name = $image_name
 	| .DiskProvisioning = "thin"
@@ -38,8 +38,8 @@ govc import.spec \
   > $build_output_dir/images/${image_name}.json
 
 govc import.ova \
-  -dc=$VMW_VCENTER_DATACENTER \
-  -ds=$VMW_VCENTER_DATASTORE \
-  -folder=/$VMW_VCENTER_DATACENTER/vm/$VMW_VCENTER_TEMPLATES_FOLDER \
+  -dc=$VCENTER_DATACENTER \
+  -ds=$VCENTER_DATASTORE \
+  -folder=/$VCENTER_DATACENTER/vm/$VCENTER_TEMPLATES_FOLDER \
   -options=$build_output_dir/images/${image_name}.json \
   $build_output_dir/images/${image_name}-*.ova  

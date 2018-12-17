@@ -22,15 +22,15 @@ fi
 which expect >/dev/null 2>&1
 if [[ $? -eq 0 ]]; then
 
-  $build_dir/build/ssh_pass "$VMW_ESX_PASSWORD" "$VMW_ESX_USERNAME@$VMW_ESX_HOST" '
+  $build_dir/build/ssh_pass "$ESX_PASSWORD" "$ESX_USERNAME@$ESX_HOST" '
     set -x
     esxcli system settings advanced set -o /Net/GuestIPHack -i 1
     esxcli network firewall ruleset set --ruleset-id gdbserver --enabled true' \
   >$log_dir/build-vmware-$type.log
 else
 
-  echo -e "\nUpdating ESX Host for build. Please enter '$VMW_ESX_USERNAME' password if prompted.."
-  ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $VMW_ESX_USERNAME@$VMW_ESX_HOST '
+  echo -e "\nUpdating ESX Host for build. Please enter '$ESX_USERNAME' password if prompted.."
+  ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $ESX_USERNAME@$ESX_HOST '
     set -x
     esxcli system settings advanced set -o /Net/GuestIPHack -i 1
     esxcli network firewall ruleset set --ruleset-id gdbserver --enabled true' \
