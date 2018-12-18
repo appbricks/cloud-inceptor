@@ -22,7 +22,8 @@ output "bastion_fqdn" {
 }
 
 output "bastion_admin_fqdn" {
-  value = "${var.bastion_admin_ip}"
+  value = "${var.bastion_allow_public_ssh && local.has_dmz_network 
+    ? var.bastion_dmz_ip : var.bastion_admin_ip}"
 }
 
 output "bastion_admin_password" {
