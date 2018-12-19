@@ -13,8 +13,8 @@ apt-get -y \
     --allow-downgrades --allow-remove-essential --allow-change-held-packages \
     dist-upgrade
 
-apt-get install -y -q \
-    policycoreutils
+#apt-get install -y -q \
+#    policycoreutils
 
 # Disable sshguard if it is installed
 if [[ -e /etc/sshguard/ ]]; then
