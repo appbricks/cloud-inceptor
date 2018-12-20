@@ -128,7 +128,6 @@ iface $itf inet static
     address $ip
     netmask $lan_netmask
     post-up /sbin/route add -net $lan_subnet gw $lan_gateway
-    post-down /sbin/route del -net $lan_subnet gw $lan_gateway
 ---EOF
             else
             
