@@ -115,6 +115,7 @@ for n in $(echo $config_server_lan_interfaces | sed "s/,/ /g"); do
 
         ifdown $itf
         ip address flush dev $itf
+        ps -ef | awk '!/awk/&&/dhclient.'$itf'/{ print $2 }' | xargs kill -9
 
         if [[ -n $ip ]]; then        
             # Configure a static IP
