@@ -5,7 +5,10 @@ echo -e "\n**** Restarting NICs ****"
 itfs=( $(ip a | grep "^[0-9]*: e" | awk '{ print substr($2,0,length($2)-1) }') )
 for itf in ${itfs[@]}; do
     echo "*** Restarting NIC $itf..."
+    
     ifdown $itf
+    ip address flush dev $itf
+    ps -ef | awk '!/awk/&&/dhclient.'$itf'/{ print $2 }' | xargs kill -9
     ifup $itf
 done
 
