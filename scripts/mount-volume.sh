@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -x
+
 [[ -n "${attached_device_name}" ]] || exit 0
 
 # Mount and format the data volume if available and unformatted
