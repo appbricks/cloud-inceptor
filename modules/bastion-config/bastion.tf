@@ -75,7 +75,7 @@ network:
   config: disabled
 
 runcmd: 
-- /root/mount-data-volume.sh
+- /root/mount-data-volume.sh 2>&1 | tee -a /var/log/mount-data-volume.log
 - mv /root/bastion-config.yml /root/config.yml
 - /root/.bin/configure_network 2>&1 | tee -a /var/log/configure_network.log
 - /root/.bin/configure_powerdns 2>&1 | tee -a /var/log/configure_powerdns.log
