@@ -79,7 +79,7 @@ for zone in $config_powerdns_dns_zones; do
     set -e
 done
 
-echo -e "\n+.=$config_server_dns_resolver" >> /etc/powerdns/forward-zones.conf
+echo -e "\n+.=$config_server_dns_resolvers" >> /etc/powerdns/forward-zones.conf
 
 for dns_mapping in $config_powerdns_dns_records; do
     
