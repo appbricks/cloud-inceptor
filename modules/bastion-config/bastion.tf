@@ -125,7 +125,7 @@ server:
       var.bastion_nic2_lan_netmask,
       var.bastion_nic2_lan_gateway
     ))}'
-  dns_resolvers: ${length(var.bastion_dns) == 0 ? "8.8.8.8": var.bastion_dns}
+  dns_resolvers: ${length(var.bastion_dns) == 0 ? local.bastion_internal_ip: var.bastion_dns}
   admin_ssh_port: ${var.bastion_admin_ssh_port}
   admin_user: ${var.bastion_admin_user}
   admin_passwd: ${random_string.bastion-admin-password.result}
@@ -136,7 +136,7 @@ powerdns:
   dns_zones: ${join(" ", var.vpc_internal_dns_zones)}
   dns_records: ${join(" ", var.vpc_internal_dns_records)}
   allowed_subnets: ${var.vpc_cidr},${var.vpn_network}
-  ns_ip: ${length(var.bastion_dns) == 0 ? local.bastion_internal_ip: var.bastion_dns}
+  ns_ip: ${local.bastion_internal_ip}
   api_key: ${random_string.powerdns-api-key.result}
 
 smtp:
