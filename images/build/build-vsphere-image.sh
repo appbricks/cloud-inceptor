@@ -26,7 +26,7 @@ if [[ $? -eq 0 ]]; then
     set -x
     esxcli system settings advanced set -o /Net/GuestIPHack -i 1
     esxcli network firewall ruleset set --ruleset-id gdbserver --enabled true' \
-  >$log_dir/build-vmware-$type.log
+  >$log_dir/build-vsphere-$type.log
 else
 
   echo -e "\nUpdating ESX Host for build. Please enter '$ESX_USERNAME' password if prompted.."
@@ -34,7 +34,7 @@ else
     set -x
     esxcli system settings advanced set -o /Net/GuestIPHack -i 1
     esxcli network firewall ruleset set --ruleset-id gdbserver --enabled true' \
-  >$log_dir/build-vmware-$type.log
+  >$log_dir/build-vsphere-$type.log
 fi
 
 set -eo pipefail
@@ -55,7 +55,7 @@ packer build \
   -var "iso_checksum_type=$iso_checksum_type" \
   -var "boot_command_prefix=$boot_command_prefix" \
   -var "vm_name=$image_name" \
-  build-vmware-$type.json 2>&1 \
-  | tee -a $log_dir/build-vmware-$type.log
+  build-vsphere-$type.json 2>&1 \
+  | tee -a $log_dir/build-vsphere-$type.log
 
 cd -
