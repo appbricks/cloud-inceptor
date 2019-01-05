@@ -156,6 +156,9 @@ iface $itf inet dhcp
     fi
 done
 
+echo "nameserver $config_server_dns_resolvers" > /etc/resolvconf/resolv.conf.d/head
+resolvconf -u
+
 #
 # Configure Docker daemon
 #
