@@ -44,7 +44,7 @@ module "config" {
   bastion_use_fqdn  = "${var.bastion_use_fqdn}"
   bastion_public_ip = "${local.bastion_public_ip}"
 
-  bastion_dns = "${length(var.bastion_dns) == 0 ? "8.8.8.8": var.bastion_dns}"
+  bastion_dns = "${var.bastion_dns}"
 
   bastion_nic1_private_ip  = "${local.has_dmz_network ? var.bastion_dmz_ip : var.bastion_admin_ip}"
   bastion_nic1_netmask     = "${cidrnetmask(local.has_dmz_network ? var.dmz_network_cidr : var.admin_network_cidr)}"
