@@ -30,9 +30,11 @@ resource "vsphere_virtual_machine" "bastion-1nic" {
   }
 
   disk {
-    label = "disk1"
-    size  = "${vsphere_virtual_disk.bastion-data-disk.size}"
-    path  = "${vsphere_virtual_disk.bastion-data-disk.vmdk_path}"
+    label  = "disk1"
+    attach = "true"
+
+    datastore_id = "${data.vsphere_datastore.pds.id}"
+    path         = "${vsphere_virtual_disk.bastion-data-disk.vmdk_path}"
 
     unit_number = 14
   }
@@ -84,9 +86,11 @@ resource "vsphere_virtual_machine" "bastion-2nic" {
   }
 
   disk {
-    label = "disk1"
-    size  = "${vsphere_virtual_disk.bastion-data-disk.size}"
-    path  = "${vsphere_virtual_disk.bastion-data-disk.vmdk_path}"
+    label  = "disk1"
+    attach = "true"
+
+    datastore_id = "${data.vsphere_datastore.pds.id}"
+    path         = "${vsphere_virtual_disk.bastion-data-disk.vmdk_path}"
 
     unit_number = 14
   }
