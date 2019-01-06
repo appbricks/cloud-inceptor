@@ -194,8 +194,8 @@ mkdir -p $OPENVPN_APACHE_USER_CONFIG
 web_server_http_port=${config_webserver_http_port:-80}
 web_server_https_port=${config_webserver_https_port:-443}
 
-sed "s|Listen 80\$|Listen $web_server_http_port|g" /etc/apache2/ports.conf
-sed "s|Listen 443\$|Listen $web_server_https_port|g" /etc/apache2/ports.conf
+sed -i "s|Listen 80\$|Listen $web_server_http_port|g" /etc/apache2/ports.conf
+sed -i "s|Listen 443\$|Listen $web_server_https_port|g" /etc/apache2/ports.conf
 
 if [[ $web_server_https_port == 443 ]]; then
     redirect_https=https://$config_server_host/
