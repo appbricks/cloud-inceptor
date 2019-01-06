@@ -75,6 +75,10 @@ function configure_openvpn() {
     sed -i "s/^;user nobody/user nobody/" $OPENVPN_CONFIG/server.conf
     sed -i "s/^;group nogroup/group nogroup/" $OPENVPN_CONFIG/server.conf
 
+    if [ "$config_openvpn_protocol" == "tcp" ]; then
+        sed -i "s/^explicit-exit-notify 1/;explicit-exit-notify 1/" $OPENVPN_CONFIG/server.conf
+    fi
+
     if [ "$config_openvpn_allow_multiple_logins" == "yes" ]; then
         sed -i "s/^;duplicate-cn/duplicate-cn/" $OPENVPN_CONFIG/server.conf
     fi
