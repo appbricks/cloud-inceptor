@@ -83,10 +83,29 @@
     {
       "type": "shell",
       "scripts": [
-        "{{user `build_dir`}}/scripts/vmware/base.sh",
-        "{{user `build_dir`}}/scripts/vmware/vmware.sh",
-        "{{user `build_dir`}}/scripts/vmware/cloud_init.sh",
-        "{{user `build_dir`}}/scripts/vmware/cleanup.sh"
+        "{{user `build_dir`}}/scripts/vsphere/base.sh",
+        "{{user `build_dir`}}/scripts/vsphere/vsphere.sh",
+        "{{user `build_dir`}}/scripts/vsphere/cloud_init.sh",
+        "{{user `build_dir`}}/scripts/vsphere/cleanup.sh"
+      ]
+    },
+    {
+      "type": "file",
+      "source": "{{user `build_dir`}}/scripts/config",
+      "destination": "/tmp/inceptor-scripts"
+    },
+    {
+      "type": "shell",
+      "expect_disconnect": "true",
+      "inline": [
+        "sudo chmod 0755 /tmp/inceptor-scripts/*",
+        "sudo /tmp/inceptor-scripts/install_packages",
+        "sudo rm /tmp/inceptor-scripts/install_packages",
+        "sudo mv /tmp/inceptor-scripts/rc.local /etc/rc.local",
+        "sudo mv /tmp/inceptor-scripts /root/.bin",
+        "sudo touch /root/config.yml",
+        "sudo rm -rf /var/lib/apt/lists/*",
+        "sudo rm -fr /tmp/*"
       ]
     }
   ]

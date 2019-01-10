@@ -83,7 +83,7 @@ locals {
 #
 
 module "bootstrap" {
-  source = "../../../modules/bootstrap-automation/vmware"
+  source = "../../../modules/bootstrap-automation/vsphere"
 
   #
   # Company information used in certificate creation

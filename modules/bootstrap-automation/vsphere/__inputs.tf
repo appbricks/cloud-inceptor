@@ -120,7 +120,7 @@ variable "bastion_instance_cpus" {
 }
 
 variable "bastion_template_path" {
-  default = "/templates/appbricks-inceptor"
+  default = "templates/appbricks-inceptor"
 }
 
 variable "bastion_root_disk_size" {
@@ -278,5 +278,5 @@ variable "jumpbox_admin_ip" {
 }
 
 variable "jumpbox_template_path" {
-  default = "/templates/appbricks-ubuntu"
+  default = "templates/appbricks-ubuntu"
 }

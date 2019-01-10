@@ -6,7 +6,7 @@ resource "vsphere_virtual_machine" "bastion-1nic" {
   count = "${length(var.dmz_network) == 0 ? 1 : 0 }"
 
   name   = "${element(split(".", var.vpc_dns_zone), 0)}"
-  folder = "/${var.datacenter}/vm/${vsphere_folder.vpc.path}"
+  folder = "${vsphere_folder.vpc.path}"
 
   resource_pool_id = "${data.vsphere_compute_cluster.cl.*.resource_pool_id[0]}"
   datastore_id     = "${data.vsphere_datastore.eds.id}"
@@ -30,9 +30,11 @@ resource "vsphere_virtual_machine" "bastion-1nic" {
   }
 
   disk {
-    label = "disk1"
-    size  = "${vsphere_virtual_disk.bastion-data-disk.size}"
-    path  = "${vsphere_virtual_disk.bastion-data-disk.vmdk_path}"
+    label  = "disk1"
+    attach = "true"
+
+    datastore_id = "${data.vsphere_datastore.pds.id}"
+    path         = "${vsphere_virtual_disk.bastion-data-disk.vmdk_path}"
 
     unit_number = 14
   }
@@ -84,9 +86,11 @@ resource "vsphere_virtual_machine" "bastion-2nic" {
   }
 
   disk {
-    label = "disk1"
-    size  = "${vsphere_virtual_disk.bastion-data-disk.size}"
-    path  = "${vsphere_virtual_disk.bastion-data-disk.vmdk_path}"
+    label  = "disk1"
+    attach = "true"
+
+    datastore_id = "${data.vsphere_datastore.pds.id}"
+    path         = "${vsphere_virtual_disk.bastion-data-disk.vmdk_path}"
 
     unit_number = 14
   }

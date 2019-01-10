@@ -20,6 +20,10 @@ resource "local_file" "bastion-ssh-key" {
 # Bastion configuration templates
 #
 
+locals {
+  bastion_internal_ip = "${length(var.bastion_nic2_private_ip) > 0 ? var.bastion_nic2_private_ip : var.bastion_nic1_private_ip}"
+}
+
 data "template_cloudinit_config" "bastion-cloudinit" {
   gzip          = true
   base64_encode = true
@@ -75,7 +79,7 @@ network:
   config: disabled
 
 runcmd: 
-- /root/mount-data-volume.sh
+- /root/mount-data-volume.sh 2>&1 | tee -a /var/log/mount-data-volume.log
 - mv /root/bastion-config.yml /root/config.yml
 - /root/.bin/configure_network 2>&1 | tee -a /var/log/configure_network.log
 - /root/.bin/configure_powerdns 2>&1 | tee -a /var/log/configure_powerdns.log
@@ -121,7 +125,7 @@ server:
       var.bastion_nic2_lan_netmask,
       var.bastion_nic2_lan_gateway
     ))}'
-  dns_resolvers: ${var.bastion_dns}
+  dns_resolvers: ${length(var.bastion_dns) == 0 ? local.bastion_internal_ip: var.bastion_dns}
   admin_ssh_port: ${var.bastion_admin_ssh_port}
   admin_user: ${var.bastion_admin_user}
   admin_passwd: ${random_string.bastion-admin-password.result}
@@ -132,14 +136,14 @@ powerdns:
   dns_zones: ${join(" ", var.vpc_internal_dns_zones)}
   dns_records: ${join(" ", var.vpc_internal_dns_records)}
   allowed_subnets: ${var.vpc_cidr},${var.vpn_network}
-  ns_ip: ${length(var.bastion_nic2_private_ip) > 0 ? var.bastion_nic2_private_ip : var.bastion_nic1_private_ip}
+  ns_ip: ${local.bastion_internal_ip}
   api_key: ${random_string.powerdns-api-key.result}
 
 smtp:
   relay_host: ${var.smtp_relay_host}
   relay_port: ${var.smtp_relay_port}
   relay_api_key: ${var.smtp_relay_api_key}
-  internal_smtp_host: ${length(var.bastion_nic2_private_ip) > 0 ? var.bastion_nic2_private_ip : var.bastion_nic1_private_ip}
+  internal_smtp_host: ${local.bastion_internal_ip}
   internal_smtp_port: 2525
   networks: 172.16.0.0/12 ${var.vpc_cidr} ${var.bastion_public_ip}
 
