@@ -95,8 +95,8 @@ for dns_mapping in $config_powerdns_dns_records; do
     zone=${name#*.}
     host=${name%%.*}
 
-    set +
-    pdnsutil list-zone $zone | grep $host.$zone > /dev/null 2>&1
+    set +e
+    pdnsutil list-zone $zone 2> /dev/null | grep $host.$zone > /dev/null 2>&1
     if [[ $? -ne 0 ]]; then
         pdnsutil add-record $zone $host A $address
     fi
