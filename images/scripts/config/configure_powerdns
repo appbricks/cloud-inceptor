@@ -72,12 +72,21 @@ for zone in $config_powerdns_dns_zones; do
 
     set +e
     pdnsutil list-zone $zone > /dev/null 2>&1
-    if [[ $? -eq 1 ]]; then
+    if [[ $? -ne 0 ]]; then
         pdnsutil create-zone $zone ns1.$zone
         pdnsutil add-record $zone ns1 A $config_powerdns_ns_ip
+
+        parent_zone=${zone#*.}
+        pdnsutil list-zone $parent_zone > /dev/null 2>&1
+        if [[ $? -eq 0 ]]; then
+            zone_host=${zone%%.*}
+            pdnsutil add-record $parent_zone sandbox NS $config_powerdns_ns_ip
+        fi
     fi
     set -e
 done
+
+echo -e "\n+.=$config_server_dns_resolvers" >> /etc/powerdns/forward-zones.conf
 
 for dns_mapping in $config_powerdns_dns_records; do
     
