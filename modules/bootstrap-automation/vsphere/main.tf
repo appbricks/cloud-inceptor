@@ -52,7 +52,7 @@ data "vsphere_virtual_machine" "jumpbox-template" {
 #
 
 resource "vsphere_folder" "vpc" {
-  path          = "${var.vpc_name}"
+  path          = "${var.vpc_name}-bootstrap"
   type          = "vm"
   datacenter_id = "${data.vsphere_datacenter.dc.id}"
 }

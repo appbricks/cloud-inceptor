@@ -5,7 +5,7 @@
 resource "vsphere_virtual_machine" "bastion-1nic" {
   count = "${length(var.dmz_network) == 0 ? 1 : 0 }"
 
-  name   = "${element(split(".", var.vpc_dns_zone), 0)}"
+  name   = "inceptor"
   folder = "${vsphere_folder.vpc.path}"
 
   resource_pool_id = "${data.vsphere_compute_cluster.cl.*.resource_pool_id[0]}"
@@ -30,8 +30,10 @@ resource "vsphere_virtual_machine" "bastion-1nic" {
   }
 
   disk {
-    label  = "disk1"
-    attach = "true"
+    label        = "disk1"
+    attach       = "true"
+    disk_mode    = "independent_persistent"
+    disk_sharing = "sharingNone"
 
     datastore_id = "${data.vsphere_datastore.pds.id}"
     path         = "${vsphere_virtual_disk.bastion-data-disk.vmdk_path}"
@@ -55,7 +57,7 @@ resource "vsphere_virtual_machine" "bastion-1nic" {
 resource "vsphere_virtual_machine" "bastion-2nic" {
   count = "${length(var.dmz_network) > 0 ? 1 : 0 }"
 
-  name   = "${element(split(".", var.vpc_dns_zone), 0)}"
+  name   = "inceptor"
   folder = "/${var.datacenter}/vm/${vsphere_folder.vpc.path}"
 
   resource_pool_id = "${data.vsphere_compute_cluster.cl.*.resource_pool_id[0]}"
@@ -86,8 +88,10 @@ resource "vsphere_virtual_machine" "bastion-2nic" {
   }
 
   disk {
-    label  = "disk1"
-    attach = "true"
+    label        = "disk1"
+    attach       = "true"
+    disk_mode    = "independent_persistent"
+    disk_sharing = "sharingNone"
 
     datastore_id = "${data.vsphere_datastore.pds.id}"
     path         = "${vsphere_virtual_disk.bastion-data-disk.vmdk_path}"
@@ -114,7 +118,7 @@ resource "vsphere_virtual_machine" "bastion-2nic" {
 
 resource "vsphere_virtual_disk" "bastion-data-disk" {
   size               = "${var.bastion_data_disk_size}"
-  vmdk_path          = "/bastion/data.vmdk"
+  vmdk_path          = "/${var.vpc_name}-bootstrap/data.vmdk"
   datacenter         = "${data.vsphere_datacenter.dc.name}"
   datastore          = "${data.vsphere_datastore.pds.name}"
   type               = "thin"
