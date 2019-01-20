@@ -44,7 +44,7 @@ sed -i "s|# api-logfile=/var/log/pdns.log|api-logfile=/var/log/pdns.log|" /etc/p
 
 # Configure SQL Lite backend for the Authoritative server
 sed -i "s|gsqlite3-database=.*|gsqlite3-database=$PDNS_DATA_DIR/pdns.sqlite3|" /etc/powerdns/pdns.d/pdns.local.gsqlite3.conf
-echo "gsqlite3-pragma-synchronous=0" >> /etc/powerdns/pdns.d/pdns.local.gsqlite3.conf
+echo "gsqlite3-pragma-synchronous=1" >> /etc/powerdns/pdns.d/pdns.local.gsqlite3.conf
 
 # Configure the recursor
 sed -i "s|local-address=127.0.0.1|local-address=$config_powerdns_ns_ip|" /etc/powerdns/recursor.conf
