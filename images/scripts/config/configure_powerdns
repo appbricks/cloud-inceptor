@@ -108,6 +108,7 @@ done
 
 sleep 5
 systemctl restart pdns.service
+sleep 5
 systemctl restart pdns-recursor.service
 
 touch /root/.powerdns_installed
