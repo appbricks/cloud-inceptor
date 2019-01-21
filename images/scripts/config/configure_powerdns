@@ -54,6 +54,12 @@ sed -i "s|# forward-zones-file=.*|forward-zones-file=/etc/powerdns/forward-zones
 rm /etc/powerdns/bindbackend.conf
 rm /etc/powerdns/pdns.d/pdns.simplebind.conf
 
+systemctl enable pdns.service
+systemctl start pdns.service
+
+systemctl enable pdns-recursor.service
+systemctl start pdns-recursor.service
+
 echo "nameserver $config_powerdns_ns_ip" > /etc/resolvconf/resolv.conf.d/head
 resolvconf -u
 
@@ -100,15 +106,6 @@ for dns_mapping in $config_powerdns_dns_records; do
     set -e
 done
 
-systemctl enable pdns-recursor.service
-systemctl enable pdns.service
-
-systemctl stop pdns-recursor.service
-systemctl stop pdns.service
-sleep 5
-
-systemctl start pdns.service
-sleep 10
-systemctl start pdns-recursor.service
+systemctl restart pdns-recursor.service
 
 touch /root/.powerdns_installed
