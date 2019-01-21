@@ -37,7 +37,6 @@ apt-get install -y -q \
     pdns-server pdns-backend-sqlite3
 
 systemctl stop pdns.service
-systemctl stop pdns-recursor.service
 systemctl disable pdns.service
 systemctl disable pdns-recursor.service
 
