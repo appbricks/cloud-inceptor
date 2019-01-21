@@ -57,9 +57,6 @@ rm /etc/powerdns/pdns.d/pdns.simplebind.conf
 systemctl enable pdns.service
 systemctl start pdns.service
 
-systemctl enable pdns-recursor.service
-systemctl start pdns-recursor.service
-
 echo "nameserver $config_powerdns_ns_ip" > /etc/resolvconf/resolv.conf.d/head
 resolvconf -u
 
@@ -105,6 +102,9 @@ for dns_mapping in $config_powerdns_dns_records; do
     fi
     set -e
 done
+
+systemctl enable pdns-recursor.service
+systemctl start pdns-recursor.service
 
 sleep 5
 systemctl restart pdns.service
