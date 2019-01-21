@@ -106,6 +106,8 @@ for dns_mapping in $config_powerdns_dns_records; do
     set -e
 done
 
+sleep 5
+systemctl restart pdns.service
 systemctl restart pdns-recursor.service
 
 touch /root/.powerdns_installed
