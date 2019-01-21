@@ -38,7 +38,6 @@ apt-get install -y -q \
 
 systemctl stop pdns.service
 systemctl disable pdns.service
-systemctl disable pdns-recursor.service
 
 # Need give some time for PDNS service to
 # stop otherwise recursor install fails
