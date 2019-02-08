@@ -8,7 +8,7 @@ resource "vsphere_virtual_machine" "bastion-1nic" {
   name   = "inceptor"
   folder = "${vsphere_folder.vpc.path}"
 
-  resource_pool_id = "${data.vsphere_compute_cluster.cl.*.resource_pool_id[0]}"
+  resource_pool_id = "${data.vsphere_resource_pool.rp.id}"
   datastore_id     = "${data.vsphere_datastore.eds.id}"
 
   memory   = "${var.bastion_instance_memory}"
@@ -60,7 +60,7 @@ resource "vsphere_virtual_machine" "bastion-2nic" {
   name   = "inceptor"
   folder = "/${var.datacenter}/vm/${vsphere_folder.vpc.path}"
 
-  resource_pool_id = "${data.vsphere_compute_cluster.cl.*.resource_pool_id[0]}"
+  resource_pool_id = "${data.vsphere_resource_pool.rp.id}"
   datastore_id     = "${data.vsphere_datastore.eds.id}"
 
   memory   = "${var.bastion_instance_memory}"

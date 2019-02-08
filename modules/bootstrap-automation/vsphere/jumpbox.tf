@@ -19,7 +19,7 @@ resource "vsphere_virtual_machine" "jumpbox" {
   name   = "jumpbox"
   folder = "/${var.datacenter}/vm/${vsphere_folder.vpc.path}"
 
-  resource_pool_id = "${data.vsphere_compute_cluster.cl.*.resource_pool_id[0]}"
+  resource_pool_id = "${data.vsphere_resource_pool.rp.id}"
   datastore_id     = "${data.vsphere_datastore.eds.id}"
 
   memory   = "${var.jumpbox_instance_memory}"

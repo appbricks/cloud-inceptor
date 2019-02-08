@@ -6,16 +6,18 @@ variable "datacenter" {
   type = "string"
 }
 
-variable "clusters" {
-  type = "list"
-}
-
 variable "ephemeral_datastore" {
   type = "string"
 }
 
 variable "persistent_datastore" {
   type = "string"
+}
+
+# Map of availability zones defined
+# as cluster => resource pool pairs.
+variable "availability_zones" {
+  type = "map"
 }
 
 variable "dmz_network" {

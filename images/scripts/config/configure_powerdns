@@ -44,7 +44,7 @@ sed -i "s|# api-logfile=/var/log/pdns.log|api-logfile=/var/log/pdns.log|" /etc/p
 
 # Configure SQL Lite backend for the Authoritative server
 sed -i "s|gsqlite3-database=.*|gsqlite3-database=$PDNS_DATA_DIR/pdns.sqlite3|" /etc/powerdns/pdns.d/pdns.local.gsqlite3.conf
-echo "gsqlite3-pragma-synchronous=0" >> /etc/powerdns/pdns.d/pdns.local.gsqlite3.conf
+echo "gsqlite3-pragma-synchronous=4" >> /etc/powerdns/pdns.d/pdns.local.gsqlite3.conf
 
 # Configure the recursor
 sed -i "s|local-address=127.0.0.1|local-address=$config_powerdns_ns_ip|" /etc/powerdns/recursor.conf
@@ -54,11 +54,11 @@ sed -i "s|# forward-zones-file=.*|forward-zones-file=/etc/powerdns/forward-zones
 rm /etc/powerdns/bindbackend.conf
 rm /etc/powerdns/pdns.d/pdns.simplebind.conf
 
-echo "nameserver $config_powerdns_ns_ip" > /etc/resolvconf/resolv.conf.d/head
-resolvconf -u
-
 systemctl enable pdns.service
 systemctl start pdns.service
+
+echo "nameserver $config_powerdns_ns_ip" > /etc/resolvconf/resolv.conf.d/head
+resolvconf -u
 
 first=Y
 for zone in $config_powerdns_dns_zones; do
@@ -105,5 +105,10 @@ done
 
 systemctl enable pdns-recursor.service
 systemctl start pdns-recursor.service
+
+sleep 5
+systemctl restart pdns.service
+sleep 5
+systemctl restart pdns-recursor.service
 
 touch /root/.powerdns_installed
