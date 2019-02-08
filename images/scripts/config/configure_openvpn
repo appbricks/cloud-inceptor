@@ -106,6 +106,13 @@ function configure_openvpn() {
     itfs=( $(ip a | awk '/^[0-9]+: (eth|ens?)[0-9]+:/{ print substr($2,1,length($2)-1) }') )
     i=0
 
+    # Assume first interface is the externally interface and
+    # create NAT rules to route to internet destinations.
+
+    # Masquerade traffic from VPN to "the world" -- done in the nat table
+    iptables -t nat -I POSTROUTING -o ${itfs[0]} -s $config_openvpn_subnet -j MASQUERADE
+
+    # Create rules to route VPN traffic to the correct LAN destinations
     for n in $(echo $config_server_lan_interfaces | sed "s/,/ /g"); do
 
         itf=${itfs[$i]}
@@ -123,18 +130,15 @@ function configure_openvpn() {
         # Allow traffic initiated from VPN to access LAN
         iptables -I FORWARD -i tun0 -o $itf -s $config_openvpn_subnet -d $lan_subnet -m conntrack --ctstate NEW -j ACCEPT
 
-        # Allow traffic initiated from VPN to access "the world"
-        iptables -I FORWARD -i tun0 -o $itf -s $config_openvpn_subnet -m conntrack --ctstate NEW -j ACCEPT
-
         # Allow traffic initiated from LAN to access "the world"
         iptables -I FORWARD -i $itf -o $itf -s $lan_subnet -m conntrack --ctstate NEW -j ACCEPT
 
-        # Masquerade traffic from VPN to "the world" -- done in the nat table
-        iptables -t nat -I POSTROUTING -o $itf -s $config_openvpn_subnet -j MASQUERADE
-
-        # Masquerade traffic from LAN to "the world"
+        # Masquerade traffic from LAN to "the world" -- done in the nat table
         iptables -t nat -I POSTROUTING -o $itf -s $lan_subnet -j MASQUERADE
     done
+
+    # Allow traffic initiated from VPN to access "the world"
+    iptables -I FORWARD -i tun0 -o ${itfs[0]} -s $config_openvpn_subnet -m conntrack --ctstate NEW -j ACCEPT
 
     echo -e "\n# Enable PAM Authentication" >> $OPENVPN_CONFIG/server.conf
     echo -e "plugin /usr/lib/openvpn/plugins/openvpn-plugin-auth-pam.so openvpn" >> $OPENVPN_CONFIG/server.conf
