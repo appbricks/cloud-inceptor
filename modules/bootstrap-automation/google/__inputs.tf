@@ -69,7 +69,7 @@ variable "vpc_subnet_start" {
 }
 
 variable "vpc_internal_dns_zones" {
-  type = "list"
+  default = [""]
 }
 
 variable "vpc_internal_dns_records" {

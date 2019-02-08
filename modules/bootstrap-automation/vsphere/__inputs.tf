@@ -59,7 +59,7 @@ variable "vpc_dns_zone" {
 }
 
 variable "vpc_internal_dns_zones" {
-  default = []
+  default = [""]
 }
 
 variable "vpc_internal_dns_records" {
