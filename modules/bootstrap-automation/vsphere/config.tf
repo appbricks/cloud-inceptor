@@ -1,24 +1,6 @@
 #
 # Inceptor bastion common config module
 # 
-# When debugging replace source github path 
-#
-# - "github.com/appbricks/cloud-inceptor//modules/bastion-config"
-#
-# with relative path filesystem path.
-#
-# - "../../../modules/bastion-config"
-#
-
-locals {
-  bastion_public_ip = "${length(var.bastion_public_ip) > 0 
-                        ? var.bastion_public_ip 
-                        : length(var.bastion_dmz_ip) > 0 
-                          ? var.bastion_dmz_ip 
-                          : var.bastion_admin_ip}"
-
-  has_dmz_network = "${length(var.dmz_network) > 0}"
-}
 
 module "config" {
   source = "../../../modules/bastion-config"
@@ -46,17 +28,13 @@ module "config" {
 
   bastion_dns = "${var.bastion_dns}"
 
-  bastion_nic1_private_ip  = "${local.has_dmz_network ? var.bastion_dmz_ip : var.bastion_admin_ip}"
-  bastion_nic1_netmask     = "${cidrnetmask(local.has_dmz_network ? var.dmz_network_cidr : var.admin_network_cidr)}"
-  bastion_nic1_lan_cidr    = "0.0.0.0/0"
-  bastion_nic1_lan_netmask = "${cidrnetmask(local.has_dmz_network ? var.dmz_network_cidr : var.vpc_cidr)}"
-  bastion_nic1_lan_gateway = "${local.has_dmz_network ? var.dmz_network_gateway : var.admin_network_gateway}"
+  enable_bastion_as_dhcpd = "${var.enable_bastion_as_dhcpd}"
+  dhcpd_lease_range       = "${var.dhcpd_lease_range}"
 
-  bastion_nic2_private_ip  = "${local.has_dmz_network ? var.bastion_admin_ip : ""}"
-  bastion_nic2_netmask     = "${local.has_dmz_network ? cidrnetmask(var.admin_network_cidr) : ""}"
-  bastion_nic2_lan_cidr    = "${local.has_dmz_network ? var.vpc_cidr : ""}"
-  bastion_nic2_lan_netmask = "${local.has_dmz_network ? cidrnetmask(var.vpc_cidr) : ""}"
-  bastion_nic2_lan_gateway = "${local.has_dmz_network ? var.admin_network_gateway : ""}"
+  # Assume the first NIC config is the external interface 
+  bastion_dmz_itf_ip   = "${local.bastion_dmz_itf_ip}"
+  bastion_admin_itf_ip = "${local.bastion_admin_itf_ip}"
+  bastion_nic_config   = "${data.external.bastion-nic-config.*.result.config}"
 
   data_volume_name = "/dev/sdb"
 

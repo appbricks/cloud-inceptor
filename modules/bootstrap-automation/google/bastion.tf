@@ -7,6 +7,7 @@ resource "google_compute_instance" "bastion" {
   machine_type = "${var.bastion_instance_type}"
   zone         = "${data.google_compute_zones.available.names[0]}"
 
+  can_ip_forward            = true
   allow_stopping_for_update = true
 
   tags = [
@@ -15,7 +16,6 @@ resource "google_compute_instance" "bastion" {
     "bastion-smtp-ext",
     "bastion-smtp-int",
     "bastion-proxy",
-    "bastion-deny-vpc",
     "bastion-deny-dmz",
   ]
 

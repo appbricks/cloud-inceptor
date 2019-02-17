@@ -3,9 +3,9 @@ SCRIPT_HOME=$(cd $(dirname "$(ls -l $0 | awk '{ print $NF }')") && pwd)
 source $SCRIPT_HOME/common
 
 if [[ -z $config_powerdns_dns_zones \
-    || -z $config_powerdns_api_key ]]; then
-    echo "Skipping Power DNS setup as DNS configuration is incomplete."
-    exit 0
+  || -z $config_powerdns_api_key ]]; then
+  echo "Skipping Power DNS setup as DNS configuration is incomplete."
+  exit 0
 fi
 
 set -xo pipefail
@@ -17,8 +17,8 @@ groupadd pdns > /dev/null 2>&1
 useradd -m -g pdns pdns > /dev/null 2>&1
 
 if [[ ! -e $PDNS_DATA_DIR/pdns.sqlite3 ]]; then
-    mv /var/lib/powerdns/pdns.sqlite3 $PDNS_DATA_DIR
-    chown -R pdns:pdns $PDNS_DATA_DIR
+  mv /var/lib/powerdns/pdns.sqlite3 $PDNS_DATA_DIR
+  chown -R pdns:pdns $PDNS_DATA_DIR
 fi
 
 set -e
@@ -63,44 +63,53 @@ resolvconf -u
 first=Y
 for zone in $config_powerdns_dns_zones; do
 
-    if [[ -n $first ]]; then 
-        echo "$zone=127.0.0.1:5300" > /etc/powerdns/forward-zones.conf
-        unset first
-    else
-        echo "$zone=127.0.0.1:5300" >> /etc/powerdns/forward-zones.conf
-    fi
+  if [[ -n $first ]]; then 
+    echo "$zone=127.0.0.1:5300" > /etc/powerdns/forward-zones.conf
+    unset first
+  else
+    echo "$zone=127.0.0.1:5300" >> /etc/powerdns/forward-zones.conf
+  fi
 
-    set +e
-    pdnsutil list-zone $zone > /dev/null 2>&1
-    if [[ $? -ne 0 ]]; then
-        pdnsutil create-zone $zone ns1.$zone
-        pdnsutil add-record $zone ns1 A $config_powerdns_ns_ip
+  set +e
+  pdnsutil list-zone $zone > /dev/null 2>&1
+  if [[ $? -ne 0 ]]; then
+    pdnsutil create-zone $zone ns1.$zone
+    pdnsutil add-record $zone ns1 A $config_powerdns_ns_ip
 
-        parent_zone=${zone#*.}
-        pdnsutil list-zone $parent_zone > /dev/null 2>&1
-        if [[ $? -eq 0 ]]; then
-            zone_host=${zone%%.*}
-            pdnsutil add-record $parent_zone sandbox NS $config_powerdns_ns_ip
-        fi
+    parent_zone=${zone#*.}
+    pdnsutil list-zone $parent_zone > /dev/null 2>&1
+    if [[ $? -eq 0 ]]; then
+      zone_host=${zone%%.*}
+      pdnsutil add-record $parent_zone sandbox NS $config_powerdns_ns_ip
     fi
-    set -e
+  fi
+  set -e
 done
 
 echo -e "\n+.=$config_server_dns_resolvers" >> /etc/powerdns/forward-zones.conf
 
-for dns_mapping in $config_powerdns_dns_records; do
-    
-    address=${dns_mapping##*:}
-    name=${dns_mapping%%:*}
-    zone=${name#*.}
-    host=${name%%.*}
+if [[ $config_server_enable_dhcpd == true ]]; then
+  
+  # Update DHCP daemon's config
+  sed -i "s|^  option domain-name-servers.*$|  option domain-name-servers  $config_powerdns_ns_ip;|" \
+    /etc/dhcp/dhcpd.conf
 
-    set +e
-    pdnsutil list-zone $zone 2> /dev/null | grep $host.$zone > /dev/null 2>&1
-    if [[ $? -ne 0 ]]; then
-        pdnsutil add-record $zone $host A $address
-    fi
-    set -e
+  systemctl restart isc-dhcp-server.service
+fi
+
+for dns_mapping in $config_powerdns_dns_records; do
+  
+  address=${dns_mapping##*:}
+  name=${dns_mapping%%:*}
+  zone=${name#*.}
+  host=${name%%.*}
+
+  set +e
+  pdnsutil list-zone $zone 2> /dev/null | grep $host.$zone > /dev/null 2>&1
+  if [[ $? -ne 0 ]]; then
+    pdnsutil add-record $zone $host A $address
+  fi
+  set -e
 done
 
 systemctl enable pdns-recursor.service

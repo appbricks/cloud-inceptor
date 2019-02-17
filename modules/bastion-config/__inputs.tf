@@ -86,49 +86,45 @@ variable "bastion_dns" {
 }
 
 #
-# Bastion NIC 1 on DMZ network
+# Setup bastion as a DHCP server for LANs
 #
-variable "bastion_nic1_private_ip" {
+
+variable "enable_bastion_as_dhcpd" {
+  default = "false"
+}
+
+variable "dhcpd_lease_range" {
+  default = "50"
+}
+
+# The local IP of the external or NAT interface
+variable "bastion_dmz_itf_ip" {
   type = "string"
 }
 
-variable "bastion_nic1_netmask" {
+# The local IP of the interface attached to the 
+# admin network 
+variable "bastion_admin_itf_ip" {
   type = "string"
 }
 
-variable "bastion_nic1_lan_cidr" {
-  type = "string"
-}
-
-variable "bastion_nic1_lan_netmask" {
-  type = "string"
-}
-
-variable "bastion_nic1_lan_gateway" {
-  type = "string"
-}
-
+# Bastion NIC configurations
 #
-# Bastion NIC 2 on internal network
+# This should be a list attributes of all the 
+# NICs to be configured on the Bastion. The 
+# list should be a list of:
 #
-variable "bastion_nic2_private_ip" {
-  type = "string"
-}
-
-variable "bastion_nic2_netmask" {
-  type = "string"
-}
-
-variable "bastion_nic2_lan_cidr" {
-  type = "string"
-}
-
-variable "bastion_nic2_lan_netmask" {
-  type = "string"
-}
-
-variable "bastion_nic2_lan_gateway" {
-  type = "string"
+# - private_ip
+# - netmask
+# - cidr
+# - gateway
+#
+# The first network is assumed to be the DMZ
+# network with the ability to NAT to the public
+# domain. The second network if present is
+# assumed to be the administration network.
+variable "bastion_nic_config" {
+  type = "list"
 }
 
 #

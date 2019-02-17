@@ -21,15 +21,15 @@ postconf -e "mydestination = \$myhostname, \$mydomain, localhost.localdomain, lo
 postconf -e "mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128 $config_smtp_networks"
 
 if [[ -n $config_smtp_relay_host \
-    && -n $config_smtp_relay_port \
-    && -n $config_smtp_relay_api_key ]]; then
+  && -n $config_smtp_relay_port \
+  && -n $config_smtp_relay_api_key ]]; then
 
-    postconf -e "relayhost = [$config_smtp_relay_host]:$config_smtp_relay_port"
-    postconf -e "smtp_tls_security_level = encrypt"
-    postconf -e "smtp_sasl_auth_enable = yes"
-    postconf -e "smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd"
-    postconf -e "smtp_sasl_security_options = noanonymous"
-    postconf -e "header_size_limit = 4096000"
+  postconf -e "relayhost = [$config_smtp_relay_host]:$config_smtp_relay_port"
+  postconf -e "smtp_tls_security_level = encrypt"
+  postconf -e "smtp_sasl_auth_enable = yes"
+  postconf -e "smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd"
+  postconf -e "smtp_sasl_security_options = noanonymous"
+  postconf -e "header_size_limit = 4096000"
 fi
 
 postconf -e "mail_spool_directory = /var/mail"
@@ -40,13 +40,13 @@ postconf -e "smtpd_recipient_restrictions = permit_mynetworks,permit_sasl_authen
 
 s="${config_smtp_internal_smtp_port}      inet  n       -       y       -       -       smtpd"
 grep -q "^${config_smtp_internal_smtp_port}\s" /etc/postfix/master.cf \
-    && sed -i ":a;N;\$!ba;s|10025.*smtpd|$s|g" /etc/postfix/master.cf \
-    || echo -e "$s" >> /etc/postfix/master.cf
+  && sed -i ":a;N;\$!ba;s|10025.*smtpd|$s|g" /etc/postfix/master.cf \
+  || echo -e "$s" >> /etc/postfix/master.cf
 
 s="policy-spf  unix  -       n       n       -       -       spawn\n  user=nobody argv=/usr/bin/policyd-spf"
 grep -q "^policy-spf\s" /etc/postfix/master.cf \
-    && sed -i ":a;N;\$!ba;s|policy-spf.*policyd-spf|$s|g" /etc/postfix/master.cf \
-    || echo -e "$s" >> /etc/postfix/master.cf
+  && sed -i ":a;N;\$!ba;s|policy-spf.*policyd-spf|$s|g" /etc/postfix/master.cf \
+  || echo -e "$s" >> /etc/postfix/master.cf
 
 echo "[$config_smtp_relay_host]:$config_smtp_relay_port apikey:$config_smtp_relay_api_key" > /etc/postfix/sasl_passwd
 postmap /etc/postfix/sasl_passwd

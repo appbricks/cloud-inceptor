@@ -20,28 +20,24 @@ variable "availability_zones" {
   type = "map"
 }
 
-variable "dmz_network" {
-  default = ""
-}
-
-variable "dmz_network_cidr" {
-  default = ""
-}
-
-variable "dmz_network_gateway" {
-  default = ""
-}
-
-variable "admin_network" {
-  type = "string"
-}
-
-variable "admin_network_cidr" {
-  type = "string"
-}
-
-variable "admin_network_gateway" {
-  default = ""
+# List of local Networks to attach the bastion instance to.
+# For example:
+#
+# [ {
+#   vsphere_network = ...
+#   cidr            = ...
+#   gateway         = ...
+#   bastion_ip      = ...
+# } ]
+#
+# If the bastion_ip is not provided then it will be calculatd
+# based on var.bastion_nic_hostnum which would be the host
+# number offset for the network's CIDR. If the gateway is not
+# provided then the bastion will provide routing and NATing
+# services via the bastion's ip on that network.
+#
+variable "local_networks" {
+  type = "list"
 }
 
 #
@@ -145,12 +141,8 @@ variable "bastion_public_ip" {
   default = ""
 }
 
-variable "bastion_dmz_ip" {
-  default = ""
-}
-
-variable "bastion_admin_ip" {
-  type = "string"
+variable "bastion_nic_hostnum" {
+  default = "2"
 }
 
 #
@@ -158,6 +150,18 @@ variable "bastion_admin_ip" {
 #
 variable "bastion_dns" {
   default = ""
+}
+
+#
+# Setup bastion as a DHCP server for LANs
+#
+
+variable "enable_bastion_as_dhcpd" {
+  default = "false"
+}
+
+variable "dhcpd_lease_range" {
+  default = "54"
 }
 
 #
@@ -275,8 +279,8 @@ variable "jumpbox_data_disk_size" {
   default = "160"
 }
 
-variable "jumpbox_admin_ip" {
-  default = ""
+variable "jumpbox_nic_hostnum" {
+  default = "3"
 }
 
 variable "jumpbox_template_path" {

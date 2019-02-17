@@ -6,8 +6,12 @@ variable "datacenter" {
   type = "string"
 }
 
-variable "clusters" {
-  type = "list"
+variable "availability_zones" {
+  default = {
+    az1 = {
+      cluster = "cluster"
+    }
+  }
 }
 
 variable "ephemeral_datastore" {
@@ -18,28 +22,12 @@ variable "persistent_datastore" {
   type = "string"
 }
 
-variable "dmz_network" {
-  default = ""
-}
-
-variable "dmz_network_cidr" {
-  default = ""
-}
-
-variable "dmz_network_gateway" {
-  default = ""
-}
-
-variable "admin_network" {
+variable "vpc_cidr" {
   type = "string"
 }
 
-variable "admin_network_cidr" {
-  type = "string"
-}
-
-variable "admin_network_gateway" {
-  type = "string"
+variable "local_networks" {
+  type = "list"
 }
 
 variable "vpn_server_port" {
@@ -71,14 +59,6 @@ variable "notification_email" {
 }
 
 #
-# Local variables
-#
-
-locals {
-  has_dmz_network = "${length(var.dmz_network) > 0}"
-}
-
-#
 # Bootstrap an base environment named "inceptor"
 #
 
@@ -103,22 +83,16 @@ module "bootstrap" {
   #
   datacenter = "${var.datacenter}"
 
-  clusters = ["${var.clusters}"]
-
+  availability_zones   = "${var.availability_zones}"
   ephemeral_datastore  = "${var.ephemeral_datastore}"
   persistent_datastore = "${var.persistent_datastore}"
 
-  dmz_network         = "${var.dmz_network}"
-  dmz_network_cidr    = "${var.dmz_network_cidr}"
-  dmz_network_gateway = "${var.dmz_network_gateway}"
-
-  admin_network         = "${var.admin_network}"
-  admin_network_cidr    = "${var.admin_network_cidr}"
-  admin_network_gateway = "${var.admin_network_gateway}"
+  local_networks      = "${var.local_networks}"
+  bastion_nic_hostnum = 31
 
   vpc_name     = "inceptor"
   vpc_dns_zone = "test.vmw.appbricks.cloud"
-  vpc_cidr     = "${var.admin_network_cidr}"
+  vpc_cidr     = "${var.vpc_cidr}"
 
   # Local DNS zone. This could also be the same as the public
   # which will enable setting up a split DNS of the public zone
@@ -139,8 +113,10 @@ module "bootstrap" {
 
   # Whether to allow SSH access to bastion server
   bastion_allow_public_ssh = "true"
-  bastion_dmz_ip           = "${cidrhost(local.has_dmz_network ? var.dmz_network_cidr : "0.0.0.0/0", 31)}"
-  bastion_admin_ip         = "${cidrhost(var.admin_network_cidr, 31)}"
+
+  bastion_dns = "8.8.8.8"
+
+  enable_bastion_as_dhcpd = "true"
 
   # If the SMTP relay settings are provided then
   # and SMTP server will be setup which will send
@@ -157,7 +133,7 @@ module "bootstrap" {
   # provided and the DNS will be jumpbox.[first local zone].
   deploy_jumpbox = "${var.deploy_jumpbox}"
 
-  jumpbox_admin_ip = "${cidrhost(var.admin_network_cidr, 32)}"
+  jumpbox_nic_hostnum = 32
 
   #
   # Bootstrap pipeline
@@ -187,4 +163,8 @@ output "bastion_admin_password" {
 
 output "concourse_admin_password" {
   value = "Passw0rd"
+}
+
+output "jumpbox_ip" {
+  value = "${module.bootstrap.jumpbox_ip}"
 }

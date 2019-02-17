@@ -21,7 +21,18 @@ resource "local_file" "bastion-ssh-key" {
 #
 
 locals {
-  bastion_internal_ip = "${length(var.bastion_nic2_private_ip) > 0 ? var.bastion_nic2_private_ip : var.bastion_nic1_private_ip}"
+  bastion_internal_ip = "${length(var.bastion_admin_itf_ip) > 0 
+    ? var.bastion_admin_itf_ip 
+    : var.bastion_dmz_itf_ip}"
+
+  admin_email = "${var.bastion_admin_user}@${var.vpc_dns_zone}"
+
+  # Create shorter email key if it is too long when 
+  # vpc dns is included, as vpn cert creation limits 
+  # length of string accepted.
+  vpn_email_key = "${length(local.admin_email) > 40 
+    ? join("@", list(var.bastion_admin_user, var.vpc_name))
+    : local.admin_email}"
 }
 
 data "template_cloudinit_config" "bastion-cloudinit" {
@@ -111,21 +122,10 @@ server:
   host: ${var.bastion_public_ip}
   fqdn: ${var.bastion_fqdn}
   use_fqdn: ${var.bastion_use_fqdn}
-  private_ip: ${var.bastion_nic1_private_ip}
-  lan_interfaces: '${join("|", list(
-      var.bastion_nic1_private_ip,
-      var.bastion_nic1_netmask,
-      var.bastion_nic1_lan_cidr,
-      var.bastion_nic1_lan_netmask,
-      var.bastion_nic1_lan_gateway
-    ))},${var.bastion_nic2_private_ip == "" ? "" : join("|", list(
-      var.bastion_nic2_private_ip,
-      var.bastion_nic2_netmask,
-      var.bastion_nic2_lan_cidr,
-      var.bastion_nic2_lan_netmask,
-      var.bastion_nic2_lan_gateway
-    ))}'
+  dmz_itf_ip: ${var.bastion_dmz_itf_ip}
+  lan_interfaces: '${join(",", var.bastion_nic_config)}'
   dns_resolvers: ${length(var.bastion_dns) == 0 ? local.bastion_internal_ip: var.bastion_dns}
+  enable_dhcpd: ${var.enable_bastion_as_dhcpd}
   admin_ssh_port: ${var.bastion_admin_ssh_port}
   admin_user: ${var.bastion_admin_user}
   admin_passwd: ${random_string.bastion-admin-password.result}
@@ -158,7 +158,7 @@ openvpn:
   vpn_cert:
     name: ${var.vpc_name}_VPN
     org: ${var.organization_name}
-    email: ${var.bastion_admin_user}@${var.vpc_dns_zone}
+    email: ${local.vpn_email_key}
     city: ${var.locality}
     province: ${var.province}
     country: ${var.country}

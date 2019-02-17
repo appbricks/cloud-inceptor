@@ -18,16 +18,25 @@ output "root_ca_cert" {
 #
 
 output "bastion_fqdn" {
-  value = "${local.has_dmz_network ? var.bastion_dmz_ip : var.bastion_admin_ip}"
+  value = "${local.bastion_dmz_itf_ip}"
 }
 
 output "bastion_admin_fqdn" {
-  value = "${var.bastion_allow_public_ssh && local.has_dmz_network 
-    ? var.bastion_dmz_ip : var.bastion_admin_ip}"
+  value = "${local.num_networks == 1 
+    ? local.bastion_dmz_itf_ip
+    : local.bastion_admin_itf_ip}"
 }
 
 output "bastion_admin_password" {
   value = "${module.config.bastion_admin_password}"
+}
+
+#
+# Jumpbox resource attributes
+#
+
+output "jumpbox_ip" {
+  value = "${local.jumpbox_ip}"
 }
 
 # The api-key required to adminster the 

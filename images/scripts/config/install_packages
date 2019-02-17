@@ -13,14 +13,26 @@ apt-get -y \
     --allow-downgrades --allow-remove-essential --allow-change-held-packages \
     dist-upgrade
 
-#apt-get install -y -q \
-#    policycoreutils
+apt-get install -y -q \
+   ipcalc
 
 # Disable sshguard if it is installed
 if [[ -e /etc/sshguard/ ]]; then
     systemctl stop sshguard
     systemctl disable sshguard
 fi
+
+# DHCP
+apt-get install -y -q \
+    --allow-downgrades \
+    --allow-remove-essential \
+    --allow-change-held-packages \
+    isc-dhcp-server
+
+systemctl stop isc-dhcp-server.service
+systemctl disable isc-dhcp-server.service
+systemctl stop isc-dhcp-server6.service
+systemctl disable isc-dhcp-server6.service
 
 # NTP
 apt-get install -y -q \

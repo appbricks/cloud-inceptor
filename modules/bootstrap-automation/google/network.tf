@@ -117,3 +117,19 @@ resource "google_compute_firewall" "admin-allow-int-ssh" {
   source_ranges = ["${var.vpc_cidr}"]
   target_tags   = ["allow-int-ssh"]
 }
+
+#
+# Bastion instance will also provide NAT for VPC
+#
+
+resource "google_compute_route" "nat-route-admin" {
+  name = "${var.vpc_name}-nat-route-admin"
+
+  dest_range             = "0.0.0.0/0"
+  network                = "${google_compute_network.admin.name}"
+  next_hop_instance      = "${google_compute_instance.bastion.name}"
+  next_hop_instance_zone = "${google_compute_instance.bastion.zone}"
+  priority               = 800
+
+  tags = ["nat-${var.vpc_name}-${var.region}"]
+}

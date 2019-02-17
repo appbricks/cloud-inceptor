@@ -6,18 +6,29 @@ locals {
   local_dns = "${length(var.vpc_internal_dns_zones) > 0 
     ? element(var.vpc_internal_dns_zones, 0) : ""}"
 
+  jumpbox_network_cidr = "${local.num_networks == 1 
+    ? lookup(var.local_networks[0], "cidr") 
+    : lookup(var.local_networks[1], "cidr") }"
+
+  jumpbox_network_gateway = "${length(local.bastion_admin_itf_ip) > 0
+    ? local.bastion_admin_itf_ip
+    : local.bastion_dmz_itf_ip
+  }"
+
+  jumpbox_ip = "${cidrhost(local.jumpbox_network_cidr, var.jumpbox_nic_hostnum)}"
+
   jumpbox_dns = "${var.deploy_jumpbox == "true" && length(local.local_dns) > 0 
     ? format("jumpbox.%s", local.local_dns) : ""}"
 
-  jumpbox_dns_record = "${length(local.jumpbox_dns) > 0 && length(var.jumpbox_admin_ip) > 0
-    ? format("%s:%s", local.jumpbox_dns, var.jumpbox_admin_ip) : ""}"
+  jumpbox_dns_record = "${length(local.jumpbox_dns) > 0 && length(local.jumpbox_ip) > 0
+    ? format("%s:%s", local.jumpbox_dns, local.jumpbox_ip) : ""}"
 }
 
 resource "vsphere_virtual_machine" "jumpbox" {
   count = "${length(local.jumpbox_dns) > 0 ? 1 : 0}"
 
   name   = "jumpbox"
-  folder = "/${var.datacenter}/vm/${vsphere_folder.vpc.path}"
+  folder = "${vsphere_folder.vpc.path}"
 
   resource_pool_id = "${data.vsphere_resource_pool.rp.id}"
   datastore_id     = "${data.vsphere_datastore.eds.id}"
@@ -29,7 +40,7 @@ resource "vsphere_virtual_machine" "jumpbox" {
   scsi_type = "${data.vsphere_virtual_machine.jumpbox-template.scsi_type}"
 
   network_interface {
-    network_id   = "${data.vsphere_network.admin.id}"
+    network_id   = "${data.vsphere_network.jumpbox.id}"
     adapter_type = "${data.vsphere_virtual_machine.jumpbox-template.network_interface_types[0]}"
   }
 
@@ -102,18 +113,42 @@ runcmd:
   cat << ---EOF > /etc/network/interfaces.d/99-$itf.cfg
   auto $itf
   iface $itf inet static
-    address ${var.jumpbox_admin_ip}
-    netmask ${cidrnetmask(var.admin_network_cidr)}
-    gateway ${var.admin_network_gateway}
+    address ${local.jumpbox_ip}
+    netmask ${cidrnetmask(local.jumpbox_network_cidr)}
+    gateway ${local.jumpbox_network_gateway}
   ---EOF
   ifup $itf
 
-  echo "nameserver ${var.bastion_admin_ip}" > /etc/resolvconf/resolv.conf.d/head
+  echo "nameserver ${local.jumpbox_network_gateway}" > /etc/resolvconf/resolv.conf.d/head
   echo "search ${element(var.vpc_internal_dns_zones, 0)}" >> /etc/resolvconf/resolv.conf.d/head
   resolvconf -u
 
 USER_DATA
   }
+}
+
+#
+# Jumpbox template
+#
+
+data "vsphere_virtual_machine" "jumpbox-template" {
+  count = "${length(var.deploy_jumpbox) > 0 ? 1 : 0}"
+
+  name          = "/${var.datacenter}/vm/${var.jumpbox_template_path}"
+  datacenter_id = "${data.vsphere_datacenter.dc.id}"
+}
+
+#
+# Jumpbox network
+#
+data "vsphere_network" "jumpbox" {
+  count = "${length(var.deploy_jumpbox) > 0 ? 1 : 0}"
+
+  name = "${local.num_networks == 1 
+    ? lookup(var.local_networks[0], "vsphere_network") 
+    : lookup(var.local_networks[1], "vsphere_network") }"
+
+  datacenter_id = "${data.vsphere_datacenter.dc.id}"
 }
 
 #

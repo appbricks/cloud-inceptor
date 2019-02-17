@@ -1,24 +1,28 @@
 #!/bin/bash
 
+set -ex
+
 SCRIPT_HOME=$(cd $(dirname "$(ls -l $0 | awk '{ print $NF }')") && pwd)
 source $SCRIPT_HOME/common
 
-set -ex
+if [[ -z $config_server_dmz_itf_ip ]]; then
+  exit 0
+fi
 
 #
 # Setup hostname to map to domain
 #
 if [[ -n $config_server_fqdn ]]; then
-    echo "$config_server_fqdn" > /etc/hostname
-    hostname $config_server_fqdn
+  echo "$config_server_fqdn" > /etc/hostname
+  hostname $config_server_fqdn
 
-    sed -i \
-        "s|^127.0.1.1.*$|127.0.1.1\t${config_server_fqdn}  ${config_server_fqdn%%.*}|" \
-        /etc/hosts
+  sed -i \
+    "s|^127.0.1.1.*$|127.0.1.1\t${config_server_fqdn}  ${config_server_fqdn%%.*}|" \
+    /etc/hosts
 
-    sed -i \
-        "s|^$config_server_private_ip.*$|$config_server_private_ip  ${config_server_fqdn}  ${config_server_fqdn%%.*}|" \
-        /etc/hosts
+  sed -i \
+    "s|^$config_server_dmz_itf_ip.*$|$config_server_dmz_itf_ip  ${config_server_fqdn}  ${config_server_fqdn%%.*}|" \
+    /etc/hosts
 fi
 
 #
@@ -26,47 +30,47 @@ fi
 #
 
 if [[ -e /data/users/etc ]]; then
-    cp -r /data/users/etc/* /etc
+  cp -r /data/users/etc/* /etc
 else
-    mkdir -p /data/users/home
-    mkdir -p /data/users/etc
-    mkdir -p /data/users/etc/ssh
+  mkdir -p /data/users/home
+  mkdir -p /data/users/etc
+  mkdir -p /data/users/etc/ssh
 fi
 
 if [[ -n "$config_server_admin_passwd" ]]; then
 
-    admin_user=${config_server_admin_user:-admin}
-    admin_password=$(mkpasswd "$config_server_admin_passwd")
-    user_home=/data/users/home/$admin_user
+  admin_user=${config_server_admin_user:-admin}
+  admin_password=$(mkpasswd "$config_server_admin_passwd")
+  user_home=/data/users/home/$admin_user
 
-    set +e
-    id $admin_user >/dev/null 2>&1
-    if [[ $? -ne 0 ]]; then
-        useradd $admin_user -p $admin_password -m -d $user_home -s /bin/bash
-    else
-        usermod $admin_user -p $admin_password -m -d $user_home -s /bin/bash
-    fi
-    adduser $admin_user sudo
+  set +e
+  id $admin_user >/dev/null 2>&1
+  if [[ $? -ne 0 ]]; then
+    useradd $admin_user -p $admin_password -m -d $user_home -s /bin/bash
+  else
+    usermod $admin_user -p $admin_password -m -d $user_home -s /bin/bash
+  fi
+  adduser $admin_user sudo
 
-    mkdir -p $user_home/.ssh
-    echo "$config_server_admin_ssh_public_key" \
-        > $user_home/.ssh/authorized_keys
-    
-    chmod 0700 $user_home/.ssh
-    chmod 0600 $user_home/.ssh/authorized_keys
+  mkdir -p $user_home/.ssh
+  echo "$config_server_admin_ssh_public_key" \
+    > $user_home/.ssh/authorized_keys
+  
+  chmod 0700 $user_home/.ssh
+  chmod 0600 $user_home/.ssh/authorized_keys
 
-    chown -R $admin_user:$admin_user $user_home
+  chown -R $admin_user:$admin_user $user_home
 
-    # Remove any overrides that may 
-    # allow passwordless sudos
-    rm -fr /etc/sudoers.d/*
-    sed -i 's|%sudo ALL=(ALL:ALL) NOPASSWD:ALL|%sudo ALL=(ALL:ALL) ALL|' /etc/sudoers
-    
-    set -e
-    [[ -n "$config_server_admin_ssh_port" ]] && \
-        sed -i "s|^Port [0-9]*$|Port $config_server_admin_ssh_port|" /etc/ssh/sshd_config
+  # Remove any overrides that may 
+  # allow passwordless sudos
+  rm -fr /etc/sudoers.d/*
+  sed -i 's|%sudo ALL=(ALL:ALL) NOPASSWD:ALL|%sudo ALL=(ALL:ALL) ALL|' /etc/sudoers
+  
+  set -e
+  [[ -n "$config_server_admin_ssh_port" ]] && \
+    sed -i "s|^Port [0-9]*$|Port $config_server_admin_ssh_port|" /etc/ssh/sshd_config
 
-    service sshd restart
+  service sshd restart
 fi
 
 # Fix to remove "mesg: ttyname failed: Inappropriate ioctl for device" 
@@ -85,79 +89,191 @@ route -n
 echo -e "===============================================================================\n"
 set -x
 
+itfs=( $(ip a | awk '/^[0-9]+: (eth|ens?)[0-9]+:/{ print substr($2,1,length($2)-1) }') )
+
 public_itf=$(ip a \
-    | grep -B 5 "$config_server_private_ip" \
-    | awk '/^[0-9]+: (eth|ens?)[0-9]+:/{ print substr($2,1,length($2)-1) }')
+  | grep -B 5 "$config_server_dmz_itf_ip" \
+  | awk '/^[0-9]+: (eth|ens?)[0-9]+:/{ print substr($2,1,length($2)-1) }')
 
 if [[ -z $public_itf ]]; then
-    # Remove cloud-config network setup
-    rm -f /etc/network/interfaces.d/50-cloud-init.cfg
+  # Remove cloud-config network setup
+  rm -f /etc/network/interfaces.d/50-cloud-init.cfg
 fi
 
-itfs=( $(ip a | grep "^[0-9]*: " | awk '{ print substr($2,1,length($2)-1) }') )
+lans=()
+dhcpd_interfaces=""
+
 i=0
 j=51
 
 for n in $(echo $config_server_lan_interfaces | sed "s/,/ /g"); do
 
-    i=$(($i+1))
-    itf=${itfs[$i]}
+  itf=${itfs[$i]}
+  i=$(($i+1))
+
+  # If more lan interfaces are configured 
+  # then available then skip them
+  [[ -n $itf ]] || continue
+  
+  ip=$(echo $n | awk -F'|' '{print $1}')
+  subnet=$(echo $n | awk -F'|' '{print $2}')
+  static_route_subnet=$(echo $n | awk -F'|' '{print $3}')
+  gateway=$(echo $n | awk -F'|' '{print $4}')
+  dhcp_lease_start=$(echo $n | awk -F'|' '{print $5}')
+  dhcp_lease_end=$(echo $n | awk -F'|' '{print $6}')
+
+  netinfo=$(ipcalc $subnet)
+  subnet_ip=$(echo -e "$netinfo" | awk '/Address/{ print $2 }')
+  netmask=$(echo -e "$netinfo" | awk '/Netmask/{ print $2 }')
+  broadcast=$(echo -e "$netinfo" | awk '/Broadcast/{ print $2 }')
+
+  if [[ -z "$static_route_subnet" \
+    || "$static_route_subnet" == "0.0.0.0/0" ]]; then
+
+    lan_itf="$subnet|$itf"
+  else
+    netmask=$(ipcalc $static_route_subnet | awk '/Netmask/{ print $2 }')
+    lan_itf="$static_route_subnet|$itf"
+  fi
+  lans+=($lan_itf)
+
+  if [[ $itf != $public_itf ]]; then
+
+    set +e
+
+    ifdown $itf
+    ip address flush dev $itf
+    ps -ef | awk '!/awk/&&/dhclient.'$itf'/{ print $2 }' | xargs kill -9
+
+    if [[ -n $ip ]]; then    
+      # Configure a static IP
     
-    ip=$(echo $n | awk -F'|' '{print $1}')    
-    netmask=$(echo $n | awk -F'|' '{print $2}')
-    lan_subnet=$(echo $n | awk -F'|' '{print $3}')
-    lan_netmask=$(echo $n | awk -F'|' '{print $4}')
-    lan_gateway=$(echo $n | awk -F'|' '{print $5}')
+      if [[ -n $static_route_subnet && -n $gateway ]]; then
 
-    if [[ $itf != $public_itf ]]; then
-
-        set +e
-
-        ifdown $itf
-        ip address flush dev $itf
-        ps -ef | awk '!/awk/&&/dhclient.'$itf'/{ print $2 }' | xargs kill -9
-
-        if [[ -n $ip ]]; then        
-            # Configure a static IP
-
-            if [[ -n $lan_subnet && -n $lan_gateway ]]; then
-                # Configure a static route
-
-                cat << ---EOF > /etc/network/interfaces.d/$j-$itf.cfg
+        cat << ---EOF > /etc/network/interfaces.d/$j-$itf.cfg
 auto $itf
 iface $itf inet static
-    address $ip
-    netmask $lan_netmask
-    post-up /sbin/route add -net $lan_subnet gw $lan_gateway
+  address $ip
+  netmask $netmask
+  post-up /sbin/route add -net $static_route_subnet gw $gateway
 ---EOF
-            else
-            
-                cat << ---EOF > /etc/network/interfaces.d/$j-$itf.cfg
+      else
+      
+        cat << ---EOF > /etc/network/interfaces.d/$j-$itf.cfg
 auto $itf
 iface $itf inet static
-    address $ip
-    netmask $netmask
+  address $ip
+  netmask $netmask
 ---EOF
+      fi
+    else
+      # Configure DHCP
 
-            fi
-        else
-            # Configure DHCP
-
-            cat << ---EOF > /etc/network/interfaces.d/$j-$itf.cfg
+      cat << ---EOF > /etc/network/interfaces.d/$j-$itf.cfg
 auto $itf
 iface $itf inet dhcp
 ---EOF
-        fi
-
-        ifup $itf
-        set -e
-        
-        j=$(($j+1))
     fi
+
+    ifup $itf
+    set -e
+    
+    j=$(($j+1))
+
+    # Configure DHCP daemon's leases on subnet
+    if [[ -n $dhcp_lease_start ]]; then
+
+      dhcpd_interfaces="$dhcpd_interfaces $itf"
+
+      cat << ---EOF >> /etc/dhcp/dhcpd.conf
+
+subnet $subnet_ip netmask $netmask {
+
+  option routers              $ip;
+  option subnet-mask          $netmask;
+  option broadcast-address    $broadcast;
+  option domain-name-servers  $config_server_dns_resolvers;
+  option ntp-servers          $ip;
+  default-lease-time          86400;
+  max-lease-time              86400;
+
+  range $dhcp_lease_start $dhcp_lease_end;
+}
+---EOF
+    fi
+  fi
 done
 
+if [[ -z $public_itf ]]; then
+
+  # NAT interface should be configured by now and 
+  # it should have beeen assigned the server's 
+  # private IP from the provided configuration
+  public_itf=$(ip a \
+    | grep -B 5 "$config_server_dmz_itf_ip" \
+    | awk '/^[0-9]+: (eth|ens?)[0-9]+:/{ print substr($2,1,length($2)-1) }')
+
+  [[ -n $public_itf ]] || (
+    echo "ERROR! unable to determine interface mapped to server's IP $public_itf.";
+    exit 1;
+  )
+fi
+
+# Configure DNS resolver
 echo "nameserver $config_server_dns_resolvers" > /etc/resolvconf/resolv.conf.d/head
 resolvconf -u
+
+# Enable IP forwarding
+sed -i "s/^.*net.ipv4.ip_forward=.*/net.ipv4.ip_forward=1/" /etc/sysctl.conf
+sed -i "s/^.*net.ipv6.conf.all.forwarding=.*/net.ipv6.conf.all.forwarding=1/" /etc/sysctl.conf
+sysctl -p
+
+# Allow established traffic to pass back and forth
+iptables -I FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+
+# Create rules for routing packets between peer lans
+for l in "${lans[@]}"; do
+
+  src_subnet=$(echo $l | awk -F'|' '{print $1}')
+  src_itf=$(echo $l | awk -F'|' '{print $2}')
+
+  if [[ -n $src_subnet \
+    && $src_itf != $public_itf ]]; then
+
+    # Masquerade traffic from LAN to "the world" -- done in the nat table
+    iptables -t nat -I POSTROUTING -o $public_itf -s $src_subnet -j MASQUERADE
+
+    # Allow traffic initiated from LAN to access "the world"
+    iptables -I FORWARD -i $src_itf -o $public_itf -s $src_subnet -m conntrack --ctstate NEW -j ACCEPT
+
+    for ll in "${lans[@]}"; do
+      dest_subnet=$(echo $ll | awk -F'|' '{print $1}')
+      dest_itf=$(echo $ll | awk -F'|' '{print $2}')
+
+      if [[ -n $dest_subnet \
+        && "$src_subnet" != "$dest_subnet" \
+        && $dest_itf != $public_itf ]]; then
+        
+        iptables -I FORWARD -i $src_itf -o $dest_itf -s $src_subnet -d $dest_subnet -m conntrack --ctstate NEW -j ACCEPT
+      fi
+    done
+  fi
+done
+
+mkdir -p /data/network/etc
+iptables-save > /data/network/etc/iptables-dump.ipt
+
+#
+# Enable DHCPD
+#
+
+if [[ $config_server_enable_dhcpd == true ]]; then
+  sed -i "s|INTERFACES=.*|INTERFACES=\"$dhcpd_interfaces\"|" \
+    /etc/default/isc-dhcp-server
+
+  systemctl enable isc-dhcp-server.service
+  systemctl start isc-dhcp-server.service
+fi
 
 #
 # Configure Docker daemon
@@ -168,30 +284,30 @@ set +e
 
 if [[ -n $config_server_docker_mount_path ]]; then
 
-    i=0
+  i=0
+  mount | grep " $config_server_docker_mount_path " >/dev/null 2>&1
+  while [[ $i -lt 12 && $? -ne 0 ]]; do
+    echo "Waiting for docker root mount '$config_server_docker_mount_path' to become available..."
+    sleep 5
+    i=$(($i+1))
     mount | grep " $config_server_docker_mount_path " >/dev/null 2>&1
-    while [[ $i -lt 12 && $? -ne 0 ]]; do
-        echo "Waiting for docker root mount '$config_server_docker_mount_path' to become available..."
-        sleep 5
-        i=$(($i+1))
-        mount | grep " $config_server_docker_mount_path " >/dev/null 2>&1
-    done
-    if [[ $i -lt 12 ]]; then
-        echo "Changing docker root path to '$config_server_docker_mount_path'."
+  done
+  if [[ $i -lt 12 ]]; then
+    echo "Changing docker root path to '$config_server_docker_mount_path'."
 
-        systemctl stop docker
+    systemctl stop docker
 
-        mkdir -p /etc/systemd/system/docker.service.d
-        cat << ---EOF > /etc/systemd/system/docker.service.d/docker.root.conf
+    mkdir -p /etc/systemd/system/docker.service.d
+    cat << ---EOF > /etc/systemd/system/docker.service.d/docker.root.conf
 [Service]
 ExecStart=
 ExecStart=/usr/bin/dockerd --data-root $config_server_docker_mount_path/docker
 ---EOF
 
-        systemctl daemon-reload
-    else
-        echo "Timed out waiting for docker root mount path to become available. No changes will be made to docker root path."
-    fi
+    systemctl daemon-reload
+  else
+    echo "Timed out waiting for docker root mount path to become available. No changes will be made to docker root path."
+  fi
 fi
 
 set -e

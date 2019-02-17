@@ -36,17 +36,26 @@ module "config" {
 
   bastion_dns = "${length(var.bastion_dns) == 0 ? google_compute_subnetwork.admin.gateway_address: var.bastion_dns}"
 
-  bastion_nic1_private_ip  = "${google_compute_address.bastion-dmz.address}"
-  bastion_nic1_netmask     = "${cidrnetmask(google_compute_subnetwork.dmz.ip_cidr_range)}"
-  bastion_nic1_lan_cidr    = "${google_compute_subnetwork.dmz.ip_cidr_range}"
-  bastion_nic1_lan_netmask = ""
-  bastion_nic1_lan_gateway = ""
+  bastion_dmz_itf_ip   = "${google_compute_address.bastion-dmz.address}"
+  bastion_admin_itf_ip = "${google_compute_address.bastion-admin.address}"
 
-  bastion_nic2_private_ip  = "${google_compute_address.bastion-admin.address}"
-  bastion_nic2_netmask     = "${cidrnetmask(google_compute_subnetwork.admin.ip_cidr_range)}"
-  bastion_nic2_lan_cidr    = "${var.vpc_cidr}"
-  bastion_nic2_lan_netmask = "${cidrnetmask(var.vpc_cidr)}"
-  bastion_nic2_lan_gateway = "${google_compute_subnetwork.admin.gateway_address}"
+  bastion_nic_config = [
+    "${join("|", 
+      list(
+        google_compute_address.bastion-dmz.address, 
+        google_compute_subnetwork.dmz.ip_cidr_range,
+        "0.0.0.0/0"
+      ),
+    )}",
+    "${join("|", 
+      list(
+        google_compute_address.bastion-admin.address, 
+        google_compute_subnetwork.admin.ip_cidr_range,
+        var.vpc_cidr,
+        google_compute_subnetwork.admin.gateway_address
+      )
+    )}",
+  ]
 
   data_volume_name = "/dev/sdb"
 
