@@ -27,6 +27,12 @@ data "vsphere_datastore" "pds" {
   datacenter_id = "${data.vsphere_datacenter.dc.id}"
 }
 
+data "vsphere_host" "host" {
+  count         = "${length(var.esxi_hosts)}"
+  name          = "${var.esxi_hosts[count.index]}"
+  datacenter_id = "${data.vsphere_datacenter.dc.id}"
+}
+
 #
 # VCenter folder for VPC
 #

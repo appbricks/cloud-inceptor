@@ -4,6 +4,46 @@
 
 locals {
   num_networks = "${length(var.local_networks)}"
+
+  local_networks = "${matchkeys(
+    data.null_data_source.local_networks.*.outputs, 
+    data.null_data_source.local_networks.*.outputs.create, 
+    list("true"))}"
+}
+
+data "null_data_source" "local_networks" {
+  count = "${length(var.local_networks)}"
+
+  inputs = {
+    vsphere_network = "${lookup(var.local_networks[count.index], "vsphere_network", "")}"
+    create          = "${lookup(var.local_networks[count.index], "create", "")}"
+    vlan_id         = "${lookup(var.local_networks[count.index], "vlan_id", "4094")}"
+  }
+}
+
+resource "vsphere_distributed_virtual_switch" "dvs" {
+  name          = "inceptor-local-network"
+  datacenter_id = "${data.vsphere_datacenter.dc.id}"
+
+  uplinks         = ["uplink1"]
+  active_uplinks  = ["uplink1"]
+  standby_uplinks = []
+
+  host = [
+    {
+      host_system_id = "${data.vsphere_host.host.0.id}"
+      devices        = ["${var.esxi_host_vmnics}"]
+    },
+  ]
+}
+
+resource "vsphere_distributed_port_group" "dpg" {
+  count = "${length(local.local_networks)}"
+
+  name                            = "${lookup(local.local_networks[count.index], "vsphere_network")}"
+  distributed_virtual_switch_uuid = "${vsphere_distributed_virtual_switch.dvs.id}"
+
+  vlan_id = "${lookup(local.local_networks[count.index], "vlan_id")}"
 }
 
 data "vsphere_network" "network" {
@@ -11,6 +51,23 @@ data "vsphere_network" "network" {
 
   name          = "${lookup(var.local_networks[count.index], "vsphere_network")}"
   datacenter_id = "${data.vsphere_datacenter.dc.id}"
+
+  # Additional networks may be created by
+  # the bootstrap module so this data
+  # resource needs to be executed only
+  # after the module has completed.
+  depends_on = [
+    "vsphere_distributed_port_group.dpg",
+  ]
+}
+
+data "null_data_source" "vsphere_networks" {
+  count = "${local.num_networks}"
+
+  inputs = {
+    name = "${data.vsphere_network.network.*.name[count.index]}"
+    id   = "${data.vsphere_network.network.*.id[count.index]}"
+  }
 }
 
 data "external" "bastion-nic-config" {

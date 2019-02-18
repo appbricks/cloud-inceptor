@@ -21,6 +21,10 @@ variable "availability_zones" {
 }
 
 # List of local Networks to attach the bastion instance to.
+# The "create" and "vlan" attributes are required only if
+# if network does not and needs to be created as a 
+# distributed virtual switch.
+#
 # For example:
 #
 # [ {
@@ -28,6 +32,9 @@ variable "availability_zones" {
 #   cidr            = ...
 #   gateway         = ...
 #   bastion_ip      = ...
+#  
+#   create  = "true"
+#   vlan_id = 4092
 # } ]
 #
 # If the bastion_ip is not provided then it will be calculatd
@@ -38,6 +45,18 @@ variable "availability_zones" {
 #
 variable "local_networks" {
   type = "list"
+}
+
+#
+# ESX hosts and NICs need to be provided only if one or more
+# of the networks declared in the 
+#
+variable "esxi_hosts" {
+  default = []
+}
+
+variable "esxi_host_vmnics" {
+  default = []
 }
 
 #

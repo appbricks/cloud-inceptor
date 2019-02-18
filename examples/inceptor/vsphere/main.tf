@@ -1,64 +1,4 @@
 #
-# VSphere Environment
-#
-
-variable "datacenter" {
-  type = "string"
-}
-
-variable "availability_zones" {
-  default = {
-    az1 = {
-      cluster = "cluster"
-    }
-  }
-}
-
-variable "ephemeral_datastore" {
-  type = "string"
-}
-
-variable "persistent_datastore" {
-  type = "string"
-}
-
-variable "vpc_cidr" {
-  type = "string"
-}
-
-variable "local_networks" {
-  type = "list"
-}
-
-variable "vpn_server_port" {
-  default = "2295"
-}
-
-variable "deploy_jumpbox" {
-  default = "true"
-}
-
-#
-# Notifications
-#
-
-variable "smtp_relay_host" {
-  default = ""
-}
-
-variable "smtp_relay_port" {
-  default = ""
-}
-
-variable "smtp_relay_api_key" {
-  default = ""
-}
-
-variable "notification_email" {
-  default = ""
-}
-
-#
 # Bootstrap an base environment named "inceptor"
 #
 
@@ -87,7 +27,10 @@ module "bootstrap" {
   ephemeral_datastore  = "${var.ephemeral_datastore}"
   persistent_datastore = "${var.persistent_datastore}"
 
-  local_networks      = "${var.local_networks}"
+  local_networks   = "${var.local_networks}"
+  esxi_hosts       = "${var.esxi_hosts}"
+  esxi_host_vmnics = "${var.esxi_host_vmnics}"
+
   bastion_nic_hostnum = 31
 
   vpc_name     = "inceptor"
@@ -103,7 +46,7 @@ module "bootstrap" {
   ssh_key_file_path = "${path.module}"
 
   # VPN Port
-  vpn_server_port = "${var.vpn_server_port}"
+  vpn_server_port = "2295"
 
   # Concourse Port
   concourse_server_port = "8080"
@@ -131,7 +74,7 @@ module "bootstrap" {
   # Whether to deploy a jumpbox in the admin network. The
   # jumpbox will be deployed only if a local DNS zone is
   # provided and the DNS will be jumpbox.[first local zone].
-  deploy_jumpbox = "${var.deploy_jumpbox}"
+  deploy_jumpbox = "true"
 
   jumpbox_nic_hostnum = 32
 

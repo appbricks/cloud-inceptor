@@ -14,6 +14,14 @@ output "root_ca_cert" {
 }
 
 #
+# Vsphere network references
+#
+
+output "vsphere_networks" {
+  value = "${data.null_data_source.vsphere_networks.*.outputs}"
+}
+
+#
 # Bastion resource attributes
 #
 

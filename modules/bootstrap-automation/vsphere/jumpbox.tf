@@ -40,7 +40,10 @@ resource "vsphere_virtual_machine" "jumpbox" {
   scsi_type = "${data.vsphere_virtual_machine.jumpbox-template.scsi_type}"
 
   network_interface {
-    network_id   = "${data.vsphere_network.jumpbox.id}"
+    network_id = "${local.num_networks == 1 
+      ? element(data.vsphere_network.network.*.id, 0) 
+      : element(data.vsphere_network.network.*.id, 1) }"
+
     adapter_type = "${data.vsphere_virtual_machine.jumpbox-template.network_interface_types[0]}"
   }
 
@@ -135,19 +138,6 @@ data "vsphere_virtual_machine" "jumpbox-template" {
   count = "${length(var.deploy_jumpbox) > 0 ? 1 : 0}"
 
   name          = "/${var.datacenter}/vm/${var.jumpbox_template_path}"
-  datacenter_id = "${data.vsphere_datacenter.dc.id}"
-}
-
-#
-# Jumpbox network
-#
-data "vsphere_network" "jumpbox" {
-  count = "${length(var.deploy_jumpbox) > 0 ? 1 : 0}"
-
-  name = "${local.num_networks == 1 
-    ? lookup(var.local_networks[0], "vsphere_network") 
-    : lookup(var.local_networks[1], "vsphere_network") }"
-
   datacenter_id = "${data.vsphere_datacenter.dc.id}"
 }
 

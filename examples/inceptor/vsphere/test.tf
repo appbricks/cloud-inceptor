@@ -2,10 +2,12 @@
 # Test instances on additional networks
 #
 
-locals {}
+locals {
+  num_networks = "${length(var.local_networks)}"
+}
 
 resource "vsphere_virtual_machine" "test" {
-  count = "${max(0, local.num_networks - 2)}"
+  count = "${var.deploy_test_instances ? max(0, local.num_networks - 2) : 0}"
 
   name   = "test-${count.index}"
   folder = "inceptor-bootstrap"
@@ -20,7 +22,7 @@ resource "vsphere_virtual_machine" "test" {
   scsi_type = "${data.vsphere_virtual_machine.test-template.scsi_type}"
 
   network_interface {
-    network_id   = "${data.vsphere_network.network.*.id[count.index + 2]}"
+    network_id   = "${lookup(module.bootstrap.vsphere_networks[count.index + 2], "id")}"
     adapter_type = "${data.vsphere_virtual_machine.test-template.network_interface_types[0]}"
   }
 
