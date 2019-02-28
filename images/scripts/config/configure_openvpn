@@ -136,7 +136,7 @@ function configure_openvpn() {
       echo -e "push \"route $subnet_ip $netmask\"" >> $OPENVPN_CONFIG/server.conf
 
       # Allow traffic initiated from VPN to access LAN
-      iptables -I FORWARD -i tun0 -o $itf -s $config_openvpn_subnet -d $subnet -m conntrack --ctstate NEW -j ACCEPT
+      iptables -I FORWARD -i tun0 -o $itf -s $config_openvpn_subnet -d $lan_subnet -m conntrack --ctstate NEW -j ACCEPT
     fi
   done
 
