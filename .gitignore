@@ -10,3 +10,5 @@
 *_key.*
 
 tmp/
+packer_cache/
+images/packer/manifest.json

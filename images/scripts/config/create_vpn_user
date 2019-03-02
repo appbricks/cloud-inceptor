@@ -1,0 +1,130 @@
+#!/bin/bash
+
+set -e
+
+if [[ `whoami` != "root" ]]; then 
+    echo -e "\nThis script needs to be run as root.\n"
+    exit 1
+fi
+
+if [[ -z "$1" ]]; then
+    echo -e "\nUsage: create_vpn_user user [ password ]\n"
+    exit 1
+fi
+
+user=$1
+user_home=/data/users/home/$user
+
+if [[ -z "$2" && ! -e $user_home ]]; then
+    echo -e "\nHome directory for $user does not exist. Please"
+    echo -e "create the user or pass the password as the second"
+    echo -e "argument to this script to create a new user.\n"
+    exit 1
+fi
+
+rm -fr /etc/openvpn/users/${user}
+dest_dir=/etc/openvpn/users/${user}/client
+mkdir -p "$dest_dir"
+
+pushd /etc/openvpn/easy-rsa/
+
+source /etc/openvpn/serverinfo
+source vars
+
+./build-key $user
+cp keys/${user}.crt keys/${user}.key "$dest_dir"
+cp /etc/openvpn/ca.crt /etc/openvpn/ta.key "$dest_dir"
+cp /usr/share/doc/openvpn/examples/sample-config-files/client.conf "$dest_dir/client.conf"
+
+sed -i "s/^remote .*/remote $vpn_server $vpn_server_port/" "$dest_dir/client.conf"
+sed -i "s/^proto .*/proto $vpn_server_proto/" "$dest_dir/client.conf"
+sed -i "s/^ca .*\.crt/ca ca.crt/" "$dest_dir/client.conf"
+sed -i "s/^cert .*\.crt/cert $user.crt/" "$dest_dir/client.conf"
+sed -i "s/^key .*\.key/key $user.key/" "$dest_dir/client.conf"
+sed -i "s/^;tls-auth/tls-auth/" "$dest_dir/client.conf"
+sed -i "s/^;cipher .*/cipher AES-256-CBC/" "$dest_dir/client.conf"
+
+echo -e "\n# Enable Multi-Factor Authentication" >> "$dest_dir/client.conf"
+echo -e "auth-user-pass" >> "$dest_dir/client.conf"
+
+echo -e "\n# Prevent the password file from being cached" >> "$dest_dir/client.conf"
+echo -e "auth-nocache" >> "$dest_dir/client.conf"
+
+echo -e "\n# Prevent re-authorization every 3600 seconds" >> "$dest_dir/client.conf"
+echo -e "reneg-sec 0" >> "$dest_dir/client.conf"
+
+popd
+
+pushd /etc/openvpn/users/${user}
+
+# Create Tunnelblick configuration for OSX
+mv client "$vpn_server_description.tblk"
+zip -r /etc/openvpn/users/${user}/openvpn-config.tunnelblick.zip "$vpn_server_description.tblk"
+
+# Create OpenVPN client configuration for windows
+mv "$vpn_server_description.tblk" "$vpn_server_description"
+mv "$vpn_server_description/client.conf" "$vpn_server_description/$vpn_server_description.ovpn"
+zip -r /etc/openvpn/users/${user}/openvpn-config.client.zip "$vpn_server_description"
+
+rm -fr "$vpn_server_description"
+
+popd
+
+if [[ -n $2 ]]; then
+    set +e
+    userdel $user > /dev/null 2>&1
+    set -e
+    rm -fr $user_home
+
+    password=$(mkpasswd "$2")
+    useradd $user -p $password -m -d $user_home -s /bin/bash
+fi
+
+if [[ -n $3 ]]; then
+    echo "$3" > $user_home/.ssh/authorized_keys
+
+    grep -q "^AllowUsers $user" /etc/ssh/sshd_config \
+        || echo -e "AllowUsers $user" >> /etc/ssh/sshd_config
+fi
+
+service sshd restart
+
+case "$config_openvpn_auth_strategy" in
+    google_mfa)
+        google-authenticator -f -t -d -r 3 -R 30 -w 8 -l "${user}@${vpn_server_domain}" -s $user_home/.google_authenticator
+        cp $user_home/.google_authenticator /etc/openvpn/users/${user}/gauth.secret
+        chown ubuntu:ubuntu /etc/openvpn/users/${user}/gauth.secret
+        ;;
+    *)
+        ;;
+esac
+
+cp /etc/openvpn/users/${user}/*.zip $user_home
+cp /usr/lib/openvpn/clients/openvpn-install-*.exe $user_home
+chown -R $user:$user $user_home
+
+if [[ -e /etc/apache2 ]]; then
+
+    mkdir -p /data/openvpn/apache2/users
+    cat << ---EOF > /data/openvpn/apache2/users/$user.conf
+<Directory $user_home>
+    AuthType Basic
+    AuthName "Restricted Area"
+    AuthBasicProvider external
+    AuthExternal pwauth
+    Require user $user
+    Options +Indexes
+</Directory>
+---EOF
+
+    systemctl restart apache2
+fi
+
+# Backup all system user files
+cp /etc/passwd /data/users/etc
+cp /etc/shadow /data/users/etc
+cp /etc/group /data/users/etc
+cp /etc/gshadow /data/users/etc
+cp /etc/ssh/sshd_config /data/users/etc/ssh
+
+set +e

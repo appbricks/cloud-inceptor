@@ -45,25 +45,6 @@ cat <<'EOF' > notification-patch.yml
 - type: replace
   path: /resources?/-
   value:
-    name: job-info
-    type: smuggler
-    source:
-      commands:
-        check: |
-          echo "$(date +%s)" > ${SMUGGLER_OUTPUT_DIR}/versions
-        in: |
-          cat <<EOF > $SMUGGLER_DESTINATION_DIR/job_info
-          export BUILD_ID='${BUILD_ID}'
-          export BUILD_NAME='${BUILD_NAME}'
-          export BUILD_JOB_NAME='${BUILD_JOB_NAME}'
-          export BUILD_PIPELINE_NAME='${BUILD_PIPELINE_NAME}'
-          export BUILD_TEAM_NAME='${BUILD_TEAM_NAME}'
-          export ATC_EXTERNAL_URL='${ATC_EXTERNAL_URL}'
-          EOF
-
-- type: replace
-  path: /resources?/-
-  value:
     name: notification
     type: fly
     source:
@@ -80,32 +61,59 @@ for j in $(echo -e "$jobs"); do
   alert_on_failure=$(echo -e "$pipeline" | awk "/- task: notify on $j failure/{ print \"y\" }")
 
   cat <<EOF >> notification-patch.yml
+
+- type: replace
+  path: /resources?/-
+  value:
+    name: $j-job-info
+    type: smuggler
+    source:
+      smuggler_debug: true
+      commands:
+        check: |
+          echo "\$(date +%s)" > \${SMUGGLER_OUTPUT_DIR}/versions
+        in: |
+          cat <<EOF > \${SMUGGLER_DESTINATION_DIR}/job_info
+          export BUILD_ID='\${BUILD_ID}'
+          export BUILD_NAME='\${BUILD_NAME}'
+          export BUILD_JOB_NAME='\${BUILD_JOB_NAME}'
+          export BUILD_PIPELINE_NAME='\${BUILD_PIPELINE_NAME}'
+          export BUILD_TEAM_NAME='\${BUILD_TEAM_NAME}'
+          export ATC_EXTERNAL_URL='\${ATC_EXTERNAL_URL}'
+          EOF
+
 - type: replace
   path: /jobs/name=$j/plan/0:before
   value:
-    get: job-info
+    get: $j-job-info
 EOF
 
   if [[ -n $alert_on_success ]]; then
 
     cat <<EOF >> notification-patch.yml
+
+- type: remove
+  path: /jobs/name=$j/on_success/do/task=notify on $j success
+
 - type: replace
-  path: /jobs/name=$j/on_success?/do?
+  path: /jobs/name=$j/on_success?/do?/-
   value:
-  - task: job_succeeded_alert
-    file: automation/lib/inceptor/tasks/queue_job_email/task.yml
+    task: job_succeeded_alert
+    file: ((pipeline_automation_path))/tasks/queue_job_email/task.yml
+    input_mapping: {job-info: $j-job-info}
     params: 
-      BUCKET: pcf
-      EMAIL_QUEUE_PATH: email-queue
       AUTOS3_URL: ((autos3_url))
       AUTOS3_ACCESS_KEY: ((autos3_access_key))
       AUTOS3_SECRET_KEY: ((autos3_secret_key))
       SUBJECT_PRE: ((vpc_name)) ${subject_heading}SUCCEEDED
       JOB_STATUS: succeeded
-  - put: notification
+
+- type: replace
+  path: /jobs/name=$j/on_success?/do?/-
+  value:
+    put: notification
     params: 
       options: 'trigger-job -j bootstrap/notifications'
-
 EOF
 
   fi
@@ -113,23 +121,29 @@ EOF
   if [[ -n $alert_on_failure ]]; then
 
     cat <<EOF >> notification-patch.yml
+    
+- type: remove
+  path: /jobs/name=$j/on_failure/do/task=notify on $j failure
+
 - type: replace
-  path: /jobs/name=$j/on_failure?/do?
+  path: /jobs/name=$j/on_failure?/do?/-
   value:
-  - task: job_failed_alert
-    file: automation/lib/inceptor/tasks/queue_job_email/task.yml
+    task: job_failed_alert
+    file: ((pipeline_automation_path))/tasks/queue_job_email/task.yml
+    input_mapping: {job-info: $j-job-info}
     params: 
-      BUCKET: pcf
-      EMAIL_QUEUE_PATH: email-queue
       AUTOS3_URL: ((autos3_url))
       AUTOS3_ACCESS_KEY: ((autos3_access_key))
       AUTOS3_SECRET_KEY: ((autos3_secret_key))
       SUBJECT_PRE: ((vpc_name)) ${subject_heading}FAILED
       JOB_STATUS: failed
-  - put: notification
+
+- type: replace
+  path: /jobs/name=$j/on_failure?/do?/-
+  value:
+    put: notification
     params: 
       options: 'trigger-job -j bootstrap/notifications'
-
 EOF
 
   fi

@@ -1,11 +1,4 @@
 #
-# Google Cloud Region
-#
-variable "region" {
-  type = "string"
-}
-
-#
 # Certificate Subject data for certificate creation
 #
 variable "company_name" {
@@ -47,28 +40,20 @@ variable "vpc_name" {
   type = "string"
 }
 
-variable "vpc_dns_zone" {
-  type = "string"
-}
-
 variable "vpc_cidr" {
   type = "string"
 }
 
-variable "dmz_network" {
+variable "vpc_dns_zone" {
   type = "string"
 }
 
-variable "dmz_subnetwork" {
-  type = "string"
+variable "vpc_internal_dns_zones" {
+  type = "list"
 }
 
-variable "admin_network" {
-  type = "string"
-}
-
-variable "admin_subnetwork" {
-  type = "string"
+variable "vpc_internal_dns_records" {
+  type = "list"
 }
 
 #
@@ -94,49 +79,52 @@ variable "bastion_public_ip" {
 }
 
 #
-# Bastion NIC 1 on DMZ network
+# DNS resolvers for the Bastion server
 #
-variable "bastion_nic1_private_ip" {
-  type = "string"
-}
-
-variable "bastion_nic1_netmask" {
-  type = "string"
-}
-
-variable "bastion_nic1_lan_cidr" {
-  type = "string"
-}
-
-variable "bastion_nic1_lan_netmask" {
-  type = "string"
-}
-
-variable "bastion_nic1_lan_gateway" {
+variable "bastion_dns" {
   type = "string"
 }
 
 #
-# Bastion NIC 2 on internal network
+# Setup bastion as a DHCP server for LANs
 #
-variable "bastion_nic2_private_ip" {
+
+variable "enable_bastion_as_dhcpd" {
+  default = "false"
+}
+
+variable "dhcpd_lease_range" {
+  default = "50"
+}
+
+# The local IP of the external or NAT interface
+variable "bastion_dmz_itf_ip" {
   type = "string"
 }
 
-variable "bastion_nic2_netmask" {
+# The local IP of the interface attached to the 
+# admin network 
+variable "bastion_admin_itf_ip" {
   type = "string"
 }
 
-variable "bastion_nic2_lan_cidr" {
-  type = "string"
-}
-
-variable "bastion_nic2_lan_netmask" {
-  type = "string"
-}
-
-variable "bastion_nic2_lan_gateway" {
-  type = "string"
+# Bastion NIC configurations
+#
+# This should be a list attributes of all the 
+# NICs to be configured on the Bastion. The 
+# list should be a list of:
+#
+# - private_ip
+# - netmask
+# - cidr
+# - gateway
+#
+# The first network is assumed to be the DMZ
+# network with the ability to NAT to the public
+# domain. The second network if present is
+# assumed to be the administration network.
+variable "bastion_nic_config" {
+  type = "list"
 }
 
 #
@@ -144,7 +132,7 @@ variable "bastion_nic2_lan_gateway" {
 #
 
 variable "data_volume_name" {
-  type = "string"
+  default = ""
 }
 
 #
@@ -173,10 +161,6 @@ variable "vpn_network" {
   type = "string"
 }
 
-variable "vpn_network_dns" {
-  type = "string"
-}
-
 variable "vpn_tunnel_all_traffic" {
   type = "string"
 }
@@ -201,6 +185,19 @@ variable "bootstrap_pipeline_file" {
 }
 
 variable "bootstrap_pipeline_vars" {
+  type = "string"
+}
+
+# Path to cloud inceptor repository provided as input 
+# to concourse tasks. This is required to be able to 
+# locate tasks such as notifications found in that
+# repository.
+variable "pipeline_automation_path" {
+  type = "string"
+}
+
+# Email to send concourse job notifications to
+variable "notification_email" {
   type = "string"
 }
 

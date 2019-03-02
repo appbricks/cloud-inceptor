@@ -1,7 +1,39 @@
 ---
 jobs:
 - name: bootstrap
+  on_success:
+    do:
+    - task: success-message
+      input_mapping: {job-info-in: bootstrap-job-info}
+      output_mapping: {job-info-out: bootstrap-job-info}
+      config:
+        platform: linux
+        image_resource:
+          type: docker-image
+          source: {repository: alpine}
+        inputs:
+        - name: job-info-in
+        outputs:
+        - name: job-info-out
+        run:
+          path: /bin/sh
+          args:
+          - -c
+          - |
+            cp job-info-in/* job-info-out
+            cat <<EOF > job-info-out/job_message
+            <hr/>
+            <p><large>Inceptor bootstrap testing @ $(date +"%A %Y-%m-%d %H:%M:%S")...</large></p>
+            <hr/>
+            EOF
+            
+    - task: notify on bootstrap success
+
+  on_failure:
+    do:
+    - task: notify on bootstrap failure
   plan:
+  - get: automation
   - task: initialize
     config:
       platform: linux
@@ -146,7 +178,62 @@ jobs:
         AUTOS3_ACCESS_KEY: ((autos3_access_key))
         AUTOS3_SECRET_KEY: ((autos3_secret_key))
 
+- name: failing-job
+  on_failure:
+    do:
+    - task: failure-message
+      input_mapping: {job-info-in: failing-job-job-info}
+      output_mapping: {job-info-out: failing-job-job-info}
+      config:
+        platform: linux
+        image_resource:
+          type: docker-image
+          source: {repository: alpine}
+        inputs:
+        - name: job-info-in
+        outputs:
+        - name: job-info-out
+        run:
+          path: /bin/sh
+          args:
+          - -c
+          - |
+            cp job-info-in/* job-info-out
+            cat <<EOF > job-info-out/job_message
+            <hr/>
+            <p><large>Inceptor failure testing @ $(date +"%A %Y-%m-%d %H:%M:%S")...</large></p>
+            <hr/>
+            EOF
+            
+    - task: notify on failing-job failure
+    
+  plan:
+  - get: automation
+  - task: fail
+    config:
+      platform: linux
+      image_resource:
+        type: docker-image
+        source: {repository: alpine}
+      run:
+        path: /bin/sh
+        args:
+        - -c
+        - |
+          set -e
+          
+          apk add figlet --update-cache >>out.log 2>&1
+          figlet -cw 160 "FAIL!"
+
+          exit 1
+
 resources:
+
+- name: automation
+  type: git
+  source:
+    uri: https://github.com/mevansam/cloud-inceptor
+    branch: master
 
 - name: hello-message
   type: s3

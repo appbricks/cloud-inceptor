@@ -14,6 +14,9 @@ image_resource:
 inputs:
 - name: upload_path
 
+outputs:
+- name: upload_object
+
 run:
   path: /bin/bash
   args:
@@ -24,24 +27,34 @@ run:
     name=${OBJECT_NAME%.*}
     ext=${OBJECT_NAME#*.}
 
-    current_version=$(mc find auto/$BUCKET/$UPLOAD_PATH --name "$name-*.$ext" --exec "echo {}" 2>/dev/null)
-    if [[ -z $current_version ]]; then
+    if [[ ${name} == ${ext} ]]; then
+      ext=""
+    elif [[ -n ${ext} ]]; then
+      ext=".${ext}"
+    fi
+
+    current_version=$(mc find auto/${BUCKET}/${UPLOAD_PATH} --name "${name}-*${ext}" --exec "echo {}" 2>/dev/null)
+    if [[ -z ${current_version} ]]; then
       version=0
     else
-      version_filename=$(basename $current_version)
+      version_filename=$(basename ${current_version})
       version_name=${version_filename%.*}
       version=$(($(echo ${version_name##*-})+1))
 
-      mc rm $current_version
+      mc rm ${current_version}
     fi
 
-    mc cp upload_path/$OBJECT_NAME auto/$BUCKET/$UPLOAD_PATH/$name-$version.$ext
+    if [[ -z ${CLEAN_UP_OLD_VERSIONS_ONLY} ]]; then
+      mc cp upload_path/${OBJECT_NAME} auto/${BUCKET}/${UPLOAD_PATH}/${name}-${version}${ext}
+    else
+      cp upload_path/${OBJECT_NAME} ./upload_object/${name}-${version}${ext}
+    fi
 
 params:
   BUCKET:
   UPLOAD_PATH:
   OBJECT_NAME:
-  VERSION_INCREMENT:
   AUTOS3_URL:
   AUTOS3_ACCESS_KEY:
   AUTOS3_SECRET_KEY:
+  CLEAN_UP_OLD_VERSIONS_ONLY:

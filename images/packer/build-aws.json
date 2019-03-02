@@ -1,0 +1,42 @@
+{
+    "variables": {
+        "aws_access_key": "{{env `AWS_ACCESS_KEY`}}",
+        "aws_secret_key": "{{env `AWS_SECRET_KEY`}}",
+        "region": "",
+        "ami": "",
+        "name": "",
+        "build_dir": ""
+    },
+    "builders": [
+        {
+            "type": "amazon-ebs",
+            "access_key": "{{user `aws_access_key`}}",
+            "secret_key": "{{user `aws_secret_key`}}",
+            "region": "{{user `region`}}",
+            "source_ami": "{{user `ami`}}",
+            "instance_type": "t2.micro",
+            "ssh_username": "ubuntu",
+            "ami_name": "{{user `name`}}"
+        }
+    ],
+    "provisioners": [
+        {
+            "type": "file",
+            "source": "{{user `build_dir`}}/scripts/config",
+            "destination": "/tmp/inceptor-scripts"
+        },
+        {
+            "type": "shell",
+            "expect_disconnect": "true",
+            "inline": [
+                "sudo chmod 0755 /tmp/inceptor-scripts/*",
+                "sudo /tmp/inceptor-scripts/install_packages",
+                "sudo rm /tmp/inceptor-scripts/install_packages",
+                "sudo mv /tmp/inceptor-scripts/rc.local /etc/rc.local",
+                "sudo mv /tmp/inceptor-scripts /root/.bin",
+                "sudo rm -rf /var/lib/apt/lists/*",
+                "sudo rm -fr /tmp/*"
+            ]
+        }
+    ]
+}

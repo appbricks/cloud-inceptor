@@ -1,0 +1,308 @@
+#!/bin/bash
+SCRIPT_HOME=$(cd $(dirname "$(ls -l $0 | awk '{ print $NF }')") && pwd)
+source $SCRIPT_HOME/common
+
+if [[ -z $config_openvpn_port ]]; then
+  echo "Skipping VPN setup as no VPN configuration found."
+  exit 0
+fi
+
+set -exo pipefail
+
+OPENVPN_DATA_HOME=/data/openvpn
+OPENVPN_CONFIG=$OPENVPN_DATA_HOME/etc
+OPENVPN_APACHE_USER_CONFIG=$OPENVPN_DATA_HOME/apache2/users
+
+function configure_openvpn() {
+
+  mkdir -p $OPENVPN_CONFIG
+  mv /etc/openvpn $OPENVPN_CONFIG
+  ln -s $OPENVPN_CONFIG /etc/openvpn
+
+  # Use the fully qualified name
+  # of the host instead of host ip.
+  [[ $config_server_use_fqdn == "true" ]] && \
+    config_server_host=$config_server_fqdn
+
+  echo "export vpn_server=\"$config_server_host\"" > $OPENVPN_CONFIG/serverinfo
+  echo "export vpn_server_port=\"$config_openvpn_port\"" >> $OPENVPN_CONFIG/serverinfo
+  echo "export vpn_server_proto=\"$config_openvpn_protocol\"" >> $OPENVPN_CONFIG/serverinfo
+  echo "export vpn_server_description=\"$config_openvpn_server_description\"" >> $OPENVPN_CONFIG/serverinfo
+  echo "export vpn_server_domain=\"$config_openvpn_server_domain\"" >> $OPENVPN_CONFIG/serverinfo
+  echo "export vpn_server_organization=\"$config_openvpn_vpn_cert_org\"" >> $OPENVPN_CONFIG/serverinfo
+  echo "export vpn_auth_strategy=config_openvpn_auth_strategy" >> $OPENVPN_CONFIG/serverinfo
+
+  mkdir -p $OPENVPN_CONFIG/easy-rsa/
+  pushd $OPENVPN_CONFIG/easy-rsa/
+
+  cp -r /usr/share/easy-rsa/* $OPENVPN_CONFIG/easy-rsa/
+
+  sed -i "s|export KEY_NAME=\".*\"|export KEY_NAME=\"${config_openvpn_vpn_cert_name:-AppBricks_VPN}\"|" vars
+  sed -i "s|export KEY_EMAIL=\".*\"|export KEY_EMAIL=\"${config_openvpn_vpn_cert_email:-}\"|" vars
+  sed -i "s|export KEY_COUNTRY=\".*\"|export KEY_COUNTRY=\"${config_openvpn_vpn_cert_country:-US}\"|" vars
+  sed -i "s|export KEY_PROVINCE=\".*\"|export KEY_PROVINCE=\"${config_openvpn_vpn_cert_province:-MA}\"|" vars
+  sed -i "s|export KEY_CITY=\".*\"|export KEY_CITY=\"${config_openvpn_vpn_cert_city:-Boston}\"|" vars
+  sed -i "s|export KEY_ORG=\".*\"|export KEY_ORG=\"${config_openvpn_vpn_cert_org:-AppBricks}\"|" vars
+  sed -i "s|export KEY_OU=\".*\"|export KEY_OU=\"${config_openvpn_vpn_cert_ou:-Development}\"|" vars
+
+  for f in $(ls build*); do sed -i "s|\-\-interact ||" $f; done
+
+  source vars
+  ./clean-all
+  ./build-ca
+  ./build-key-server $hn
+  ./build-dh
+
+  cp keys/$hn.crt keys/$hn.key keys/ca.crt keys/dh2048.pem $OPENVPN_CONFIG/
+
+  cp /usr/share/doc/openvpn/examples/sample-config-files/server.conf.gz $OPENVPN_CONFIG/
+  gzip -f -d $OPENVPN_CONFIG/server.conf.gz
+
+  openvpn --genkey --secret $OPENVPN_CONFIG/ta.key
+
+  vpn_subnet_ip=${config_openvpn_subnet/\/*/}
+
+  sed -i "s/^;local a.b.c.d/local $config_server_dmz_itf_ip/" $OPENVPN_CONFIG/server.conf
+  sed -i "s/^port .*/port $config_openvpn_port/" $OPENVPN_CONFIG/server.conf
+  sed -i "s/^proto .*/proto $config_openvpn_protocol/" $OPENVPN_CONFIG/server.conf
+  sed -i "s/^server .*/server $vpn_subnet_ip $config_openvpn_netmask/" $OPENVPN_CONFIG/server.conf
+  sed -i "s/^ca .*\.crt/ca ca.crt/" $OPENVPN_CONFIG/server.conf
+  sed -i "s/^cert .*\.crt/cert $hn.crt/" $OPENVPN_CONFIG/server.conf
+  sed -i "s/^key .*\.key/key $hn.key/" $OPENVPN_CONFIG/server.conf
+  sed -i "s/^dh .*\.pem/dh dh2048.pem/" $OPENVPN_CONFIG/server.conf
+  sed -i "s/^;tls-auth/tls-auth/" $OPENVPN_CONFIG/server.conf
+  sed -i "s/^;cipher AES-128-CBC/cipher AES-256-CBC/" $OPENVPN_CONFIG/server.conf
+  sed -i "s/^;user nobody/user nobody/" $OPENVPN_CONFIG/server.conf
+  sed -i "s/^;group nogroup/group nogroup/" $OPENVPN_CONFIG/server.conf
+
+  if [ "$config_openvpn_protocol" == "tcp" ]; then
+    sed -i "s/^explicit-exit-notify 1/;explicit-exit-notify 1/" $OPENVPN_CONFIG/server.conf
+  fi
+
+  if [ "$config_openvpn_allow_multiple_logins" == "yes" ]; then
+    sed -i "s/^;duplicate-cn/duplicate-cn/" $OPENVPN_CONFIG/server.conf
+  fi
+
+  if [ "$config_openvpn_tunnel_all_traffic" == "yes" ]; then
+    sed -i "s/^;push \"redirect-gateway def1 bypass-dhcp\"/push \"redirect-gateway def1 bypass-dhcp\"/" $OPENVPN_CONFIG/server.conf
+  fi
+
+  if [[ -e /root/.powerdns_installed ]]; then
+    openvpn_dns_servers=$config_powerdns_ns_ip
+  else
+    openvpn_dns_servers=${config_openvpn_dns_servers:-$config_server_dns_resolvers}
+  fi
+  if [ -n "$openvpn_dns_servers" ]; then
+    dns_servers=$(for ip in $(echo -e "$openvpn_dns_servers" | sed 's/,/ /g'); do echo -n "push \\\"dhcp-option DNS $ip\\\"\\n"; done)
+    sed -i "s/^;push \"dhcp-option DNS 208.67.220.220\"/;push \"dhcp-option DNS 208.67.220.220\"\n$dns_servers/" $OPENVPN_CONFIG/server.conf
+  fi
+
+  echo -e "\n# Internal LAN" >> $OPENVPN_CONFIG/server.conf
+  echo -e "topology subnet" >> $OPENVPN_CONFIG/server.conf
+
+  # Create NAT rules to route to internet destinations.
+
+  public_itf=$(ip a \
+    | grep -B 5 "$config_server_dmz_itf_ip" \
+    | awk '/^[0-9]+: (eth|ens?)[0-9]+:/{ print substr($2,1,length($2)-1) }')
+
+  # Masquerade traffic from VPN to "the world" -- done in the nat table
+  iptables -t nat -A POSTROUTING -o $public_itf -s $config_openvpn_subnet -j MASQUERADE
+
+  # Allow traffic initiated from VPN to access "the world"
+  iptables -I FORWARD -i tun0 -o $public_itf -s $config_openvpn_subnet -m conntrack --ctstate NEW -j ACCEPT
+
+  # Create rules to route VPN traffic to the correct LAN destinations
+  itfs=( $(ip a | awk '/^[0-9]+: (eth|ens?)[0-9]+:/{ print substr($2,1,length($2)-1) }') )
+  i=0
+
+  for n in $(echo $config_server_lan_interfaces | sed "s/,/ /g"); do
+
+    itf=${itfs[$i]}
+    i=$(($i+1))
+
+    if [[ $itf != $public_itf ]]; then
+      lan_subnet=$(echo $n | awk -F'|' '{print $3}')
+      if [[ -z $lan_subnet ]]; then
+        # If an explicit static route has not been provided 
+        # default to the subnet the interface is attached to
+        lan_subnet=$(echo $n | awk -F'|' '{print $2}')
+      fi
+      
+      netinfo=$(ipcalc $lan_subnet)
+      subnet_ip=$(echo -e "$netinfo" | awk '/Address/{ print $2 }')
+      netmask=$(echo -e "$netinfo" | awk '/Netmask/{ print $2 }')
+
+      echo -e "push \"route $subnet_ip $netmask\"" >> $OPENVPN_CONFIG/server.conf
+
+      # Allow traffic initiated from VPN to access LAN
+      iptables -I FORWARD -i tun0 -o $itf -s $config_openvpn_subnet -d $lan_subnet -m conntrack --ctstate NEW -j ACCEPT
+    fi
+  done
+
+  iptables-save > /data/network/etc/iptables-dump.ipt
+
+  echo -e "\n# Enable PAM Authentication" >> $OPENVPN_CONFIG/server.conf
+  echo -e "plugin /usr/lib/openvpn/plugins/openvpn-plugin-auth-pam.so openvpn" >> $OPENVPN_CONFIG/server.conf
+
+  echo -e "\n# Prevent re-authorization every 3600 seconds" >> $OPENVPN_CONFIG/server.conf
+  echo -e "reneg-sec 0" >> $OPENVPN_CONFIG/server.conf
+
+  case "$config_openvpn_auth_strategy" in
+    google_mfa)
+      echo -e "# Enable multi-factor authentication with Google authenticator" > /etc/pam.d/openvpn
+      echo -e "auth requisite pam_google_authenticator.so forward_pass" >> /etc/pam.d/openvpn
+      echo -e "auth required pam_unix.so use_first_pass" >> /etc/pam.d/openvpn
+
+      sed -i "s/# PAM configuration for the Secure Shell service/# PAM configuration for the Secure Shell service\n\nauth required \/lib\/security\/pam_google_authenticator.so/" /etc/pam.d/sshd
+      sed -i "s/^ChallengeResponseAuthentication .*/ChallengeResponseAuthentication yes/" /etc/ssh/sshd_config
+      ;;
+    *)
+      echo -e "# Enable local user authentication" > /etc/pam.d/openvpn
+      echo -e "auth required pam_unix.so" >> /etc/pam.d/openvpn
+      ;;
+  esac
+
+  popd
+
+  mv $SCRIPT_HOME/create_vpn_user /usr/local/bin/create_vpn_user
+  chmod +x /usr/local/bin/create_vpn_user
+  mv $SCRIPT_HOME/delete_vpn_user /usr/local/bin/delete_vpn_user
+  chmod +x /usr/local/bin/delete_vpn_user
+}
+
+if [[ ! -e $OPENVPN_CONFIG/ta.key ]]; then
+  configure_openvpn
+else
+  rm -fr /etc/openvpn
+  ln -s $OPENVPN_CONFIG /etc/openvpn
+
+  iptables-restore < /etc/openvpn/iptables-dump.ipt
+
+  mv $SCRIPT_HOME/create_vpn_user /usr/local/bin/create_vpn_user
+  chmod +x /usr/local/bin/create_vpn_user
+  mv $SCRIPT_HOME/delete_vpn_user /usr/local/bin/delete_vpn_user
+  chmod +x /usr/local/bin/delete_vpn_user
+fi
+
+cat /dev/null > /var/log/syslog
+systemctl enable openvpn
+systemctl start openvpn
+
+#
+# Configure Apache2 Web Server to serv VPN configurations for system users
+#
+
+mkdir -p $OPENVPN_APACHE_USER_CONFIG
+
+web_server_http_port=${config_webserver_http_port:-80}
+web_server_https_port=${config_webserver_https_port:-443}
+
+sed -i "s|Listen 80\$|Listen $web_server_http_port|g" /etc/apache2/ports.conf
+sed -i "s|Listen 443\$|Listen $web_server_https_port|g" /etc/apache2/ports.conf
+
+if [[ $web_server_https_port == 443 ]]; then
+  redirect_https=https://$config_server_host/
+else
+  redirect_https=https://$config_server_host:$web_server_https_port/
+fi
+
+if [[ ! -e /etc/ssl/certs/bastion_web_ca.pem ]]; then
+
+  openssl req -x509 -nodes -days 3650 \
+    -newkey rsa:4096 -keyout /etc/ssl/private/bastion_web_key.pem \
+    -out /etc/ssl/certs/bastion_web_cert.pem \
+    -subj "/C=${KEY_COUNTRY}/ST=${KEY_PROVINCE}/L=${KEY_CITY}/O=${KEY_ORG}/CN=${config_openvpn_vpn_cert_cn:-vpn.appbricks.org}"
+
+  cat << ---EOF > /etc/apache2/sites-available/vpn-web.conf
+<VirtualHost *:$web_server_http_port>
+ServerName $config_server_host
+Redirect permanent / $redirect_https
+</VirtualHost>
+
+<VirtualHost *:$web_server_https_port>
+ServerName $config_server_host
+DocumentRoot /var/www/html
+
+SSLEngine on
+SSLCertificateFile /etc/ssl/certs/bastion_web_cert.pem
+SSLCertificateKeyFile /etc/ssl/private/bastion_web_key.pem
+
+<IfModule mod_authnz_external.c>
+AddExternalAuth pwauth /usr/sbin/pwauth
+SetExternalAuthMethod pwauth pipe
+</IfModule>
+
+# VPN Users
+UserDir "/data/users/home/*"
+IncludeOptional "$OPENVPN_APACHE_USER_CONFIG/*.conf"
+
+</VirtualHost>
+---EOF
+
+else
+
+  cat << ---EOF > /etc/apache2/sites-available/vpn-web.conf
+<VirtualHost *:$web_server_http_port>
+ServerName $config_server_host
+Redirect permanent / $redirect_https
+</VirtualHost>
+
+<VirtualHost *:$web_server_https_port>
+ServerName $config_server_host
+DocumentRoot /var/www/html
+
+SSLEngine on
+SSLCertificateChainFile /etc/ssl/certs/bastion_web_ca.pem
+SSLCertificateFile /etc/ssl/certs/bastion_web_cert.pem
+SSLCertificateKeyFile /etc/ssl/private/bastion_web_key.pem
+
+<IfModule mod_authnz_external.c>
+AddExternalAuth pwauth /usr/sbin/pwauth
+SetExternalAuthMethod pwauth pipe
+</IfModule>
+
+# VPN Users
+UserDir "/data/users/home/*"  
+IncludeOptional "$OPENVPN_APACHE_USER_CONFIG/*.conf"
+
+</VirtualHost>
+---EOF
+
+fi
+
+pushd /etc/apache2/mods-enabled
+[[ -e userdir.load ]] || ln -s ../mods-available/userdir.load userdir.load
+[[ -e authnz_external.load ]] || ln -s ../mods-available/authnz_external.load authnz_external.load
+[[ -e socache_shmcb.load ]] || ln -s ../mods-available//socache_shmcb.load socache_shmcb.load
+[[ -e ssl.load ]] || ln -s ../mods-available/ssl.load ssl.load
+[[ -e ssl.conf ]] || ln -s ../mods-available/ssl.conf ssl.conf
+popd
+
+pushd /etc/apache2/sites-enabled
+rm -f *
+ln -s ../sites-available/vpn-web.conf vpn-web.conf
+popd
+
+systemctl enable apache2
+systemctl start apache2
+
+set +ex
+
+#
+# Create initial set of VPN users
+#
+
+if [[ -n "$config_server_admin_user" \
+  && ! -e "/etc/openvpn/users/$config_server_admin_user" ]]; then
+
+  create_vpn_user $config_server_admin_user
+fi
+
+for n in $(echo $config_openvpn_users | sed "s/,/ /g"); do
+  user=$(echo $n | awk -F'|' '{print $1}')
+  passwd=$(echo $n | awk -F'|' '{print $2}')
+  create_vpn_user $user $passwd
+done
+
+touch /root/.openvpn_installed
