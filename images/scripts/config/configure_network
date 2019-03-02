@@ -228,40 +228,45 @@ sed -i "s/^.*net.ipv4.ip_forward=.*/net.ipv4.ip_forward=1/" /etc/sysctl.conf
 sed -i "s/^.*net.ipv6.conf.all.forwarding=.*/net.ipv6.conf.all.forwarding=1/" /etc/sysctl.conf
 sysctl -p
 
-# Allow established traffic to pass back and forth
-iptables -I FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+if [[ -e /data/network/etc/iptables-dump.ipt ]]; then
+  # Restore persisted configured rules
+  iptables-restore < /data/network/etc/iptables-dump.ipt
+else
+  # Allow established traffic to pass back and forth
+  iptables -I FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
 
-# Create rules for routing packets between peer lans
-for l in "${lans[@]}"; do
+  # Create rules for routing packets between peer lans
+  for l in "${lans[@]}"; do
 
-  src_subnet=$(echo $l | awk -F'|' '{print $1}')
-  src_itf=$(echo $l | awk -F'|' '{print $2}')
+    src_subnet=$(echo $l | awk -F'|' '{print $1}')
+    src_itf=$(echo $l | awk -F'|' '{print $2}')
 
-  if [[ -n $src_subnet \
-    && $src_itf != $public_itf ]]; then
+    if [[ -n $src_subnet \
+      && $src_itf != $public_itf ]]; then
 
-    # Masquerade traffic from LAN to "the world" -- done in the nat table
-    iptables -t nat -I POSTROUTING -o $public_itf -s $src_subnet -j MASQUERADE
+      # Masquerade traffic from LAN to "the world" -- done in the nat table
+      iptables -t nat -I POSTROUTING -o $public_itf -s $src_subnet -j MASQUERADE
 
-    # Allow traffic initiated from LAN to access "the world"
-    iptables -I FORWARD -i $src_itf -o $public_itf -s $src_subnet -m conntrack --ctstate NEW -j ACCEPT
+      # Allow traffic initiated from LAN to access "the world"
+      iptables -I FORWARD -i $src_itf -o $public_itf -s $src_subnet -m conntrack --ctstate NEW -j ACCEPT
 
-    for ll in "${lans[@]}"; do
-      dest_subnet=$(echo $ll | awk -F'|' '{print $1}')
-      dest_itf=$(echo $ll | awk -F'|' '{print $2}')
+      for ll in "${lans[@]}"; do
+        dest_subnet=$(echo $ll | awk -F'|' '{print $1}')
+        dest_itf=$(echo $ll | awk -F'|' '{print $2}')
 
-      if [[ -n $dest_subnet \
-        && "$src_subnet" != "$dest_subnet" \
-        && $dest_itf != $public_itf ]]; then
-        
-        iptables -I FORWARD -i $src_itf -o $dest_itf -s $src_subnet -d $dest_subnet -m conntrack --ctstate NEW -j ACCEPT
-      fi
-    done
-  fi
-done
+        if [[ -n $dest_subnet \
+          && "$src_subnet" != "$dest_subnet" \
+          && $dest_itf != $public_itf ]]; then
+          
+          iptables -I FORWARD -i $src_itf -o $dest_itf -s $src_subnet -d $dest_subnet -m conntrack --ctstate NEW -j ACCEPT
+        fi
+      done
+    fi
+  done
 
-mkdir -p /data/network/etc
-iptables-save > /data/network/etc/iptables-dump.ipt
+  mkdir -p /data/network/etc
+  iptables-save > /data/network/etc/iptables-dump.ipt
+fi
 
 #
 # Enable DHCPD

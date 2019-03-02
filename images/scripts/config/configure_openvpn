@@ -177,7 +177,7 @@ else
   rm -fr /etc/openvpn
   ln -s $OPENVPN_CONFIG /etc/openvpn
 
-  iptables-restore < /etc/openvpn/iptables-dump.ipt
+  iptables-restore < /data/network/etc/iptables-dump.ipt
 
   mv $SCRIPT_HOME/create_vpn_user /usr/local/bin/create_vpn_user
   chmod +x /usr/local/bin/create_vpn_user
@@ -290,7 +290,7 @@ systemctl start apache2
 set +ex
 
 #
-# Create initial set of VPN users
+# Create VPN users
 #
 
 if [[ -n "$config_server_admin_user" \
@@ -301,8 +301,11 @@ fi
 
 for n in $(echo $config_openvpn_users | sed "s/,/ /g"); do
   user=$(echo $n | awk -F'|' '{print $1}')
-  passwd=$(echo $n | awk -F'|' '{print $2}')
-  create_vpn_user $user $passwd
+
+  if [[ ! -e "/etc/openvpn/users/$user" ]]; then
+    passwd=$(echo $n | awk -F'|' '{print $2}')
+    create_vpn_user "$user" "$passwd"
+  fi
 done
 
 touch /root/.openvpn_installed
