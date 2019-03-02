@@ -69,15 +69,18 @@ server:
   lan_interfaces: <COMMA SEPARATED LIST OF 'interface|ip|netmask|route_cidr|route_netmask|gateway|'>
 ```
 
-The `server.host` configuration value should be the externally accessible IP of the inception instance. The server network interface configuration should be provided as a comma separated list of `ip|netmask|lan_cidr|lan_netmask|lan_gateway` in the order of the interfaces configured for the instance.
+The `server.host` configuration value should be the externally accessible IP of the inception instance. The server network interface configuration should be provided as a comma separated list of `ip|subnet_cidr|lan_cidr|gateway|dhcp_lease_start|dhcp_lease_end` in the order of the interfaces configured for the instance.
 
-* `ip` - the IP of the interface on the attached subnet.
-* `netmask` - the netmask of the subnet this interface is attached to
-* `lan_cidr` - the LAN network CIDR range that should be routed via this interface. 
-* `lan_netmask` - the LAN netmask of the network that should be routed via this interface. If this is not provided then the `netmask` will be assumed as the route netmask.
-* `lan_gateway` - the gateway for the route -
+* `ip` - IPv4 address of network interface
+* `subnet_cidr` - CIDR of subnet to which this interface is attached
+* `lan_cidr` - CIDR of LAN to which a static route will be created via this interface
+* `gateway` - Gateway to configure for the interface's subnet
+* `dhcp_lease_start` - 0 DHCPd lease start (if providing DHCP leases on LAN segment)
+* `dhcp_lease_end` - DHCPd lease end (if providing DHCP leases on LAN segment)
 
-If the `ip` is empty then it will be assumed that the NIC is auto configured and this configuration will only be used when configuring OpenVPN. It is important that the first interface is the external interface via which VPN connections will be made.
+If the `ip` is empty then it will be assumed that the NIC is auto configured and this configuration will only be used when configuring OpenVPN. It is important that the first interface is the external interface via which VPN connections will be made. 
+
+The bastion will behave as a gateway and provide routing for subnets each interface is attached to. The first interface will be assumed to be attached to the DMZ and will also be the NAT interface. If the DHCP lease ranges are provided then the bastion will provide DHCP leases on that interface.
 
 ### OpenVPN
 
@@ -89,9 +92,8 @@ openvpn:
   protocol: [tcp|udp]
   subnet: <VPN SUBNET i.e. 192.168.111.0/24>
   netmask: <VPN SUBNET NETMASK i.e. 255.255.255.0>
-  admin_passwd: <VPN ADMIN PASSWORD>
-  dns_servers: <COMMA SEPARATE LIST OF DNS SERVERS TO CONFIGURE ON THE VPN CLIENTS>
   server_domain: <VPN SERVER DOMAIN>
+  server_description: <VPN SERVER DECRIPTION>
   tunnel_all_traffic: [yes|no]
   vpn_cert:
     name: <IDENTIFYING NAME>
@@ -122,8 +124,6 @@ openvpn:
   protocol: udp
   subnet: 192.168.111.0/24
   netmask: 255.255.255.0
-  ssh_passwd: 1234
-  dns_servers: '8.8.8.8'
   server_domain: acme.io
   server_description: Acme-VPN
   tunnel_all_traffic: yes
