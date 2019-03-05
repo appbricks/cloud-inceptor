@@ -1,4 +1,4 @@
-# Cloud Builder Automation
+# Cloud Builder Automation Appliance
 
 ## Overview
 
@@ -15,3 +15,5 @@ The cloud inceptor image can configure one or more of the services shown below. 
 If you want to create a redundant inceptor deployment that is resilient to data center availability zone outages then you will need to configure the inceptor clustering capabilities shown below. 
 
 ![alt text](docs/images/cloud-inceptor-redundancy.png "Cloud Inceptor Redundancy")
+
+Redundancy is only required if you need to achive high-availability of the automation services. The appliance can always be rebuilt via the Terraform state of the deployment in an idempotent manner.
