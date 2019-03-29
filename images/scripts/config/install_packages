@@ -118,19 +118,19 @@ make install PREFIX=/usr/local
 
 cd -
 
-# Install lastpass cli
-git clone https://github.com/lastpass/lastpass-cli.git /tmp/lastpass-cli
-cd /tmp/lastpass-cli
+# # Install lastpass cli
+# git clone https://github.com/lastpass/lastpass-cli.git /tmp/lastpass-cli
+# cd /tmp/lastpass-cli
 
-# Checkout the latest tag
-git fetch --tags
-latestTag=$(git describe --tags `git rev-list --tags --max-count=1`)
-git checkout $latestTag
+# # Checkout the latest tag
+# git fetch --tags
+# latestTag=$(git describe --tags `git rev-list --tags --max-count=1`)
+# git checkout $latestTag
 
-make
-make install PREFIX=/usr/local
+# make
+# make install PREFIX=/usr/local
 
-cd -
+# cd -x
 
 # Install Bosh CLI
 curl -Lo /usr/local/bin/bosh https://s3.amazonaws.com/bosh-cli-artifacts/bosh-cli-5.1.2-linux-amd64
