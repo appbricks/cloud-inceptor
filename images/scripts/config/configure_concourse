@@ -65,7 +65,7 @@ services:
     - CONCOURSE_POSTGRES_DATABASE=concourse
     - CONCOURSE_EXTERNAL_URL=\${CONCOURSE_EXTERNAL_URL}
     - CONCOURSE_ADD_LOCAL_USER=admin:$(htpasswd -bnBC 10 "" "$config_concourse_password" | tr -d ':\n' | sed 's/$2y/$2a/' | sed 's|\$|\$\$|g')
-    - CONCOURSE_MAIN_TEAM_ALLOW_ALL_USERS=true
+    - CONCOURSE_MAIN_TEAM_LOCAL_USER=admin
 
   concourse-worker:
     image: concourse/concourse
