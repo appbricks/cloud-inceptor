@@ -3,27 +3,37 @@
 #
 
 resource "aws_subnet" "dmz" {
-  count = "${min(var.max_azs, length(data.aws_availability_zones.available.names))}"
+  count = "${local.num_azs_to_configure}"
 
-  vpc_id            = "${data.aws_vpc.main.id}"
+  vpc_id            = "${aws_vpc.main.id}"
   availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
 
-  cidr_block = "${cidrsubnet(var.vpc_cidr, var.subnet_bits, var.subnet_start + (0 * length(data.aws_availability_zones.available.names) + count.index))}"
+  # If DMZ CIDR is not provided then the a DMZ network will
+  # be created for each AZ starting from ${var.vpc_subnet_start}
+  cidr_block = "${length(var.dmz_cidr) != 0 
+    ? var.dmz_cidr[count.index] 
+    : cidrsubnet(var.vpc_cidr, var.vpc_subnet_bits, var.vpc_subnet_start + count.index)}"
 
-  tags {
+  tags = {
     Name = "${var.vpc_name}: dmz subnet ${count.index}"
   }
 }
 
 resource "aws_subnet" "admin" {
-  count = "${min(var.max_azs, length(data.aws_availability_zones.available.names))}"
+  count = "${local.num_azs_to_configure}"
 
-  vpc_id            = "${data.aws_vpc.main.id}"
+  vpc_id            = "${aws_vpc.main.id}"
   availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
 
-  cidr_block = "${cidrsubnet(var.vpc_cidr, var.subnet_bits, var.subnet_start + (1 * length(data.aws_availability_zones.available.names) + count.index))}"
+  # The AZ subnet CIDR should start on consective AZ counts so 
+  # they are laid out in sequence. i.e. DMZ AZ1 CIDR 1, 
+  # DMZ AZ2 CIDR 2, ADMIN AZ CIDR 4, ADMIN AZ CIDR 5 assuming 
+  # the region has 3 AZs but only 2 are being configured.
+  cidr_block = "${length(var.dmz_cidr) != 0 
+    ? cidrsubnet(var.vpc_cidr, var.vpc_subnet_bits, var.vpc_subnet_start + count.index)
+    : cidrsubnet(var.vpc_cidr, var.vpc_subnet_bits, var.vpc_subnet_start + local.num_azs + count.index)}"
 
-  tags {
+  tags = {
     Name = "${var.vpc_name}: admin subnet ${count.index}"
   }
 }
@@ -33,22 +43,22 @@ resource "aws_subnet" "admin" {
 #
 
 resource "aws_internet_gateway" "igw" {
-  vpc_id = "${data.aws_vpc.main.id}"
+  vpc_id = "${aws_vpc.main.id}"
 
-  tags {
+  tags = {
     Name = "${var.vpc_name}: internet gateway"
   }
 }
 
 resource "aws_route_table" "igw" {
-  vpc_id = "${data.aws_vpc.main.id}"
+  vpc_id = "${aws_vpc.main.id}"
 
   route {
     cidr_block = "0.0.0.0/0"
     gateway_id = "${aws_internet_gateway.igw.id}"
   }
 
-  tags {
+  tags = {
     Name = "${var.vpc_name}: internet gateway route"
   }
 }
@@ -58,30 +68,38 @@ resource "aws_route_table" "igw" {
 #
 
 resource "aws_eip" "nat" {
-  count = "${min(var.max_azs, length(data.aws_availability_zones.available.names))}"
+  count = "${local.num_azs_to_configure}"
   vpc   = true
+
+  tags = {
+    Name = "${var.vpc_name}: elastic ip for nat ${count.index}"
+  }  
 }
 
 resource "aws_nat_gateway" "nat" {
-  count = "${min(var.max_azs, length(data.aws_availability_zones.available.names))}"
+  count = "${local.num_azs_to_configure}"
 
   allocation_id = "${element(aws_eip.nat.*.id, count.index)}"
   subnet_id     = "${element(aws_subnet.dmz.*.id, count.index)}"
+
+  tags = {
+    Name = "${var.vpc_name}: nat gateway ${count.index}"
+  } 
 
   depends_on = ["aws_internet_gateway.igw"]
 }
 
 resource "aws_route_table" "nat" {
-  count = "${min(var.max_azs, length(data.aws_availability_zones.available.names))}"
+  count = "${local.num_azs_to_configure}"
 
-  vpc_id = "${data.aws_vpc.main.id}"
+  vpc_id = "${aws_vpc.main.id}"
 
   route {
     cidr_block     = "0.0.0.0/0"
     nat_gateway_id = "${element(aws_nat_gateway.nat.*.id, count.index)}"
   }
 
-  tags {
+  tags = {
     Name = "${var.vpc_name}: nat ${count.index} gateway route"
   }
 }
@@ -91,14 +109,14 @@ resource "aws_route_table" "nat" {
 #
 
 resource "aws_route_table_association" "dmz" {
-  count = "${min(var.max_azs, length(data.aws_availability_zones.available.names))}"
+  count = "${local.num_azs_to_configure}"
 
   subnet_id      = "${element(aws_subnet.dmz.*.id, count.index)}"
   route_table_id = "${aws_route_table.igw.id}"
 }
 
 resource "aws_route_table_association" "admin" {
-  count = "${min(var.max_azs, length(data.aws_availability_zones.available.names))}"
+  count = "${local.num_azs_to_configure}"
 
   subnet_id      = "${element(aws_subnet.admin.*.id, count.index)}"
   route_table_id = "${element(aws_route_table.nat.*.id, count.index)}"

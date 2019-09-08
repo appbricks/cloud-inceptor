@@ -5,27 +5,48 @@
 resource "aws_instance" "bastion" {
   instance_type = "${var.bastion_instance_type}"
   ami           = "${data.aws_ami.bastion.id}"
-  key_name      = "${aws_key_pair.bastion.key_name}"
 
-  tags {
-    Name = "${var.vpc_name}: bastion"
-  }
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
 
   root_block_device {
-    volume_size = "160"
+    volume_size = "${tonumber(var.bastion_root_disk_size)}"
   }
 
   network_interface {
-    network_interface_id = "${aws_network_interface.bastion-public.id}"
+    network_interface_id = "${aws_network_interface.bastion-dmz.id}"
     device_index         = 0
   }
-
   network_interface {
-    network_interface_id = "${aws_network_interface.bastion-private.id}"
+    network_interface_id = "${aws_network_interface.bastion-admin.id}"
     device_index         = 1
   }
 
+  tags = {
+    Name = "${var.vpc_name}: bastion"
+  }
+
   user_data_base64 = "${module.config.bastion_cloud_init_config}"
+}
+
+#
+# Attached disk for saving persistant data. This disk needs to be
+# large enough for any installation packages concourse downloads.
+#
+
+locals {
+  bastion_data_disk_device_name = "/dev/xvdf"
+}
+
+resource "aws_ebs_volume" "bastion-data-disk" {
+  size              = "${tonumber(var.bastion_data_disk_size)}"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+}
+
+resource "aws_volume_attachment" "bastion-data-disk" {
+  device_name  = "${local.bastion_data_disk_device_name}"
+  volume_id    = "${aws_ebs_volume.bastion-data-disk.id}"
+  instance_id  = "${aws_instance.bastion.id}"
+  force_detach = true
 }
 
 #
@@ -52,33 +73,42 @@ data "aws_ami" "bastion" {
 # Networking
 #
 
-resource "aws_network_interface" "bastion-public" {
-  subnet_id       = "${var.dmz_subnet_ids[0]}"
-  private_ips     = ["${cidrhost(var.dmz_subnet_cidrs[0], -2)}"]
+locals {
+  bastion_dmz_itf_ip   = "${cidrhost(aws_subnet.dmz[0].cidr_block, -3)}"
+  bastion_admin_itf_ip = "${cidrhost(aws_subnet.admin[0].cidr_block, -3)}"
+}
+
+resource "aws_network_interface" "bastion-dmz" {
+  subnet_id       = "${aws_subnet.dmz[0].id}"
+  private_ips     = ["${local.bastion_dmz_itf_ip}"]
   security_groups = ["${aws_security_group.bastion-public.id}"]
 
-  tags {
-    Name = "${var.vpc_name}: bastion-public"
+  tags = {
+    Name = "${var.vpc_name}: bastion-dmz"
   }
 }
 
-resource "aws_network_interface" "bastion-private" {
-  subnet_id       = "${var.admin_subnet_ids[0]}"
-  private_ips     = ["${cidrhost(var.admin_subnet_cidrs[0], -2)}"]
+resource "aws_network_interface" "bastion-admin" {
+  subnet_id       = "${aws_subnet.admin[0].id}"
+  private_ips     = ["${local.bastion_admin_itf_ip}"]
   security_groups = ["${aws_security_group.bastion-private.id}"]
 
-  tags {
-    Name = "${var.vpc_name}: bastion-private"
+  tags = {
+    Name = "${var.vpc_name}: bastion-admin"
   }
 }
 
 resource "aws_eip_association" "bastion" {
-  network_interface_id = "${aws_network_interface.bastion-public.id}"
-  allocation_id        = "${aws_eip.bastion.id}"
+  network_interface_id = "${aws_network_interface.bastion-dmz.id}"
+  allocation_id        = "${aws_eip.bastion-public.id}"
 }
 
-resource "aws_eip" "bastion" {
+resource "aws_eip" "bastion-public" {
   vpc = true
+
+  tags = {
+    Name = "${var.vpc_name}: bastion-public"
+  }
 }
 
 #
@@ -88,28 +118,62 @@ resource "aws_eip" "bastion" {
 resource "aws_security_group" "bastion-public" {
   name        = "${var.vpc_name}: bastion rules public"
   description = "Rules for ingress and egress of network traffic to bastion instance."
-  vpc_id      = "${data.aws_vpc.main.id}"
+  vpc_id      = "${aws_vpc.main.id}"
 
-  ingress {
-    from_port   = "80"
-    to_port     = "80"
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+  # SSH
+  dynamic "ingress" {
+    for_each = var.bastion_allow_public_ssh == "true" ? [1] : []
+    content {
+      from_port   = "${tonumber(var.bastion_admin_ssh_port)}"
+      to_port     = "${tonumber(var.bastion_admin_ssh_port)}"
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]
+    }
   }
 
-  ingress {
-    from_port   = "443"
-    to_port     = "443"
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+  # VPN
+  dynamic "ingress" {
+    for_each = length(var.vpn_server_port) > 0 ? [1] : []
+    content {
+      from_port   = "${tonumber(var.vpn_server_port)}"
+      to_port     = "${tonumber(var.vpn_server_port)}"
+      protocol    = "${var.vpn_protocol}"
+      cidr_blocks = ["0.0.0.0/0"]
+    }
+  }
+  dynamic "ingress" {
+    for_each = length(var.vpn_server_port) > 0 ? [1] : []
+    content {
+      from_port   = 80
+      to_port     = 80
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]
+    }
+  }
+  dynamic "ingress" {
+    for_each = length(var.vpn_server_port) > 0 ? [1] : []
+    content {
+      from_port   = 443
+      to_port     = 443
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]
+    }
   }
 
-  ingress {
-    from_port   = "${var.vpn_server_port}"
-    to_port     = "${var.vpn_server_port}"
-    protocol    = "${var.vpn_protocol}"
-    cidr_blocks = ["0.0.0.0/0"]
+  # SMTP
+  dynamic "ingress" {
+    for_each = length(var.smtp_relay_host) > 0 ? [1] : []
+    content {
+      from_port   = 25
+      to_port     = 25
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]
+    }
   }
+
+  #
+  # Egress
+  #
 
   egress {
     from_port   = 0
@@ -136,7 +200,7 @@ resource "aws_security_group" "bastion-public" {
 resource "aws_security_group" "bastion-private" {
   name        = "${var.vpc_name}: bastion rules private"
   description = "Rules for ingress and egress of network traffic to bastion instance."
-  vpc_id      = "${data.aws_vpc.main.id}"
+  vpc_id      = "${aws_vpc.main.id}"
 
   ingress {
     from_port   = 22
@@ -145,11 +209,15 @@ resource "aws_security_group" "bastion-private" {
     cidr_blocks = ["${var.vpn_network}"]
   }
 
-  ingress {
-    from_port   = "${var.squidproxy_server_port}"
-    to_port     = "${var.squidproxy_server_port}"
-    protocol    = "tcp"
-    cidr_blocks = ["${var.vpn_network}", "${var.vpc_cidr}"]
+  # VPN
+  dynamic "ingress" {
+    for_each = length(var.squidproxy_server_port) > 0 ? [1] : []
+    content {
+      from_port   = "${tonumber(var.squidproxy_server_port)}"
+      to_port     = "${tonumber(var.squidproxy_server_port)}"
+      protocol    = "tcp"
+      cidr_blocks = ["${var.vpn_network}", "${var.vpc_cidr}"]
+    }
   }
 
   egress {
@@ -172,13 +240,4 @@ resource "aws_security_group" "bastion-private" {
     protocol    = "icmp"
     cidr_blocks = ["${var.vpc_cidr}"]
   }
-}
-
-#
-# SSH key pair
-#
-
-resource "aws_key_pair" "bastion" {
-  key_name   = "bastion"
-  public_key = "${module.config.bastion_openssh_public_key}"
 }

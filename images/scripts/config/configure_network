@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -ex
+set -exo pipefail
 
 SCRIPT_HOME=$(cd $(dirname "$(ls -l $0 | awk '{ print $NF }')") && pwd)
 source $SCRIPT_HOME/common
@@ -95,10 +95,22 @@ public_itf=$(ip a \
   | grep -B 5 "$config_server_dmz_itf_ip" \
   | awk '/^[0-9]+: (eth|ens?)[0-9]+:/{ print substr($2,1,length($2)-1) }')
 
+if [[ -n $config_powerdns_ns_ip ]]; then
+  nameservers=$config_powerdns_ns_ip
+else
+  nameservers=$config_server_dns_resolvers
+fi
+
 if [[ -z $public_itf ]]; then
   # Remove cloud-config network setup
   rm -f /etc/network/interfaces.d/50-cloud-init.cfg
 fi
+
+cat << ---EOF > /etc/netplan/51-inceptor-network-config.yaml
+network:
+  version: 2
+  ethernets:
+---EOF
 
 lans=()
 dhcpd_interfaces=""
@@ -124,6 +136,7 @@ for n in $(echo $config_server_lan_interfaces | sed "s/,/ /g"); do
 
   netinfo=$(ipcalc $subnet)
   subnet_ip=$(echo -e "$netinfo" | awk '/Address/{ print $2 }')
+  subnet_bits=$(echo -e "$netinfo" | awk '/Netmask/{ print $4 }')
   netmask=$(echo -e "$netinfo" | awk '/Netmask/{ print $2 }')
   broadcast=$(echo -e "$netinfo" | awk '/Broadcast/{ print $2 }')
 
@@ -150,28 +163,33 @@ for n in $(echo $config_server_lan_interfaces | sed "s/,/ /g"); do
     
       if [[ -n $static_route_subnet && -n $gateway ]]; then
 
-        cat << ---EOF > /etc/network/interfaces.d/$j-$itf.cfg
-auto $itf
-iface $itf inet static
-  address $ip
-  netmask $netmask
-  post-up /sbin/route add -net $static_route_subnet gw $gateway
+        cat << ---EOF >> /etc/netplan/51-inceptor-network-config.yaml
+    $itf:
+      addresses:
+      - $ip/$subnet_bits
+      nameservers:
+        addresses: [$nameservers]
+      routes:
+      - to: $static_route_subnet
+        via: $gateway
+        metric: 80
 ---EOF
       else
       
-        cat << ---EOF > /etc/network/interfaces.d/$j-$itf.cfg
-auto $itf
-iface $itf inet static
-  address $ip
-  netmask $netmask
+        cat << ---EOF >> /etc/netplan/51-inceptor-network-config.yaml
+    $itf:
+      addresses:
+      - $ip/$subnet_bits
+      nameservers:
+        addresses: [$nameservers]
 ---EOF
       fi
     else
       # Configure DHCP
 
-      cat << ---EOF > /etc/network/interfaces.d/$j-$itf.cfg
-auto $itf
-iface $itf inet dhcp
+      cat << ---EOF >> /etc/netplan/51-inceptor-network-config.yaml
+    $itf:
+      dhcp4: true
 ---EOF
     fi
 
@@ -204,6 +222,9 @@ subnet $subnet_ip netmask $netmask {
   fi
 done
 
+# Apply new network settings
+netplan apply
+
 if [[ -z $public_itf ]]; then
 
   # NAT interface should be configured by now and 
@@ -218,10 +239,6 @@ if [[ -z $public_itf ]]; then
     exit 1;
   )
 fi
-
-# Configure DNS resolver
-echo "nameserver $config_server_dns_resolvers" > /etc/resolvconf/resolv.conf.d/head
-resolvconf -u
 
 # Enable IP forwarding
 sed -i "s/^.*net.ipv4.ip_forward=.*/net.ipv4.ip_forward=1/" /etc/sysctl.conf

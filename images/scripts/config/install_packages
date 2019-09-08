@@ -1,6 +1,11 @@
 #!/bin/bash
 
-set -xe
+rm -rf /var/lib/apt/lists/*
+echo "waiting 180 seconds for cloud-init to update /etc/apt/sources.list"
+timeout 180 /bin/bash -c \
+  'until stat /var/lib/cloud/instance/boot-finished 2>/dev/null; do echo waiting ...; sleep 1; done'
+
+set -xeu
 
 echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
 
@@ -10,24 +15,33 @@ echo "deb http://build.openvpn.net/debian/openvpn/release/2.4 $(lsb_release -c -
 # Update and upgrade the distribution
 apt-get update
 apt-get -y \
-    --allow-downgrades --allow-remove-essential --allow-change-held-packages \
-    dist-upgrade
+  --allow-downgrades --allow-remove-essential --allow-change-held-packages \
+  dist-upgrade
 
-apt-get install -y -q \
-   ipcalc
+# Install pre-req packages
+apt-get install -y \
+  pkg-config cmake build-essential \
+  openssl libcurl4-openssl-dev libssl-dev \
+  libxml2 libxml2-dev \
+  pinentry-curses xclip \
+  git-core ipcalc
 
 # Disable sshguard if it is installed
-if [[ -e /etc/sshguard/ ]]; then
-    systemctl stop sshguard
-    systemctl disable sshguard
-fi
+apt-get install -y -q \
+  --allow-downgrades \
+  --allow-remove-essential \
+  --allow-change-held-packages \
+  sshguard
+
+systemctl stop sshguard
+systemctl disable sshguard
 
 # DHCP
 apt-get install -y -q \
-    --allow-downgrades \
-    --allow-remove-essential \
-    --allow-change-held-packages \
-    isc-dhcp-server
+  --allow-downgrades \
+  --allow-remove-essential \
+  --allow-change-held-packages \
+  isc-dhcp-server
 
 systemctl stop isc-dhcp-server.service
 systemctl disable isc-dhcp-server.service
@@ -36,17 +50,17 @@ systemctl disable isc-dhcp-server6.service
 
 # NTP
 apt-get install -y -q \
-    --allow-downgrades \
-    --allow-remove-essential \
-    --allow-change-held-packages \
-    ntp
+  --allow-downgrades \
+  --allow-remove-essential \
+  --allow-change-held-packages \
+  ntp
 
 # PowerDNS
 apt-get install -y -q \
-    --allow-downgrades \
-    --allow-remove-essential \
-    --allow-change-held-packages \
-    pdns-server pdns-backend-sqlite3
+  --allow-downgrades \
+  --allow-remove-essential \
+  --allow-change-held-packages \
+  pdns-server pdns-backend-sqlite3
 
 systemctl stop pdns.service
 systemctl disable pdns.service
@@ -56,10 +70,10 @@ systemctl disable pdns.service
 sleep 5
 
 apt-get install -y -q \
-    --allow-downgrades \
-    --allow-remove-essential \
-    --allow-change-held-packages \
-    pdns-recursor
+  --allow-downgrades \
+  --allow-remove-essential \
+  --allow-change-held-packages \
+  pdns-recursor
 
 systemctl stop pdns-recursor.service
 systemctl disable pdns-recursor.service
@@ -78,9 +92,18 @@ apt-get install -y whois openvpn easy-rsa libpam-google-authenticator zip
 systemctl stop openvpn
 systemctl disable openvpn
 
-mkdir /usr/lib/openvpn/clients
-curl -L https://swupdate.openvpn.org/community/releases/openvpn-install-2.4.5-I601.exe \
-    -o /usr/lib/openvpn/clients/openvpn-install-2.4.5-I601.exe
+tblk_version="3.7.9a_build_5321"
+openvpn_version="2.4.7-I607"
+
+mkdir -p /var/lib/openvpn/clients
+curl -L https://tunnelblick.net/release/Tunnelblick_${tblk_version}.dmg \
+  -o /var/lib/openvpn/clients/tunnelblick_osx.dmg
+curl -L https://swupdate.openvpn.org/community/releases/openvpn-install-${openvpn_version}-Win7.exe \
+  -o /var/lib/openvpn/clients/openvpn-install-win7.exe
+curl -L https://swupdate.openvpn.org/community/releases/openvpn-install-${openvpn_version}-Win10.exe \
+  -o /var/lib/openvpn/clients/openvpn-install-win10.exe
+curl -L https://swupdate.openvpn.org/community/releases/openvpn-install-${openvpn_version}-I603.exe \
+  -o /var/lib/openvpn/clients/openvpn-install-winsvr2016.exe
 
 # Apache Web Server
 apt-get install -y apache2 apache2-utils libapache2-mod-authnz-external pwauth
@@ -98,42 +121,17 @@ systemctl stop squid
 systemctl disable squid
 
 # Docker Compose CLI
-curl -L https://github.com/docker/compose/releases/download/1.19.0/docker-compose-`uname -s`-`uname -m` \
-    > /usr/local/bin/docker-compose
+docker_compose_version=1.24.1
+
+curl -L https://github.com/docker/compose/releases/download/${docker_compose_version}/docker-compose-`uname -s`-`uname -m` \
+  -o /usr/local/bin/docker-compose
 chmod +x /usr/local/bin/docker-compose
 
-# Install packages necessary to compile git-crypt and lastpass cli
-apt-get install -y \
-    pkg-config cmake build-essential \
-    openssl libcurl4-openssl-dev libssl-dev \
-    libxml2 libxml2-dev \
-    pinentry-curses xclip 
-
-# Install git crypt
-git clone https://github.com/AGWA/git-crypt /tmp/git-crypt
-cd /tmp/git-crypt
-
-make
-make install PREFIX=/usr/local
-
-cd -
-
-# # Install lastpass cli
-# git clone https://github.com/lastpass/lastpass-cli.git /tmp/lastpass-cli
-# cd /tmp/lastpass-cli
-
-# # Checkout the latest tag
-# git fetch --tags
-# latestTag=$(git describe --tags `git rev-list --tags --max-count=1`)
-# git checkout $latestTag
-
-# make
-# make install PREFIX=/usr/local
-
-# cd -x
-
 # Install Bosh CLI
-curl -Lo /usr/local/bin/bosh https://s3.amazonaws.com/bosh-cli-artifacts/bosh-cli-5.1.2-linux-amd64
+bosh_version=6.0.0
+
+curl -L https://github.com/cloudfoundry/bosh-cli/releases/download/v${bosh_version}/bosh-cli-${bosh_version}-linux-amd64 \
+  -o /usr/local/bin/bosh
 chmod +x /usr/local/bin/bosh
 
 set +xe

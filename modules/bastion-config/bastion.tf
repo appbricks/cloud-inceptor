@@ -108,7 +108,7 @@ USER_DATA
 data "template_file" "mount-data-volume" {
   template = "${file("${path.module}/scripts/mount-volume.sh")}"
 
-  vars {
+  vars = {
     attached_device_name = "${var.data_volume_name}"
     mount_directory      = "/data"
     world_readable       = "false"
@@ -178,7 +178,7 @@ CONFIG
 data "template_file" "www-static-index" {
   template = "${file("${path.module}/www-static-home/index.html")}"
 
-  vars {
+  vars = {
     environment = "${var.vpc_name}"
   }
 }

@@ -16,39 +16,49 @@ output "root_ca_cert" {
 #
 # Network resource attributes
 #
-output "dmz_network" {
-  value = "${google_compute_network.dmz.self_link}"
+output "dmz_subnetworks" {
+  value = "${aws_subnet.dmz.*.id}"
 }
 
-output "dmz_subnetwork" {
-  value = "${google_compute_subnetwork.dmz.self_link}"
+output "admin_subnetworks" {
+  value =  "${aws_subnet.admin.*.id}"
 }
 
-output "admin_network" {
-  value = "${google_compute_network.admin.self_link}"
+output "vpc_dns_public_zone_id" {
+  value = "${aws_route53_zone.vpc-public.zone_id}"
 }
 
-output "admin_subnetwork" {
-  value = "${google_compute_subnetwork.admin.self_link}"
+output "vpc_dns_public_zone_name" {
+  value = "${aws_route53_zone.vpc-public.name}"
 }
 
-output "vpc_dns_zone_name" {
-  value = "${google_dns_managed_zone.vpc.name}"
+output "vpc_dns_private_zone_id" {
+  value = "${aws_route53_zone.vpc-private.zone_id}"
+}
+
+output "vpc_dns_private_zone_name" {
+  value = "${aws_route53_zone.vpc-private.name}"
 }
 
 #
 # Bastion resource attributes
 #
 output "bastion_fqdn" {
-  value = "${google_dns_record_set.vpc-public.name}"
+  value = "${aws_route53_record.vpc-public.name}"
 }
 
 output "bastion_admin_fqdn" {
-  value = "${google_dns_record_set.vpc-admin.name}"
+  value = "${aws_route53_record.vpc-admin.name}"
 }
 
 output "bastion_admin_password" {
   value = "${module.config.bastion_admin_password}"
+}
+
+# The api-key required to adminster the 
+# internal zone managed by powerdns
+output "powerdns_api_key" {
+  value = "${module.config.powerdns_api_key}"
 }
 
 #
@@ -62,3 +72,9 @@ output "default_openssh_public_key" {
 output "default_openssh_private_key" {
   value = "${tls_private_key.default-ssh-key.private_key_pem}"
 }
+
+# ==== DEBUG OUTPUT ====
+
+# output "debug_output" {
+#   value = "${module.config.debug_output}"
+# }

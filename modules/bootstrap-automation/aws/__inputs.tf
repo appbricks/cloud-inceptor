@@ -61,15 +61,28 @@ variable "vpc_cidr" {
 }
 
 variable "vpc_subnet_bits" {
+  // Used to calculate subnet CIDR 
+  // if not explicitly provided
   default = 8
 }
 
 variable "vpc_subnet_start" {
+  // Used to calculate subnet CIDR 
+  // if not explicitly provided
   default = 200
 }
 
+variable "vpc_internal_dns_zones" {
+  default = [""]
+}
+
+variable "vpc_internal_dns_records" {
+  default = []
+}
+
 variable "dmz_cidr" {
-  default = ""
+  // DMZ Subnet CIDR for each AZ
+  default = []
 }
 
 variable "max_azs" {
@@ -87,7 +100,7 @@ variable "ssh_key_file_path" {
 # Bastion inception instance variables
 #
 variable "bastion_instance_type" {
-  default = "n1-standard-1"
+  default = "t2.small"
 }
 
 variable "bastion_image_name" {
@@ -98,11 +111,7 @@ variable "bastion_root_disk_size" {
   default = 50
 }
 
-variable "bastion_concourse_vols_disk_size" {
-  default = 250
-}
-
-variable "bastion_concourse_data_disk_size" {
+variable "bastion_data_disk_size" {
   default = 250
 }
 
@@ -112,6 +121,13 @@ variable "bastion_host_name" {
 
 variable "bastion_use_fqdn" {
   default = "true"
+}
+
+#
+# DNS resolvers for the  server
+#
+variable "bastion_dns" {
+  default = ""
 }
 
 #
@@ -144,10 +160,6 @@ variable "vpn_network" {
   default = "192.168.111.0/24"
 }
 
-variable "vpn_network_dns" {
-  default = ""
-}
-
 variable "vpn_tunnel_all_traffic" {
   default = "no"
 }
@@ -173,6 +185,22 @@ variable "bootstrap_pipeline_file" {
 }
 
 variable "bootstrap_pipeline_vars" {
+  default = ""
+}
+
+# Path to cloud inceptor repository provided as input 
+# to concourse tasks. This is required to be able to 
+# locate tasks such as notifications found in that
+# repository. This path should be from the build 
+# root of the concourse build container and the
+# first element would typically be the name of
+# the concourse automation repository resource path.
+variable "pipeline_automation_path" {
+  default = "automation"
+}
+
+# Email to send concourse job notifications to
+variable "notification_email" {
   default = ""
 }
 

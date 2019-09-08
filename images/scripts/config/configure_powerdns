@@ -1,4 +1,7 @@
 #!/bin/bash
+
+set -exo pipefail
+
 SCRIPT_HOME=$(cd $(dirname "$(ls -l $0 | awk '{ print $NF }')") && pwd)
 source $SCRIPT_HOME/common
 
@@ -8,11 +11,10 @@ if [[ -z $config_powerdns_dns_zones \
   exit 0
 fi
 
-set -xo pipefail
-
 PDNS_DATA_DIR=/data/powerdns
 mkdir -p $PDNS_DATA_DIR
 
+set +e
 groupadd pdns > /dev/null 2>&1
 useradd -m -g pdns pdns > /dev/null 2>&1
 
@@ -20,7 +22,6 @@ if [[ ! -e $PDNS_DATA_DIR/pdns.sqlite3 ]]; then
   mv /var/lib/powerdns/pdns.sqlite3 $PDNS_DATA_DIR
   chown -R pdns:pdns $PDNS_DATA_DIR
 fi
-
 set -e
 
 allowed_subnets=${config_powerdns_allowed_subnets:-0.0.0.0/0}
@@ -51,14 +52,11 @@ sed -i "s|local-address=127.0.0.1|local-address=$config_powerdns_ns_ip|" /etc/po
 sed -i "s|# local-port=53|local-port=53|" /etc/powerdns/recursor.conf
 sed -i "s|# forward-zones-file=.*|forward-zones-file=/etc/powerdns/forward-zones.conf|" /etc/powerdns/recursor.conf
 
-rm /etc/powerdns/bindbackend.conf
-rm /etc/powerdns/pdns.d/pdns.simplebind.conf
+rm -f /etc/powerdns/bindbackend.conf
+rm -f /etc/powerdns/pdns.d/pdns.simplebind.conf
 
 systemctl enable pdns.service
 systemctl start pdns.service
-
-echo "nameserver $config_powerdns_ns_ip" > /etc/resolvconf/resolv.conf.d/head
-resolvconf -u
 
 first=Y
 for zone in $config_powerdns_dns_zones; do
@@ -80,7 +78,7 @@ for zone in $config_powerdns_dns_zones; do
     pdnsutil list-zone $parent_zone > /dev/null 2>&1
     if [[ $? -eq 0 ]]; then
       zone_host=${zone%%.*}
-      pdnsutil add-record $parent_zone sandbox NS $config_powerdns_ns_ip
+      pdnsutil add-record $parent_zone $zone_host NS $config_powerdns_ns_ip
     fi
   fi
   set -e
@@ -103,6 +101,12 @@ for dns_mapping in $config_powerdns_dns_records; do
   name=${dns_mapping%%:*}
   zone=${name#*.}
   host=${name%%.*}
+  
+  if [[ "$host" == "*" ]]; then
+    temp=$(echo $name | sed 's|*.|_|')
+    zone=${temp#*.}
+    host=$(echo "${temp%%.*}" | sed 's|_|*.|')
+  fi
 
   set +e
   pdnsutil list-zone $zone 2> /dev/null | grep $host.$zone > /dev/null 2>&1

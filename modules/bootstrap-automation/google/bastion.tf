@@ -34,11 +34,11 @@ resource "google_compute_instance" "bastion" {
     subnetwork = "${google_compute_subnetwork.dmz.self_link}"
     network_ip = "${google_compute_address.bastion-dmz.address}"
 
-    access_config = [{
+    access_config {
       nat_ip = "${google_compute_address.bastion-public.address}"
 
       # public_ptr_domain_name = "${google_dns_record_set.vpc-public.name}"
-    }]
+    }
   }
 
   network_interface {
@@ -46,7 +46,7 @@ resource "google_compute_instance" "bastion" {
     network_ip = "${google_compute_address.bastion-admin.address}"
   }
 
-  metadata {
+  metadata = {
     user-data          = "${module.config.bastion_cloud_init_config}"
     user-data-encoding = "base64"
   }

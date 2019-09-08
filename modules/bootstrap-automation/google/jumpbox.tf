@@ -35,7 +35,7 @@ resource "google_compute_instance" "jumpbox" {
   }
 
   attached_disk {
-    source = "${google_compute_disk.jumpbox-data-disk.self_link}"
+    source = "${google_compute_disk.jumpbox-data-disk[0].self_link}"
   }
 
   network_interface {
@@ -43,7 +43,7 @@ resource "google_compute_instance" "jumpbox" {
     network_ip = "${google_compute_address.jumpbox.address}"
   }
 
-  metadata {
+  metadata = {
     ssh-keys = "ubuntu:${tls_private_key.default-ssh-key.public_key_openssh}"
 
     user-data = <<USER_DATA
@@ -74,7 +74,7 @@ resource "google_compute_address" "jumpbox" {
 data "template_file" "mount-jumpbox-data-volume" {
   template = "${file("${path.module}/scripts/mount-volume.sh")}"
 
-  vars {
+  vars = {
     attached_device_name = "/dev/sdb"
     mount_directory      = "/data"
     world_readable       = "true"

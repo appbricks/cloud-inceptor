@@ -1,4 +1,7 @@
 #!/bin/bash
+
+set -exo pipefail
+
 SCRIPT_HOME=$(cd $(dirname "$(ls -l $0 | awk '{ print $NF }')") && pwd)
 source $SCRIPT_HOME/common
 

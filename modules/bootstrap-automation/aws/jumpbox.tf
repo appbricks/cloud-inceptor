@@ -2,17 +2,30 @@
 # Jumpbox
 #
 
+locals {
+  local_dns = "${length(var.vpc_internal_dns_zones) > 0 
+    ? element(var.vpc_internal_dns_zones, 0) : ""}"
+
+  jumpbox_dns = "${var.deploy_jumpbox == "true" && length(local.local_dns) > 0 
+    ? format("jumpbox.%s", local.local_dns) : ""}"
+
+  jumpbox_dns_record = "${length(local.jumpbox_dns) > 0 
+    ? format("%s:%s", local.jumpbox_dns, aws_instance.jumpbox[0].private_ip) : ""}"
+}
+
 resource "aws_instance" "jumpbox" {
+  count = "${length(local.jumpbox_dns) > 0 ? 1 : 0}"
+
   instance_type = "t2.nano"
   ami           = "${data.aws_ami.ubuntu.id}"
   key_name      = "${aws_key_pair.default.key_name}"
 
-  subnet_id         = "${module.vpc.admin_subnets[0]}"
+  subnet_id         = "${aws_subnet.admin[0].id}"
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
 
   vpc_security_group_ids = ["${aws_security_group.internal.id}"]
 
-  tags {
+  tags = {
     Name = "${var.vpc_name}: jumpbox"
   }
 
@@ -33,24 +46,38 @@ USERDATA
 data "template_file" "mount-volume" {
   template = "${file("${path.module}/scripts/mount-volume.sh")}"
 
-  vars {
-    attached_device_name = "${var.data_volume_device_name}"
+  vars = {
+    attached_device_name = "${local.jumpbox_data_disk_device_name}"
     mount_directory      = "/data"
+    world_readable       = "true"
   }
 }
 
 #
 # Persistant disk for data storage
 #
-resource "aws_ebs_volume" "jumpbox-data" {
-  size              = 160
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+
+locals {
+  jumpbox_data_disk_device_name = "/dev/xvdf"
 }
 
-resource "aws_volume_attachment" "jumpbox-data" {
-  device_name  = "${var.data_volume_device_name}"
-  volume_id    = "${aws_ebs_volume.jumpbox-data.id}"
-  instance_id  = "${aws_instance.jumpbox.id}"
+resource "aws_ebs_volume" "jumpbox-data-disk" {
+  count = "${length(local.jumpbox_dns) > 0 ? 1 : 0}"
+
+  size              = "${tonumber(var.jumpbox_data_disk_size)}"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+
+  tags = {
+    Name = "${var.vpc_name}: jumpbox data disk"
+  }
+}
+
+resource "aws_volume_attachment" "jumpbox-data-disk" {
+  count = "${length(local.jumpbox_dns) > 0 ? 1 : 0}"
+
+  device_name  = "${local.jumpbox_data_disk_device_name}"
+  volume_id    = "${aws_ebs_volume.jumpbox-data-disk[0].id}"
+  instance_id  = "${aws_instance.jumpbox[0].id}"
   force_detach = true
 }
 
@@ -59,17 +86,11 @@ resource "aws_volume_attachment" "jumpbox-data" {
 #
 
 resource "aws_route53_record" "jumpbox" {
+  count = "${length(local.jumpbox_dns) > 0 ? 1 : 0}"
+
   zone_id = "${aws_route53_zone.vpc-private.zone_id}"
   name    = "jumpbox.${aws_route53_zone.vpc-private.name}"
   type    = "A"
   ttl     = "300"
-  records = ["${aws_instance.jumpbox.private_ip}"]
-}
-
-#
-# Output
-#
-
-output "jumpbox-fqdn" {
-  value = "${aws_route53_record.jumpbox.name}"
+  records = ["${aws_instance.jumpbox[0].private_ip}"]
 }

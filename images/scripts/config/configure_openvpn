@@ -1,4 +1,7 @@
 #!/bin/bash
+
+set -exo pipefail
+
 SCRIPT_HOME=$(cd $(dirname "$(ls -l $0 | awk '{ print $NF }')") && pwd)
 source $SCRIPT_HOME/common
 
@@ -6,8 +9,6 @@ if [[ -z $config_openvpn_port ]]; then
   echo "Skipping VPN setup as no VPN configuration found."
   exit 0
 fi
-
-set -exo pipefail
 
 OPENVPN_DATA_HOME=/data/openvpn
 OPENVPN_CONFIG=$OPENVPN_DATA_HOME/etc
@@ -46,7 +47,8 @@ function configure_openvpn() {
   sed -i "s|export KEY_OU=\".*\"|export KEY_OU=\"${config_openvpn_vpn_cert_ou:-Development}\"|" vars
 
   for f in $(ls build*); do sed -i "s|\-\-interact ||" $f; done
-
+  
+  cp openssl-1.0.0.cnf openssl.cnf
   source vars
   ./clean-all
   ./build-ca
@@ -135,6 +137,9 @@ function configure_openvpn() {
 
       echo -e "push \"route $subnet_ip $netmask\"" >> $OPENVPN_CONFIG/server.conf
 
+      # Masquerade traffic from VPN to "LAN"
+      iptables -t nat -I POSTROUTING -o $itf -s $config_openvpn_subnet -j MASQUERADE
+
       # Allow traffic initiated from VPN to access LAN
       iptables -I FORWARD -i tun0 -o $itf -s $config_openvpn_subnet -d $lan_subnet -m conntrack --ctstate NEW -j ACCEPT
     fi
@@ -143,7 +148,7 @@ function configure_openvpn() {
   iptables-save > /data/network/etc/iptables-dump.ipt
 
   echo -e "\n# Enable PAM Authentication" >> $OPENVPN_CONFIG/server.conf
-  echo -e "plugin /usr/lib/openvpn/plugins/openvpn-plugin-auth-pam.so openvpn" >> $OPENVPN_CONFIG/server.conf
+  echo -e "plugin /usr/lib/x86_64-linux-gnu/openvpn/plugins/openvpn-plugin-auth-pam.so openvpn" >> $OPENVPN_CONFIG/server.conf
 
   echo -e "\n# Prevent re-authorization every 3600 seconds" >> $OPENVPN_CONFIG/server.conf
   echo -e "reneg-sec 0" >> $OPENVPN_CONFIG/server.conf
@@ -154,7 +159,7 @@ function configure_openvpn() {
       echo -e "auth requisite pam_google_authenticator.so forward_pass" >> /etc/pam.d/openvpn
       echo -e "auth required pam_unix.so use_first_pass" >> /etc/pam.d/openvpn
 
-      sed -i "s/# PAM configuration for the Secure Shell service/# PAM configuration for the Secure Shell service\n\nauth required \/lib\/security\/pam_google_authenticator.so/" /etc/pam.d/sshd
+      sed -i "s/# PAM configuration for the Secure Shell service/# PAM configuration for the Secure Shell service\n\nauth required \/lib\/x86_64-linux-gnu\/security\/pam_google_authenticator.so/" /etc/pam.d/sshd
       sed -i "s/^ChallengeResponseAuthentication .*/ChallengeResponseAuthentication yes/" /etc/ssh/sshd_config
       ;;
     *)

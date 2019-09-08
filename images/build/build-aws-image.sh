@@ -3,7 +3,7 @@
 LOG_DIR=$(pwd)
 BUILD_DIR=$(cd $(dirname $BASH_SOURCE)/.. && pwd)
 
-UBUNTU_RELEASE=xenial
+UBUNTU_RELEASE=bionic
 IMAGE_NAME="appbricks-inceptor-bastion"
 
 which aws >/dev/null 2>&1
@@ -28,9 +28,14 @@ function aws::build_ami() {
     local packer_manifest=$4
 
     echo -e "\nDeleting images with name '$image_name' in region $region..."
-    local images=$(aws ec2 describe-images --region $region --owner self --filters "Name=name,Values=$image_name")
+    local images=$(aws ec2 describe-images --output json \
+        --region $region --owner self --filters "Name=name,Values=$image_name")
+
     for i in $(echo "$images" | jq -r '.Images[].ImageId'); do
-        s=$(echo -e "$images" | jq -r  '.Images[] | select(.ImageId=="'$i'") | .BlockDeviceMappings[0].Ebs.SnapshotId')
+    
+        s=$(echo -e "$images" | jq -r  '.Images[] 
+            | select(.ImageId=="'$i'") 
+            | .BlockDeviceMappings[0].Ebs.SnapshotId')
 
         echo -ne "- Deleting $i with snapshot $s"
         aws ec2 deregister-image --region $region --image-id $i
@@ -56,7 +61,7 @@ function aws::build_ami() {
     cd -
 }
 
-regions=${1:-$(aws ec2 describe-regions --output text | cut -f3)}
+regions=${1:-$(aws ec2 describe-regions --output text | cut -f4)}
 base_amis=$(curl -sL https://cloud-images.ubuntu.com/query/$UBUNTU_RELEASE/server/released.txt \
     | awk '/release/&&/ebs-ssd/&&/amd64/&&/hvm/{ print $4 "|" $7 "|" $8 }')
 

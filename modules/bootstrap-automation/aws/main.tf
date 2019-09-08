@@ -1,4 +1,15 @@
 #
+# Availability Zones in current region
+#
+
+locals {
+  num_azs = "${length(data.aws_availability_zones.available.names)}"
+  num_azs_to_configure = "${min(var.max_azs, local.num_azs)}"
+}
+
+data "aws_availability_zones" "available" {}
+
+#
 # AWS Virtual Private Cloud
 #
 
@@ -6,16 +17,10 @@ resource "aws_vpc" "main" {
   cidr_block           = "${var.vpc_cidr}"
   enable_dns_hostnames = true
 
-  tags {
+  tags = {
     Name = "${var.vpc_name}"
   }
 }
-
-#
-# Availability Zones in current region
-#
-
-data "aws_availability_zones" "available" {}
 
 #
 # Ubuntu AMI
@@ -26,7 +31,7 @@ data "aws_ami" "ubuntu" {
 
   filter {
     name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-server-*"]
+    values = ["ubuntu/images/hvm-ssd/ubuntu-bionic-18.04-amd64-server-*"]
   }
 
   filter {
@@ -72,21 +77,21 @@ resource "aws_security_group" "internal" {
     from_port   = 0
     to_port     = 65535
     protocol    = "tcp"
-    cidr_blocks = ["${module.vpc.bastion_private_ip}/32"]
+    cidr_blocks = ["${local.bastion_admin_itf_ip}/32"]
   }
 
   ingress {
     from_port   = 0
     to_port     = 65535
     protocol    = "udp"
-    cidr_blocks = ["${module.vpc.bastion_private_ip}/32"]
+    cidr_blocks = ["${local.bastion_admin_itf_ip}/32"]
   }
 
   ingress {
     from_port   = -1
     to_port     = -1
     protocol    = "icmp"
-    cidr_blocks = ["${module.vpc.bastion_private_ip}/32"]
+    cidr_blocks = ["${local.bastion_admin_itf_ip}/32"]
   }
 
   egress {
@@ -122,10 +127,10 @@ resource "tls_private_key" "default-ssh-key" {
 
 resource "local_file" "default-ssh-key" {
   content  = "${tls_private_key.default-ssh-key.private_key_pem}"
-  filename = "default-ssh-key.pem"
+  filename = "${var.ssh_key_file_path}/default-ssh-key.pem"
 
   provisioner "local-exec" {
-    command = "chmod 0600 default-ssh-key.pem"
+    command = "chmod 0600 ${var.ssh_key_file_path}/default-ssh-key.pem"
   }
 }
 

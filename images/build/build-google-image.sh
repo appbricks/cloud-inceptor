@@ -3,7 +3,7 @@
 LOG_DIR=$(pwd)
 BUILD_DIR=$(cd $(dirname $BASH_SOURCE)/.. && pwd)
 
-SOURCE_IMAGE_FAMILY=ubuntu-1604-lts
+SOURCE_IMAGE_FAMILY=ubuntu-1804-lts
 IMAGE_NAME="appbricks-inceptor-bastion"
 
 which gcloud >/dev/null 2>&1
