@@ -10,7 +10,7 @@ platform: linux
 image_resource:
   type: docker-image
   source:
-    repository: appbricks/automation-tools
+    repository: appbricks/tools
 
 run:
   path: /bin/bash
