@@ -79,7 +79,7 @@ jobs:
 
 - name: hello
   plan:
-  - aggregate:
+  - in_parallel:
     - get: hello-message
       passed: [check-hello]
       trigger: true
@@ -132,7 +132,7 @@ jobs:
 
 - name: Goodbye
   plan:
-  - aggregate:
+  - in_parallel:
     - get: goodbye-message
       passed: [check-goodbye]
       trigger: true
