@@ -23,6 +23,7 @@ run:
   - -c
   - |
     set -euo pipefail
+    exit 1
 
     mc config host add auto $AUTOS3_URL $AUTOS3_ACCESS_KEY $AUTOS3_SECRET_KEY
     fly -t default login -c $CONCOURSE_URL -u ''$CONCOURSE_USER'' -p ''$CONCOURSE_PASSWORD''
