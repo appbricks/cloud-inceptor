@@ -21,7 +21,6 @@ run:
   - -c
   - |
     set -euo pipefail
-    exit 1
 
     wget -O mc "http://dl.minio.io/client/mc/release/linux-amd64/mc" && chmod +x mc
     ./mc config host add auto $AUTOS3_URL $AUTOS3_ACCESS_KEY $AUTOS3_SECRET_KEY
