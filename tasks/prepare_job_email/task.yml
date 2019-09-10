@@ -118,7 +118,6 @@ run:
 
       i=$(($i+1))
     done
-    exit 1
 
 params:
   CONCOURSE_URL:
