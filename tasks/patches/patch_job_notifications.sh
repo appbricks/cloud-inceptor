@@ -71,7 +71,7 @@ for j in $(echo -e "$jobs"); do
       smuggler_debug: true
       commands:
         check: |
-          echo "\$(date +%s)" > \${SMUGGLER_OUTPUT_DIR}/versions
+          echo "0" > \${SMUGGLER_OUTPUT_DIR}/versions
         in: |
           cat <<EOF > \${SMUGGLER_DESTINATION_DIR}/job_info
           export BUILD_ID='\${BUILD_ID}'
