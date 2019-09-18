@@ -48,10 +48,6 @@ variable "vpc_name" {
 }
 
 # VPC DNS zone
-variable "dns_managed_zone_name" {
-  type = "string"
-}
-
 variable "vpc_dns_zone" {
   type = "string"
 }

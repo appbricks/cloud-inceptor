@@ -45,17 +45,13 @@ module "bootstrap" {
 
   vpc_name = "inceptor"
 
-  # DNS Name for VPC will be 'test.gcp.appbricks.cloud'
+  # DNS Name for VPC will be 'test.aws.appbricks.cloud'
   vpc_dns_zone = "test.aws.appbricks.cloud"
 
   # Local DNS zone. This could also be the same as the public
   # which will enable setting up a split DNS of the public zone
   # for names to map to external and internal addresses.
   vpc_internal_dns_zones = ["appbricks.local"]
-
-  # Name of parent zone 'gcp.appbricks.cloud' to which the 
-  # name server records of the 'vpc_dns_zone' will be added.
-  dns_managed_zone_name = "aws-appbricks-cloud"
 
   # Local file path to write SSH private key for bastion instance
   ssh_key_file_path = "${path.module}"
