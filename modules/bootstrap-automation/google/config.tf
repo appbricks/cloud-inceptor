@@ -57,7 +57,7 @@ module "config" {
     )}",
   ]
 
-  data_volume_name = "/dev/sdb"
+  data_volume_name = "sdb"
 
   bastion_admin_ssh_port = "${var.bastion_admin_ssh_port}"
   bastion_admin_user     = "${var.bastion_admin_user}"

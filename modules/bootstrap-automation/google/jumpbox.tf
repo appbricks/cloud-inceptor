@@ -75,7 +75,7 @@ data "template_file" "mount-jumpbox-data-volume" {
   template = "${file("${path.module}/scripts/mount-volume.sh")}"
 
   vars = {
-    attached_device_name = "/dev/sdb"
+    attached_device_name = "sdb"
     mount_directory      = "/data"
     world_readable       = "true"
   }

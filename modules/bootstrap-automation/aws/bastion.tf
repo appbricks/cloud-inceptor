@@ -34,7 +34,7 @@ resource "aws_instance" "bastion" {
 #
 
 locals {
-  bastion_data_disk_device_name = "/dev/xvdf"
+  bastion_data_disk_device_name = "xvdf"
 }
 
 resource "aws_ebs_volume" "bastion-data-disk" {
@@ -43,7 +43,7 @@ resource "aws_ebs_volume" "bastion-data-disk" {
 }
 
 resource "aws_volume_attachment" "bastion-data-disk" {
-  device_name  = "${local.bastion_data_disk_device_name}"
+  device_name  = "/dev/${local.bastion_data_disk_device_name}"
   volume_id    = "${aws_ebs_volume.bastion-data-disk.id}"
   instance_id  = "${aws_instance.bastion.id}"
   force_detach = true

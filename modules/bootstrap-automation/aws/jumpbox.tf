@@ -58,7 +58,7 @@ data "template_file" "mount-volume" {
 #
 
 locals {
-  jumpbox_data_disk_device_name = "/dev/xvdf"
+  jumpbox_data_disk_device_name = "xvdf"
 }
 
 resource "aws_ebs_volume" "jumpbox-data-disk" {

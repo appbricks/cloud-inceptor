@@ -10,7 +10,7 @@ i=12
 while [ $i -gt 0 ]; do
   device="/dev/$(lsblk | grep "$(basename ${attached_device_name})" | head -1 | cut -d" " -f1)"
 
-  if [[ -n $device ]] && [[ $device == ${attached_device_name} ]]; then
+  if [[ $device == /dev/${attached_device_name} ]]; then
     break
   fi
   echo "Waiting for data volume to be attached..."
@@ -18,24 +18,24 @@ while [ $i -gt 0 ]; do
   i=$(($i-1))
 done
 
-if [[ -n $device ]]; then
+if [[ $device == /dev/${attached_device_name} ]]; then
 
   # Un-mount data volume
-  sudo umount ${mount_directory} > /dev/null 2>&1
-  sudo su - -c "sed -i 's|^/dev/${attached_device_name}\s*${mount_directory}\s*.*$||' /etc/fstab"
+  umount ${mount_directory} > /dev/null 2>&1
+  sed -i 's|^/dev/${attached_device_name}\s*${mount_directory}\s*.*$||' /etc/fstab
   
-  sudo tune2fs -l $device > /dev/null 2>&1
+  tune2fs -l $device > /dev/null 2>&1
   if [[ $? -eq 1 ]]; then
     # Format new volume
-    sudo mkfs.ext4 $device
+    mkfs.ext4 $device
   fi
 
   # Mount data volume
-  sudo mkdir -p ${mount_directory}
-  sudo su - -c "echo -e \"\\n$device\\t${mount_directory}\\text4\\tdefaults\\t0 1\" >> /etc/fstab"
-  sudo mount -a
+  mkdir -p ${mount_directory}
+  echo -e "\n$device\t${mount_directory}\text4\tdefaults\t0 1" >> /etc/fstab
+  mount -a
 
-  [[ ${world_readable} == true ]] && sudo chmod a+rwx ${mount_directory}
+  [[ ${world_readable} == true ]] && chmod a+rwx ${mount_directory}
 else
   echo "WARNING! Timed out waiting for data volume. Proceeding as a new install."
 fi
