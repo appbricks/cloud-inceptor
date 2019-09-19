@@ -101,12 +101,14 @@ else
   nameservers=$config_server_dns_resolvers
 fi
 
-if [[ -z $public_itf ]]; then
-  # Remove cloud-config network setup
-  rm -f /etc/network/interfaces.d/50-cloud-init.cfg
-fi
+# Disable cloud-init network configuration
+rm -f /etc/netplan/*.yaml
+rm -f /etc/netplan/*.yml
+cat << ---EOF > /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg
+network: {config: disabled}
+---EOF
 
-cat << ---EOF > /etc/netplan/51-inceptor-network-config.yaml
+cat << ---EOF > /etc/netplan/50-inceptor-network-config.yaml
 network:
   version: 2
   ethernets:
@@ -150,60 +152,53 @@ for n in $(echo $config_server_lan_interfaces | sed "s/,/ /g"); do
   fi
   lans+=($lan_itf)
 
-  if [[ $itf != $public_itf ]]; then
+  set +e
+  ifdown $itf
+  ip address flush dev $itf
+  ps -ef | awk '!/awk/&&/dhclient.'$itf'/{ print $2 }' | xargs kill -9
 
-    set +e
-
-    ifdown $itf
-    ip address flush dev $itf
-    ps -ef | awk '!/awk/&&/dhclient.'$itf'/{ print $2 }' | xargs kill -9
-
-    if [[ -n $ip ]]; then    
-      # Configure a static IP
-    
-      if [[ -n $static_route_subnet && -n $gateway ]]; then
-
-        cat << ---EOF >> /etc/netplan/51-inceptor-network-config.yaml
+  if [[ -n $ip ]]; then
+    # Configure a static IP
+    cat << ---EOF >> /etc/netplan/50-inceptor-network-config.yaml
     $itf:
       addresses:
       - $ip/$subnet_bits
       nameservers:
         addresses: [$nameservers]
+---EOF
+
+    # Static routes can be configured on the interface
+    # only if a static IP has been configured for it.
+    if [[ -n $static_route_subnet && -n $gateway ]]; then
+
+      cat << ---EOF >> /etc/netplan/50-inceptor-network-config.yaml
       routes:
       - to: $static_route_subnet
         via: $gateway
         metric: 80
 ---EOF
-      else
-      
-        cat << ---EOF >> /etc/netplan/51-inceptor-network-config.yaml
-    $itf:
-      addresses:
-      - $ip/$subnet_bits
-      nameservers:
-        addresses: [$nameservers]
----EOF
-      fi
-    else
-      # Configure DHCP
-
-      cat << ---EOF >> /etc/netplan/51-inceptor-network-config.yaml
-    $itf:
-      dhcp4: true
----EOF
     fi
 
-    ifup $itf
-    set -e
-    
-    j=$(($j+1))
+  else
+    # Configure DHCP
+    cat << ---EOF >> /etc/netplan/50-inceptor-network-config.yaml
+    $itf:
+      dhcp4: true
+      dhcp4-overrides:
+        route-metric: $(($i*100))
+---EOF
+  fi
 
-    # Configure DHCP daemon's leases on subnet
-    if [[ -n $dhcp_lease_start ]]; then
+  set -e
+  
+  j=$(($j+1))
 
-      dhcpd_interfaces="$dhcpd_interfaces $itf"
+  # Configure DHCP daemon's leases on subnet
+  if [[ -n $dhcp_lease_start ]]; then
 
-      cat << ---EOF >> /etc/dhcp/dhcpd.conf
+    dhcpd_interfaces="$dhcpd_interfaces $itf"
+
+    cat << ---EOF >> /etc/dhcp/dhcpd.conf
 
 subnet $subnet_ip netmask $netmask {
 
@@ -218,7 +213,6 @@ subnet $subnet_ip netmask $netmask {
   range $dhcp_lease_start $dhcp_lease_end;
 }
 ---EOF
-    fi
   fi
 done
 
