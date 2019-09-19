@@ -24,6 +24,10 @@ output "bastion_admin_password" {
   value = "${random_string.bastion-admin-password.result}"
 }
 
+output "bastion_admin_public_ssh_key" {
+  value = "${tls_private_key.bastion-ssh-key.public_key_openssh}"
+}
+
 # The api-key required to adminster the 
 # internal zone managed by powerdns
 output "powerdns_api_key" {

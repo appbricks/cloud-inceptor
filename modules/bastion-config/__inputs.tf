@@ -222,3 +222,10 @@ variable "smtp_relay_api_key" {
 variable "squidproxy_server_port" {
   type = "string"
 }
+
+#
+# Compress cloud-init data
+#
+variable "compress_cloudinit" {
+  default = true
+}

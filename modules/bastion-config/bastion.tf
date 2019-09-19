@@ -36,8 +36,8 @@ locals {
 }
 
 data "template_cloudinit_config" "bastion-cloudinit" {
-  gzip          = true
-  base64_encode = true
+  gzip          = "${var.compress_cloudinit}"
+  base64_encode = "${var.compress_cloudinit}"
 
   part {
     content = <<USER_DATA
@@ -90,16 +90,16 @@ network:
   config: disabled
 
 runcmd: 
-- /root/mount-data-volume.sh 2>&1 | tee -a /var/log/mount-data-volume.log
-- mv /root/bastion-config.yml /root/config.yml
-- /root/.bin/configure_network 2>&1 | tee -a /var/log/configure_network.log
-- /root/.bin/configure_powerdns 2>&1 | tee -a /var/log/configure_powerdns.log
-- /root/.bin/configure_smtp 2>&1 | tee -a /var/log/configure_smtp.log
-- /root/.bin/configure_openvpn 2>&1 | tee -a /var/log/configure_openvpn.log
-- /root/.bin/configure_squidproxy 2>&1 | tee -a /var/log/configure_squidproxy.log
-- /root/.bin/configure_concourse 2>&1 | tee -a /var/log/configure_concourse.log
-- chmod 0600 /var/log/configure_*.log
-- chmod 0600 /var/log/cloud-init*.log
+- '/root/mount-data-volume.sh 2>&1 | tee -a /var/log/mount-data-volume.log'
+- 'mv /root/bastion-config.yml /root/config.yml'
+- '/root/.bin/configure_network 2>&1 | tee -a /var/log/configure_network.log'
+- '/root/.bin/configure_powerdns 2>&1 | tee -a /var/log/configure_powerdns.log'
+- '/root/.bin/configure_smtp 2>&1 | tee -a /var/log/configure_smtp.log'
+- '/root/.bin/configure_openvpn 2>&1 | tee -a /var/log/configure_openvpn.log'
+- '/root/.bin/configure_squidproxy 2>&1 | tee -a /var/log/configure_squidproxy.log'
+- '/root/.bin/configure_concourse 2>&1 | tee -a /var/log/configure_concourse.log'
+- 'chmod 0600 /var/log/configure_*.log'
+- 'chmod 0600 /var/log/cloud-init*.log'
 
 USER_DATA
   }
