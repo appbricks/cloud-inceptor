@@ -304,11 +304,11 @@ if [[ -n "$config_server_admin_user" \
   create_vpn_user $config_server_admin_user
 fi
 
-for n in $(echo $config_openvpn_users | sed "s/,/ /g"); do
-  user=$(echo $n | awk -F'|' '{print $1}')
+for u in $(echo $config_openvpn_users | sed "s/,/ /g"); do
+  user=$(echo $u | awk -F'|' '{print $1}')
 
   if [[ ! -e "/etc/openvpn/users/$user" ]]; then
-    passwd=$(echo $n | awk -F'|' '{print $2}')
+    passwd=$(echo $u | awk -F'|' '{print $2}')
     create_vpn_user "$user" "$passwd"
   fi
 done
