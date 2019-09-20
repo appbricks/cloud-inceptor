@@ -1,0 +1,51 @@
+#!/bin/bash
+
+attached_device_name=$1
+mount_directory=$2
+world_readable=$3
+
+if [[ -z "${attached_device_name}" 
+  || -z "${mount_directory}" 
+  || -z "${world_readable}" ]]; then 
+
+  echo -e "\nERROR! Missing arguments.\n\n./mount-volume.sh <attached_device_name> <mount_directory> <world_readable=true/false>\n"
+  exit 1
+fi
+
+# Mount and format the data volume if available and unformatted
+
+i=12
+while [ $i -gt 0 ]; do
+  device="/dev/$(lsblk | grep "$(basename ${attached_device_name})" | head -1 | cut -d" " -f1)"
+
+  if [[ $device == /dev/${attached_device_name} ]]; then
+    break
+  fi
+  echo "Waiting for data volume to be attached..."
+  sleep 5
+  i=$(($i-1))
+done
+
+if [[ $device == /dev/${attached_device_name} ]]; then
+
+  sed -i 's|^/dev/${attached_device_name}\s*${mount_directory}\s*.*$||' /etc/fstab
+
+  # Ensure mount point free
+  umount ${mount_directory} > /dev/null 2>&1  
+  tune2fs -l $device > /dev/null 2>&1
+  if [[ $? -eq 1 ]]; then
+    # Format new volume
+    mkfs.ext4 $device
+  fi
+
+  # Mount data volume
+  mkdir -p ${mount_directory}
+  echo -e "\n$device\t${mount_directory}\text4\tdefaults\t0 1" >> /etc/fstab
+  mount -a
+
+  if [[ ${world_readable} == true ]]; then
+    chmod a+rwx ${mount_directory}
+  fi
+else
+  echo "WARNING! Timed out waiting for data volume. Proceeding as a new install."
+fi
