@@ -6,7 +6,7 @@ locals {
   local_dns = "${length(var.vpc_internal_dns_zones) > 0 
     ? element(var.vpc_internal_dns_zones, 0) : ""}"
 
-  jumpbox_dns = "${var.deploy_jumpbox == "true" && length(local.local_dns) > 0 
+  jumpbox_dns = "${var.deploy_jumpbox && length(local.local_dns) > 0 
     ? format("jumpbox.%s", local.local_dns) : ""}"
 
   jumpbox_dns_record = "${length(local.jumpbox_dns) > 0 
@@ -56,7 +56,7 @@ write_files:
   permissions: '0744'
 
 runcmd: 
-- /root/mount-volume.sh
+- sudo /root/mount-volume.sh
 USER_DATA
   }
 }

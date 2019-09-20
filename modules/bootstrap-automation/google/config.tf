@@ -42,7 +42,7 @@ module "config" {
   bastion_nic_config = [
     "${join("|", 
       list(
-        google_compute_address.bastion-dmz.address, 
+        "", // GCP will assign static IP via DHCP
         google_compute_subnetwork.dmz.ip_cidr_range,
         "0.0.0.0/0"
       ),

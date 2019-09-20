@@ -42,7 +42,7 @@ module "config" {
   bastion_nic_config = [
     "${join("|", 
       list(
-        local.bastion_dmz_itf_ip, 
+        "", // AWS will assign static IP via DHCP
         aws_subnet.dmz[0].cidr_block,
         "0.0.0.0/0"
       ),

@@ -59,17 +59,15 @@ resource "aws_route53_record" "vpc-public" {
 }
 
 resource "aws_route53_record" "vpc-admin" {
-  zone_id = "${aws_route53_zone.vpc-private.zone_id}"
+  count = "${length(var.bastion_host_name) > 0 && !var.bastion_allow_public_ssh ? 1 : 0}"
 
-  name = "${length(var.bastion_host_name) == 0
-    ? var.vpc_name : var.bastion_host_name}.${var.vpc_dns_zone}."
+  zone_id = "${aws_route53_zone.vpc-private.zone_id}"
+  name    = "${var.bastion_host_name}.${var.vpc_dns_zone}."
 
   type = "A"
   ttl  = "300"
 
-  records = ["${var.bastion_allow_public_ssh == "false"
-    ? local.bastion_admin_itf_ip
-    : aws_eip.bastion-public.public_ip}"]
+  records = ["${local.bastion_admin_itf_ip}"]
 }
 
 resource "aws_route53_record" "vpc-mail" {

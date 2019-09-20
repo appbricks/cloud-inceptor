@@ -43,75 +43,89 @@ data "template_cloudinit_config" "bastion-cloudinit" {
     content = <<USER_DATA
 #cloud-config
 
-write_files:
-# Persistant and Data Volumes
-- encoding: b64
-  content: ${base64encode(data.template_file.mount-data-volume.rendered)}
-  path: /root/mount-data-volume.sh
-  permissions: '0744'
+network:
+  config: disabled
 
+users:
+- name: ${var.bastion_admin_user}
+  sudo: ALL=(ALL) NOPASSWD:ALL
+  ssh_authorized_keys:
+  - ${tls_private_key.bastion-ssh-key.public_key_openssh}
+
+write_files:
 # Service configuration
-- encoding: b64
-  content: ${base64encode(data.template_file.bastion-config.rendered)}
+- encoding: gzip+base64
+  content: ${base64gzip(data.template_file.bastion-config.rendered)}
   path: /root/bastion-config.yml
   permissions: '0744'
 
 # Web Server SSL certificates
-- encoding: b64
-  content: ${base64encode(tls_self_signed_cert.root-ca.cert_pem)}
+- encoding: gzip+base64
+  content: ${base64gzip(tls_self_signed_cert.root-ca.cert_pem)}
   path: /etc/ssl/certs/bastion_web_ca.pem
   permissions: '0644'
-- encoding: b64
-  content: ${base64encode(tls_locally_signed_cert.bastion-web.cert_pem)}
+- encoding: gzip+base64
+  content: ${base64gzip(tls_locally_signed_cert.bastion-web.cert_pem)}
   path: /etc/ssl/certs/bastion_web_cert.pem
   permissions: '0644'
-- encoding: b64
-  content: ${base64encode(tls_private_key.bastion-web.private_key_pem)}
+- encoding: gzip+base64
+  content: ${base64gzip(tls_private_key.bastion-web.private_key_pem)}
   path: /etc/ssl/private/bastion_web_key.pem
   permissions: '0644'
 
 # Web Server home page
-- encoding: b64
-  content: ${base64encode(data.template_file.www-static-index.rendered)}
+- encoding: gzip+base64
+  content: ${base64gzip(data.template_file.www-static-index.rendered)}
   path: /var/www/html/index.html
   permissions: '0644'
 
 # Bootstrap Pipeline
-- encoding: b64
-  content: ${base64encode(file(length(var.bootstrap_pipeline_file) == 0 ? "${path.module}/_placeholder_" : var.bootstrap_pipeline_file))}
+- encoding: gzip+base64
+  content: ${base64gzip(file(length(var.bootstrap_pipeline_file) == 0 ? "${path.module}/_placeholder_" : var.bootstrap_pipeline_file))}
   path: /root/bootstrap.yml
   permissions: '0644'
-- encoding: b64
-  content: ${base64encode(data.template_file.bootstrap-pipeline-vars.rendered)}
+- encoding: gzip+base64
+  content: ${base64gzip(data.template_file.bootstrap-pipeline-vars.rendered)}
   path: /root/bootstrap-vars.yml
   permissions: '0644'
 
-network:
-  config: disabled
+runcmd:
+- |
+  sudo -i -- <<INIT
+    mv /root/bastion-config.yml /root/config.yml
 
-runcmd: 
-- '/root/mount-data-volume.sh 2>&1 | tee -a /var/log/mount-data-volume.log'
-- 'mv /root/bastion-config.yml /root/config.yml'
-- '/root/.bin/configure_network 2>&1 | tee -a /var/log/configure_network.log'
-- '/root/.bin/configure_powerdns 2>&1 | tee -a /var/log/configure_powerdns.log'
-- '/root/.bin/configure_smtp 2>&1 | tee -a /var/log/configure_smtp.log'
-- '/root/.bin/configure_openvpn 2>&1 | tee -a /var/log/configure_openvpn.log'
-- '/root/.bin/configure_squidproxy 2>&1 | tee -a /var/log/configure_squidproxy.log'
-- '/root/.bin/configure_concourse 2>&1 | tee -a /var/log/configure_concourse.log'
-- 'chmod 0600 /var/log/configure_*.log'
-- 'chmod 0600 /var/log/cloud-init*.log'
+    /root/.bin/mount_volume "${var.data_volume_name}" "/data" "false" 2>&1 \
+      | tee -a /var/log/mount-data-volume.log
+
+    /root/.bin/configure_network 2>&1 \
+      | tee -a /var/log/configure_network.log \
+      || echo "ERROR! Script configure_network exited with error: $?"
+
+    /root/.bin/configure_powerdns 2>&1 \
+      | tee -a /var/log/configure_powerdns.log \
+      || echo "ERROR! Script configure_powerdns exited with error: $?"
+
+    /root/.bin/configure_smtp 2>&1 \
+      | tee -a /var/log/configure_smtp.log \
+      || echo "ERROR! Script configure_smtp exited with error: $?"
+
+    /root/.bin/configure_openvpn 2>&1 \
+      | tee -a /var/log/configure_openvpn.log \
+      || echo "ERROR! Script configure_openvpn exited with error: $?"
+
+    /root/.bin/configure_squidproxy 2>&1 \
+      | tee -a /var/log/configure_squidproxy.log \
+      || echo "ERROR! Script configure_squidproxy exited with error: $?"
+
+    /root/.bin/configure_concourse 2>&1 \
+      | tee -a /var/log/configure_concourse.log \
+      || echo "ERROR! Script configure_concourse exited with error: $?"
+
+    chmod 0600 /var/log/configure_*.log
+    chmod 0600 /var/log/cloud-init*.log
+  INIT
 
 USER_DATA
-  }
-}
-
-data "template_file" "mount-data-volume" {
-  template = "${file("${path.module}/scripts/mount-volume.sh")}"
-
-  vars = {
-    attached_device_name = "${var.data_volume_name}"
-    mount_directory      = "/data"
-    world_readable       = "false"
   }
 }
 

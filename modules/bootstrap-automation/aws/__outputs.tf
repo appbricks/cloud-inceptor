@@ -48,7 +48,8 @@ output "bastion_fqdn" {
 }
 
 output "bastion_admin_fqdn" {
-  value = "${aws_route53_record.vpc-admin.name}"
+  value = "${length(var.bastion_host_name) > 0 && !var.bastion_allow_public_ssh
+    ? join(".", list(var.bastion_host_name, var.vpc_dns_zone)) : "N/A"}"
 }
 
 output "bastion_admin_password" {

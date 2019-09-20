@@ -2,30 +2,30 @@
 # Google compute region
 #
 variable "region" {
-  type = "string"
+  type = string
 }
 
 #
 # Certificate Subject data for certificate creation
 #
 variable "company_name" {
-  type = "string"
+  type = string
 }
 
 variable "organization_name" {
-  type = "string"
+  type = string
 }
 
 variable "locality" {
-  type = "string"
+  type = string
 }
 
 variable "province" {
-  type = "string"
+  type = string
 }
 
 variable "country" {
-  type = "string"
+  type = string
 }
 
 #
@@ -44,16 +44,16 @@ variable "root_ca_cert" {
 # VPC and network variables
 #
 variable "vpc_name" {
-  type = "string"
+  type = string
 }
 
 # VPC DNS zone
 variable "dns_managed_zone_name" {
-  type = "string"
+  type = string
 }
 
 variable "vpc_dns_zone" {
-  type = "string"
+  type = string
 }
 
 variable "vpc_cidr" {
@@ -88,7 +88,7 @@ variable "max_azs" {
 # Local file path to write SSH private key for bastion instance
 #
 variable "ssh_key_file_path" {
-  type = "string"
+  type = string
 }
 
 #
@@ -115,7 +115,7 @@ variable "bastion_host_name" {
 }
 
 variable "bastion_use_fqdn" {
-  default = "true"
+  default = true
 }
 
 #
@@ -137,7 +137,7 @@ variable "bastion_admin_user" {
 }
 
 variable "bastion_allow_public_ssh" {
-  default = "true"
+  default = true
 }
 
 #
@@ -225,7 +225,7 @@ variable "squidproxy_server_port" {
 # Jumpbox
 #
 variable "deploy_jumpbox" {
-  default = "true"
+  default = true
 }
 
 variable "jumpbox_data_disk_size" {

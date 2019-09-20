@@ -63,9 +63,10 @@ module "bootstrap" {
   concourse_server_port = "8080"
 
   # Whether to allow SSH access to bastion server
-  bastion_allow_public_ssh = false
+  bastion_allow_public_ssh = true
 
   bastion_host_name = "inceptor"
+  bastion_use_fqdn = false
 
   # If the SMTP relay settings are provided then
   # and SMTP server will be setup which will send
@@ -80,7 +81,7 @@ module "bootstrap" {
   # Whether to deploy a jumpbox in the admin network. The
   # jumpbox will be deployed only if a local DNS zone is
   # provided and the DNS will be jumpbox.[first local zone].
-  deploy_jumpbox = "true"
+  deploy_jumpbox = true
 
   #
   # Bootstrap pipeline

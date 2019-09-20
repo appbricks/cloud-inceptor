@@ -33,9 +33,3 @@ output "bastion_admin_public_ssh_key" {
 output "powerdns_api_key" {
   value = "${random_string.powerdns-api-key.result}"
 }
-
-# ==== DEBUG OUTPUT ====
-
-# output "debug_output" {
-#   value = "${data.template_file.bastion-config.rendered}"
-# }

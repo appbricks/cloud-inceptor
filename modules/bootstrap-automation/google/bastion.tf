@@ -112,7 +112,7 @@ resource "google_compute_address" "bastion-public" {
 #
 
 resource "google_compute_firewall" "bastion-ssh" {
-  count = "${var.bastion_allow_public_ssh == "true" ? 1 : 0 }"
+  count = "${var.bastion_allow_public_ssh ? 1 : 0 }"
 
   name    = "${var.vpc_name}-bastion-ssh"
   network = "${google_compute_network.dmz.self_link}"

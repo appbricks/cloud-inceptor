@@ -6,7 +6,7 @@ locals {
   local_dns = "${length(var.vpc_internal_dns_zones) > 0 
     ? element(var.vpc_internal_dns_zones, 0) : ""}"
 
-  jumpbox_dns = "${var.deploy_jumpbox == "true" && length(local.local_dns) > 0 
+  jumpbox_dns = "${var.deploy_jumpbox && length(local.local_dns) > 0 
     ? format("jumpbox.%s", local.local_dns) : ""}"
 
   jumpbox_dns_record = "${length(local.jumpbox_dns) > 0 
@@ -39,7 +39,7 @@ write_files:
   permissions: '0744'
 
 runcmd: 
-- /root/mount-volume.sh
+- sudo /root/mount-volume.sh
 USERDATA
 }
 
@@ -61,7 +61,7 @@ locals {
   jumpbox_data_disk_device_name = "xvdf"
 }
 
-resource "aws_ebs_volume" "jumpbox-data-disk" {
+resource "aws_ebs_volume" "jumpbox-data" {
   count = "${length(local.jumpbox_dns) > 0 ? 1 : 0}"
 
   size              = "${tonumber(var.jumpbox_data_disk_size)}"
@@ -72,11 +72,11 @@ resource "aws_ebs_volume" "jumpbox-data-disk" {
   }
 }
 
-resource "aws_volume_attachment" "jumpbox-data-disk" {
+resource "aws_volume_attachment" "jumpbox-data" {
   count = "${length(local.jumpbox_dns) > 0 ? 1 : 0}"
 
   device_name  = "${local.jumpbox_data_disk_device_name}"
-  volume_id    = "${aws_ebs_volume.jumpbox-data-disk[0].id}"
+  volume_id    = "${aws_ebs_volume.jumpbox-data[0].id}"
   instance_id  = "${aws_instance.jumpbox[0].id}"
   force_detach = true
 }

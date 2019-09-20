@@ -37,14 +37,14 @@ locals {
   bastion_data_disk_device_name = "xvdf"
 }
 
-resource "aws_ebs_volume" "bastion-data-disk" {
+resource "aws_ebs_volume" "bastion-data" {
   size              = "${tonumber(var.bastion_data_disk_size)}"
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
 }
 
-resource "aws_volume_attachment" "bastion-data-disk" {
+resource "aws_volume_attachment" "bastion-data" {
   device_name  = "/dev/${local.bastion_data_disk_device_name}"
-  volume_id    = "${aws_ebs_volume.bastion-data-disk.id}"
+  volume_id    = "${aws_ebs_volume.bastion-data.id}"
   instance_id  = "${aws_instance.bastion.id}"
   force_detach = true
 }
@@ -122,7 +122,7 @@ resource "aws_security_group" "bastion-public" {
 
   # SSH
   dynamic "ingress" {
-    for_each = var.bastion_allow_public_ssh == "true" ? [1] : []
+    for_each = var.bastion_allow_public_ssh ? [1] : []
     content {
       from_port   = "${tonumber(var.bastion_admin_ssh_port)}"
       to_port     = "${tonumber(var.bastion_admin_ssh_port)}"
