@@ -35,7 +35,7 @@ resource "google_compute_instance" "jumpbox" {
   }
 
   attached_disk {
-    source = "${google_compute_disk.jumpbox-data-disk[0].self_link}"
+    source = "${google_compute_disk.jumpbox-data[0].self_link}"
   }
 
   network_interface {
@@ -81,10 +81,10 @@ data "template_file" "mount-jumpbox-data-volume" {
   }
 }
 
-resource "google_compute_disk" "jumpbox-data-disk" {
+resource "google_compute_disk" "jumpbox-data" {
   count = "${length(local.jumpbox_dns) > 0 ? 1 : 0}"
 
-  name = "${var.vpc_name}-jumpbox-data-disk"
+  name = "${var.vpc_name}-jumpbox-data"
   type = "pd-standard"
   zone = "${data.google_compute_zones.available.names[0]}"
   size = "${var.jumpbox_data_disk_size}"

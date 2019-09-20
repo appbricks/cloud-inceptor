@@ -27,7 +27,7 @@ resource "google_compute_instance" "bastion" {
   }
 
   attached_disk {
-    source = "${google_compute_disk.bastion-data-disk.self_link}"
+    source = "${google_compute_disk.bastion-data.self_link}"
   }
 
   network_interface {
@@ -61,8 +61,8 @@ resource "google_compute_instance" "bastion" {
 # large enough for any installation packages concourse downloads.
 #
 
-resource "google_compute_disk" "bastion-data-disk" {
-  name = "${var.vpc_name}-bastion-data-disk"
+resource "google_compute_disk" "bastion-data" {
+  name = "${var.vpc_name}-bastion-data"
   type = "pd-standard"
   zone = "${data.google_compute_zones.available.names[0]}"
   size = "${var.bastion_data_disk_size}"
