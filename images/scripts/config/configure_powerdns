@@ -58,6 +58,8 @@ rm -f /etc/powerdns/pdns.d/pdns.simplebind.conf
 systemctl enable pdns.service
 systemctl start pdns.service
 
+local_domains=""
+
 first=Y
 for zone in $config_powerdns_dns_zones; do
 
@@ -67,6 +69,7 @@ for zone in $config_powerdns_dns_zones; do
   else
     echo "$zone=127.0.0.1:5300" >> /etc/powerdns/forward-zones.conf
   fi
+  local_domains="$zone $local_domains"
 
   set +e
   pdnsutil list-zone $zone > /dev/null 2>&1
@@ -118,6 +121,11 @@ done
 
 systemctl enable pdns-recursor.service
 systemctl start pdns-recursor.service
+
+# Configure system resolved service to use local DNS service
+sed -i "s|#DNS=|DNS=$config_powerdns_ns_ip|" /etc/systemd/resolved.conf
+sed -i "s|#Domains=|Domains=$local_domains|" /etc/systemd/resolved.conf
+service systemd-resolved restart
 
 sleep 5
 systemctl restart pdns.service
