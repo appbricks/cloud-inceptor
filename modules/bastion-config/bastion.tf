@@ -95,7 +95,7 @@ runcmd:
     mv /root/bastion-config.yml /root/config.yml
 
     /root/.bin/mount_volume "${var.data_volume_name}" "/data" "false" 2>&1 \
-      | tee -a /var/log/mount-data-volume.log
+      | tee -a /var/log/mount_volume.log
 
     /root/.bin/configure_network 2>&1 \
       | tee -a /var/log/configure_network.log \
