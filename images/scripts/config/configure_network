@@ -89,9 +89,10 @@ route -n
 echo -e "===============================================================================\n"
 set -x
 
-itfs=( $(ip a | awk '/^[0-9]+: (eth|ens?)[0-9]+:/{ print substr($2,1,length($2)-1) }') )
+ip_a=$(ip a)
+itfs=( $(echo "$ip_a" | awk '/^[0-9]+: (eth|ens?)[0-9]+:/{ print substr($2,1,length($2)-1) }') )
 
-public_itf=$(ip a \
+public_itf=$(echo "$ip_a" \
   | grep -B 5 "$config_server_dmz_itf_ip" \
   | awk '/^[0-9]+: (eth|ens?)[0-9]+:/{ print substr($2,1,length($2)-1) }')
 
@@ -142,6 +143,8 @@ for n in $(echo $config_server_lan_interfaces | sed "s/,/ /g"); do
   netmask=$(echo -e "$netinfo" | awk '/Netmask/{ print $2 }')
   broadcast=$(echo -e "$netinfo" | awk '/Broadcast/{ print $2 }')
 
+  mac_addr=$(echo "$ip_a" | grep -A 2 "^[0-9]*: $itf" | awk '/link\/ether/{ print $2 }')
+
   if [[ -z "$static_route_subnet" \
     || "$static_route_subnet" == "0.0.0.0/0" ]]; then
 
@@ -189,8 +192,16 @@ for n in $(echo $config_server_lan_interfaces | sed "s/,/ /g"); do
 ---EOF
   fi
 
+  if [[ -n $mac_addr ]]; then
+    # Lock interface to mac address
+    cat << ---EOF >> /etc/netplan/50-inceptor-network-config.yaml
+      match:
+        macaddress: $mac_addr
+      set-name: $itf
+---EOF
+  fi
+
   set -e
-  
   j=$(($j+1))
 
   # Configure DHCP daemon's leases on subnet
