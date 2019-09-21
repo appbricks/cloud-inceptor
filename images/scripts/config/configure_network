@@ -161,24 +161,46 @@ for n in $(echo $config_server_lan_interfaces | sed "s/,/ /g"); do
   ps -ef | awk '!/awk/&&/dhclient.'$itf'/{ print $2 }' | xargs kill -9
 
   if [[ -n $ip ]]; then
-    # Configure a static IP
-    cat << ---EOF >> /etc/netplan/50-inceptor-network-config.yaml
+
+    # Static routes can be configured on the interface
+    # only if a static IP has been configured for it.
+    if [[ -n $gateway ]]; then
+
+      if [[ -n $static_route_subnet ]]; then
+        # Configure a static IP with a static route
+        cat << ---EOF >> /etc/netplan/50-inceptor-network-config.yaml
+    $itf:
+      addresses:
+      - $ip/32
+      routes:
+      - to: $static_route_subnet
+        via: $gateway
+        metric: 100
+        on-link: true
+      nameservers:
+        addresses: [$nameservers]
+---EOF
+
+      else
+        # Configure a static IP with gateway
+        cat << ---EOF >> /etc/netplan/50-inceptor-network-config.yaml
+    $itf:
+      addresses:
+      - $ip/$subnet_bits
+      gateway4: $gateway
+      nameservers:
+        addresses: [$nameservers]
+---EOF
+      fi
+
+    else
+      # Configure a static IP 
+      cat << ---EOF >> /etc/netplan/50-inceptor-network-config.yaml
     $itf:
       addresses:
       - $ip/$subnet_bits
       nameservers:
         addresses: [$nameservers]
----EOF
-
-    # Static routes can be configured on the interface
-    # only if a static IP has been configured for it.
-    if [[ -n $static_route_subnet && -n $gateway ]]; then
-
-      cat << ---EOF >> /etc/netplan/50-inceptor-network-config.yaml
-      routes:
-      - to: $static_route_subnet
-        via: $gateway
-        metric: 80
 ---EOF
     fi
 
@@ -188,7 +210,7 @@ for n in $(echo $config_server_lan_interfaces | sed "s/,/ /g"); do
     $itf:
       dhcp4: true
       dhcp4-overrides:
-        route-metric: $(($i*100))
+        route-metric: 100
 ---EOF
   fi
 
