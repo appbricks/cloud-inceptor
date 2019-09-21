@@ -277,7 +277,7 @@ if [[ -e /data/network/etc/iptables-dump.ipt ]]; then
   iptables-restore < /data/network/etc/iptables-dump.ipt
 else
   # Allow established traffic to pass back and forth
-  iptables -I FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+  iptables -I FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 
   # Create rules for routing packets between peer lans
   for l in "${lans[@]}"; do
