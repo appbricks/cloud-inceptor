@@ -41,7 +41,7 @@ resource "azurerm_virtual_machine" "jumpbox" {
   }
   
   os_profile {
-    computer_name  = "${element(split(".", var.vpc_dns_zone), 0)}"
+    computer_name  = "jumpbox"
     admin_username = "ubuntu"
 
     custom_data = <<USER_DATA
