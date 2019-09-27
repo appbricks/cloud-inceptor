@@ -5,6 +5,8 @@ set -exo pipefail
 SCRIPT_HOME=$(cd $(dirname "$(ls -l $0 | awk '{ print $NF }')") && pwd)
 source $SCRIPT_HOME/common
 
+[[ ! -e /root/.powerdns_installed ]] || exit 0
+
 if [[ -z $config_powerdns_dns_zones \
   || -z $config_powerdns_api_key ]]; then
   echo "Skipping Power DNS setup as DNS configuration is incomplete."
@@ -132,4 +134,5 @@ systemctl restart pdns.service
 sleep 5
 systemctl restart pdns-recursor.service
 
+set +ex
 touch /root/.powerdns_installed

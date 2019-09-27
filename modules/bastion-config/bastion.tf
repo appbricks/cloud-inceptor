@@ -62,15 +62,15 @@ write_files:
 # Web Server SSL certificates
 - encoding: gzip+base64
   content: ${base64gzip(tls_self_signed_cert.root-ca.cert_pem)}
-  path: /etc/ssl/certs/bastion_web_ca.pem
+  path: /etc/ssl/certs/bastion_ca.pem
   permissions: '0644'
 - encoding: gzip+base64
-  content: ${base64gzip(tls_locally_signed_cert.bastion-web.cert_pem)}
-  path: /etc/ssl/certs/bastion_web_cert.pem
+  content: ${base64gzip(tls_locally_signed_cert.bastion.cert_pem)}
+  path: /etc/ssl/certs/bastion_cert.pem
   permissions: '0644'
 - encoding: gzip+base64
-  content: ${base64gzip(tls_private_key.bastion-web.private_key_pem)}
-  path: /etc/ssl/private/bastion_web_key.pem
+  content: ${base64gzip(tls_private_key.bastion.private_key_pem)}
+  path: /etc/ssl/private/bastion_key.pem
   permissions: '0644'
 
 # Web Server home page
@@ -97,6 +97,10 @@ runcmd:
     /root/.bin/mount_volume "${var.data_volume_name}" "/data" "false" 2>&1 \
       | tee -a /var/log/mount_volume.log
 
+    /root/.bin/configure_users 2>&1 \
+      | tee -a /var/log/configure_users.log \
+      || echo "ERROR! Script configure_users exited with error: $?"
+
     /root/.bin/configure_network 2>&1 \
       | tee -a /var/log/configure_network.log \
       || echo "ERROR! Script configure_network exited with error: $?"
@@ -109,13 +113,25 @@ runcmd:
       | tee -a /var/log/configure_smtp.log \
       || echo "ERROR! Script configure_smtp exited with error: $?"
 
+    /root/.bin/configure_apache 2>&1 \
+      | tee -a /var/log/configure_apache.log \
+      || echo "ERROR! Script configure_apache exited with error: $?"
+
     /root/.bin/configure_openvpn 2>&1 \
       | tee -a /var/log/configure_openvpn.log \
       || echo "ERROR! Script configure_openvpn exited with error: $?"
 
+    /root/.bin/configure_ipsecvpn 2>&1 \
+      | tee -a /var/log/configure_ipsecvpn.log \
+      || echo "ERROR! Script configure_ipsecvpn exited with error: $?"
+
     /root/.bin/configure_squidproxy 2>&1 \
       | tee -a /var/log/configure_squidproxy.log \
       || echo "ERROR! Script configure_squidproxy exited with error: $?"
+
+    /root/.bin/configure_docker 2>&1 \
+      | tee -a /var/log/configure_docker.log \
+      || echo "ERROR! Script configure_docker exited with error: $?"
 
     /root/.bin/configure_concourse 2>&1 \
       | tee -a /var/log/configure_concourse.log \
@@ -161,9 +177,10 @@ smtp:
   internal_smtp_port: 2525
   networks: 172.16.0.0/12 ${var.vpc_cidr} ${var.bastion_public_ip}
 
-openvpn:
-  port: ${var.vpn_server_port}
-  protocol: ${var.vpn_protocol}
+vpn:
+  type: ${var.vpn_type}
+  port: ${var.ovpn_server_port}
+  protocol: ${var.ovpn_protocol}
   subnet: ${var.vpn_network}
   netmask: ${cidrnetmask(var.vpn_network)}
   server_domain: ${var.vpc_dns_zone}

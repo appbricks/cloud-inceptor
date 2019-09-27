@@ -60,8 +60,14 @@ module "bootstrap" {
   # Local file path to write SSH private key for bastion instance
   ssh_key_file_path = "${path.module}"
 
-  # VPN Port
-  vpn_server_port = "2295"
+  # VPN
+  vpn_type = "ipsec"
+  # vpn_type = "openvpn"
+
+  ovpn_server_port = "2295"
+
+  # Default for IPSec
+  vpn_tunnel_all_traffic = "yes"
 
   # Concourse Port
   concourse_server_port = "8080"
@@ -70,7 +76,7 @@ module "bootstrap" {
   bastion_allow_public_ssh = true
 
   bastion_host_name = "inceptor"
-  bastion_use_fqdn = false
+  bastion_use_fqdn = true
 
   # If the SMTP relay settings are provided then
   # and SMTP server will be setup which will send

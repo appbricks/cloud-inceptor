@@ -5,8 +5,14 @@ set -exo pipefail
 SCRIPT_HOME=$(cd $(dirname "$(ls -l $0 | awk '{ print $NF }')") && pwd)
 source $SCRIPT_HOME/common
 
+[[ ! -e /root/.concourse_installed ]] || exit 0
+
 if [[ -z $config_concourse_port ]]; then
   echo "Skipping Concourse setup as no Concourse configuration found."
+  exit 0
+fi
+if [[ ! -e /root/.docker_installed ]]; then
+  echo "Concourse requires Docker to be installed."
   exit 0
 fi
 

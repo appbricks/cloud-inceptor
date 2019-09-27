@@ -164,7 +164,7 @@ resource "azurerm_network_security_rule" "bastion-ssh" {
 }
 
 resource "azurerm_network_security_rule" "bastion-http" {
-  count = "${length(var.vpn_server_port) == 0 ? 0 : 1 }"
+  count = "${length(var.ovpn_server_port) == 0 ? 0 : 1 }"
 
   name = "${var.vpc_name}-bastion-http"
 
@@ -184,7 +184,7 @@ resource "azurerm_network_security_rule" "bastion-http" {
 }
 
 resource "azurerm_network_security_rule" "bastion-https" {
-  count = "${length(var.vpn_server_port) == 0 ? 0 : 1 }"
+  count = "${length(var.ovpn_server_port) == 0 ? 0 : 1 }"
 
   name = "${var.vpc_name}-bastion-https"
 
@@ -204,7 +204,7 @@ resource "azurerm_network_security_rule" "bastion-https" {
 }
 
 resource "azurerm_network_security_rule" "bastion-vpn" {
-  count = "${length(var.vpn_server_port) == 0 ? 0 : 1 }"
+  count = "${length(var.ovpn_server_port) == 0 ? 0 : 1 }"
 
   name = "${var.vpc_name}-bastion-vpn"
 
@@ -212,14 +212,14 @@ resource "azurerm_network_security_rule" "bastion-vpn" {
   resource_group_name         = "${azurerm_resource_group.bootstrap.name}"
 
   access    = "Allow"
-  protocol  = "${var.vpn_protocol}"
+  protocol  = "${var.ovpn_protocol}"
   priority  = "503"
   direction = "Inbound"
   
   source_port_range     = "*"
   source_address_prefix = "0.0.0.0/0"
 
-  destination_port_range     = "${var.vpn_server_port}"
+  destination_port_range     = "${var.ovpn_server_port}"
   destination_address_prefix = "${azurerm_network_interface.bastion-dmz.ip_configuration[0].private_ip_address}"
 }
 

@@ -1,0 +1,121 @@
+#!/bin/bash
+
+set -exo pipefail
+
+SCRIPT_HOME=$(cd $(dirname "$(ls -l $0 | awk '{ print $NF }')") && pwd)
+source $SCRIPT_HOME/common
+
+[[ ! -e /root/.apache_installed ]] || exit 0
+
+#
+# Configure Apache2 Web Serve
+#
+
+APACHE_USER_CONFIG=/data/users/etc/apache2
+mkdir -p $APACHE_USER_CONFIG
+
+web_server_http_port=${config_webserver_http_port:-80}
+web_server_https_port=${config_webserver_https_port:-443}
+
+sed -i "s|Listen 80\$|Listen $web_server_http_port|g" /etc/apache2/ports.conf
+sed -i "s|Listen 443\$|Listen $web_server_https_port|g" /etc/apache2/ports.conf
+
+# Use the fully qualified name
+# of the host instead of host ip.
+[[ $config_server_use_fqdn == "true" ]] && \
+  config_server_host=$config_server_fqdn
+
+if [[ $web_server_https_port == 443 ]]; then
+  redirect_https=https://$config_server_host/
+else
+  redirect_https=https://$config_server_host:$web_server_https_port/
+fi
+
+if [[ ! -e /etc/ssl/certs/bastion_ca.pem ]]; then
+
+  key_country=$config_webserver_cert_country
+  key_province=$config_webserver_cert_province
+  key_city=$config_webserver_cert_city
+  key_org=$config_webserver_cert_org
+  key_cn=$config_webserver_cert_cn
+
+  openssl req -x509 -nodes -days 3650 \
+    -newkey rsa:4096 -keyout /etc/ssl/private/bastion_key.pem \
+    -out /etc/ssl/certs/bastion_cert.pem \
+    -subj "/C=${key_country}/ST=${key_province}/L=${key_city}/O=${key_org}/CN=${key_cn}"
+
+  cat << ---EOF > /etc/apache2/sites-available/bastion-web.conf
+<VirtualHost *:$web_server_http_port>
+ServerName $config_server_host
+Redirect permanent / $redirect_https
+</VirtualHost>
+
+<VirtualHost *:$web_server_https_port>
+ServerName $config_server_host
+DocumentRoot /var/www/html
+
+SSLEngine on
+SSLCertificateFile /etc/ssl/certs/bastion_cert.pem
+SSLCertificateKeyFile /etc/ssl/private/bastion_key.pem
+
+<IfModule mod_authnz_external.c>
+AddExternalAuth pwauth /usr/sbin/pwauth
+SetExternalAuthMethod pwauth pipe
+</IfModule>
+
+# Bastion Users
+UserDir "/data/users/home/*"
+IncludeOptional "$APACHE_USER_CONFIG/*.conf"
+
+</VirtualHost>
+---EOF
+
+else
+
+  cat << ---EOF > /etc/apache2/sites-available/bastion-web.conf
+<VirtualHost *:$web_server_http_port>
+ServerName $config_server_host
+Redirect permanent / $redirect_https
+</VirtualHost>
+
+<VirtualHost *:$web_server_https_port>
+ServerName $config_server_host
+DocumentRoot /var/www/html
+
+SSLEngine on
+SSLCertificateChainFile /etc/ssl/certs/bastion_ca.pem
+SSLCertificateFile /etc/ssl/certs/bastion_cert.pem
+SSLCertificateKeyFile /etc/ssl/private/bastion_key.pem
+
+<IfModule mod_authnz_external.c>
+AddExternalAuth pwauth /usr/sbin/pwauth
+SetExternalAuthMethod pwauth pipe
+</IfModule>
+
+# Bastion Users
+UserDir "/data/users/home/*"  
+IncludeOptional "$APACHE_USER_CONFIG/*.conf"
+
+</VirtualHost>
+---EOF
+
+fi
+
+pushd /etc/apache2/mods-enabled
+[[ -e userdir.load ]] || ln -s ../mods-available/userdir.load userdir.load
+[[ -e authnz_external.load ]] || ln -s ../mods-available/authnz_external.load authnz_external.load
+[[ -e socache_shmcb.load ]] || ln -s ../mods-available//socache_shmcb.load socache_shmcb.load
+[[ -e ssl.load ]] || ln -s ../mods-available/ssl.load ssl.load
+[[ -e ssl.conf ]] || ln -s ../mods-available/ssl.conf ssl.conf
+popd
+
+pushd /etc/apache2/sites-enabled
+rm -f *
+ln -s ../sites-available/bastion-web.conf bastion-web.conf
+popd
+
+systemctl enable apache2
+systemctl start apache2
+
+set +ex
+touch /root/.apache_installed

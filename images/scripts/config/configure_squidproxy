@@ -5,6 +5,8 @@ set -exo pipefail
 SCRIPT_HOME=$(cd $(dirname "$(ls -l $0 | awk '{ print $NF }')") && pwd)
 source $SCRIPT_HOME/common
 
+[[ ! -e /root/.squidproxy_installed ]] || exit 0
+
 if [[ -z $config_squidproxy_port ]]; then
   echo "Skipping Proxy setup as no proxy configuration found."
   exit 0
@@ -40,4 +42,5 @@ sed -i "s|^http_port .*|http_port $config_squidproxy_port|" /etc/squid/squid.con
 systemctl enable squid
 systemctl start squid
 
+set +ex
 touch /root/.squidproxy_installed

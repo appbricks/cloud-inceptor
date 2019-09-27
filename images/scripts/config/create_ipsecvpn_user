@@ -1,0 +1,192 @@
+#!/bin/bash
+
+set -e
+
+if [[ `whoami` != "root" ]]; then 
+  echo -e "\nThis script needs to be run as root.\n"
+  exit 1
+fi
+
+if [[ -z "$1" ]]; then
+  echo -e "\nUsage: create_vpn_user user password\n"
+  exit 1
+fi
+
+user=$1
+user_home=/data/users/home/$user
+
+if [[ -z "$2" && ! -e $user_home ]]; then
+  echo -e "\nHome directory for $user does not exist. Please"
+  echo -e "create the user or pass the password as the second"
+  echo -e "argument to this script to create a new user.\n"
+  exit 1
+fi
+
+IPSECVPN_DATA_HOME=/data/ipsecvpn
+IPSECVPN_CONFIG=$IPSECVPN_DATA_HOME/etc
+
+source $IPSECVPN_CONFIG/serverinfo
+
+# Create mobileconfig file for ios or osx
+cat << ---EOF > ${user_home}/vpn-ios-or-mac.mobileconfig
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE plist PUBLIC '-//Apple//DTD PLIST 1.0//EN' 'http://www.apple.com/DTDs/PropertyList-1.0.dtd'>
+<plist version='1.0'>
+<dict>
+  <key>PayloadContent</key>
+  <array>
+    <dict>
+      <key>IKEv2</key>
+      <dict>
+        <key>AuthenticationMethod</key>
+        <string>None</string>
+        <key>ChildSecurityAssociationParameters</key>
+        <dict>
+          <key>EncryptionAlgorithm</key>
+          <string>AES-256-GCM</string>
+          <key>IntegrityAlgorithm</key>
+          <string>SHA2-384</string>
+          <key>DiffieHellmanGroup</key>
+          <integer>21</integer>
+          <key>LifeTimeInMinutes</key>
+          <integer>1440</integer>
+        </dict>
+        <key>DeadPeerDetectionRate</key>
+        <string>Medium</string>
+        <key>DisableMOBIKE</key>
+        <integer>0</integer>
+        <key>DisableRedirect</key>
+        <integer>0</integer>
+        <key>EnableCertificateRevocationCheck</key>
+        <integer>0</integer>
+        <key>EnablePFS</key>
+        <true/>
+        <key>ExtendedAuthEnabled</key>
+        <true/>
+        <key>IKESecurityAssociationParameters</key>
+        <dict>
+          <key>EncryptionAlgorithm</key>
+          <string>AES-256-GCM</string>
+          <key>IntegrityAlgorithm</key>
+          <string>SHA2-384</string>
+          <key>DiffieHellmanGroup</key>
+          <integer>21</integer>
+          <key>LifeTimeInMinutes</key>
+          <integer>1440</integer>
+        </dict>
+        <key>OnDemandEnabled</key>
+        <integer>0</integer>
+        <key>OnDemandRules</key>
+        <array>
+          <dict>
+            <key>Action</key>
+            <string>Connect</string>
+          </dict>
+        </array>
+        <key>RemoteAddress</key>
+        <string>${vpn_server}</string>
+        <key>RemoteIdentifier</key>
+        <string>${vpn_server}</string>
+        <key>UseConfigurationAttributeInternalIPSubnet</key>
+        <integer>0</integer>
+      </dict>
+      <key>IPv4</key>
+      <dict>
+        <key>OverridePrimary</key>
+        <integer>1</integer>
+      </dict>
+      <key>PayloadDescription</key>
+      <string>Configures VPN settings</string>
+      <key>PayloadDisplayName</key>
+      <string>VPN</string>
+      <key>PayloadIdentifier</key>
+      <string>com.apple.vpn.managed.$(uuidgen)</string>
+      <key>PayloadType</key>
+      <string>com.apple.vpn.managed</string>
+      <key>PayloadUUID</key>
+      <string>$(uuidgen)</string>
+      <key>PayloadVersion</key>
+      <integer>1</integer>
+      <key>Proxies</key>
+      <dict>
+        <key>HTTPEnable</key>
+        <integer>0</integer>
+        <key>HTTPSEnable</key>
+        <integer>0</integer>
+      </dict>
+      <key>UserDefinedName</key>
+      <string>${vpn_server}</string>
+      <key>VPNType</key>
+      <string>IKEv2</string>
+    </dict>
+  </array>
+  <key>PayloadDisplayName</key>
+  <string>IKEv2 VPN configuration (${vpn_server})</string>
+  <key>PayloadIdentifier</key>
+  <string>com.mackerron.vpn.$(uuidgen)</string>
+  <key>PayloadRemovalDisallowed</key>
+  <false/>
+  <key>PayloadType</key>
+  <string>Configuration</string>
+  <key>PayloadUUID</key>
+  <string>$(uuidgen)</string>
+  <key>PayloadVersion</key>
+  <integer>1</integer>
+</dict>
+</plist>
+---EOF
+
+# Add user to ipsec secrets file
+grep -q "^${user} : EAP .*$" $IPSECVPN_CONFIG/ipsec.secrets \
+  && sed -e "s|^${user} : EAP .*$|${user} : EAP \"$2\"|" -i $IPSECVPN_CONFIG/ipsec.secrets \
+  || echo "${user} : EAP \"$2\"" >> $IPSECVPN_CONFIG/ipsec.secrets
+cp $IPSECVPN_CONFIG/ipsec.secrets /etc/ipsec.secrets
+
+set +e
+id $admin_user >/dev/null 2>&1
+if [[ $? -ne 0 ]]; then
+  userdel $user > /dev/null 2>&1
+  set -e
+  rm -fr $user_home
+
+  password=$(mkpasswd "$2")
+  useradd $user -p $password -m -d $user_home -s /bin/bash
+else
+  set -e
+fi
+
+if [[ -n $3 ]]; then
+  echo "$3" > $user_home/.ssh/authorized_keys
+
+  grep -q "^AllowUsers $user" /etc/ssh/sshd_config \
+    || echo -e "AllowUsers $user" >> /etc/ssh/sshd_config
+fi
+
+service sshd restart
+
+if [[ -e /etc/apache2 ]]; then
+
+  APACHE_USER_CONFIG=/data/users/etc/apache2
+  mkdir -p $APACHE_USER_CONFIG
+  cat << ---EOF > $APACHE_USER_CONFIG/$user.conf
+<Directory $user_home>
+  AuthType Basic
+    AuthName "Restricted Area"
+    AuthBasicProvider external
+    AuthExternal pwauth
+    Require user $user
+    Options +Indexes
+</Directory>
+---EOF
+
+  systemctl restart apache2
+fi
+
+# Backup all system user files
+cp /etc/passwd /data/users/etc
+cp /etc/shadow /data/users/etc
+cp /etc/group /data/users/etc
+cp /etc/gshadow /data/users/etc
+cp /etc/ssh/sshd_config /data/users/etc/ssh
+
+set +e

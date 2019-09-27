@@ -129,7 +129,7 @@ resource "google_compute_firewall" "bastion-ssh" {
 }
 
 resource "google_compute_firewall" "bastion-vpn" {
-  count = "${length(var.vpn_server_port) == 0 ? 0 : 1 }"
+  count = "${length(var.ovpn_server_port) == 0 ? 0 : 1 }"
 
   name    = "${var.vpc_name}-bastion-vpn"
   network = "${google_compute_network.dmz.self_link}"
@@ -140,8 +140,8 @@ resource "google_compute_firewall" "bastion-vpn" {
   }
 
   allow {
-    protocol = "${var.vpn_protocol}"
-    ports    = ["${var.vpn_server_port}"]
+    protocol = "${var.ovpn_protocol}"
+    ports    = ["${var.ovpn_server_port}"]
   }
 
   priority      = "500"

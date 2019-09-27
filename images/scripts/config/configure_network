@@ -5,6 +5,8 @@ set -exo pipefail
 SCRIPT_HOME=$(cd $(dirname "$(ls -l $0 | awk '{ print $NF }')") && pwd)
 source $SCRIPT_HOME/common
 
+[[ ! -e /root/.network_installed ]] || exit 0
+
 if [[ -z $config_server_dmz_itf_ip ]]; then
   exit 0
 fi
@@ -24,58 +26,6 @@ if [[ -n $config_server_fqdn ]]; then
     "s|^$config_server_dmz_itf_ip.*$|$config_server_dmz_itf_ip  ${config_server_fqdn}  ${config_server_fqdn%%.*}|" \
     /etc/hosts
 fi
-
-#
-# Configure Users and SSH Access
-#
-
-if [[ -e /data/users/etc ]]; then
-  cp -r /data/users/etc/* /etc
-else
-  mkdir -p /data/users/home
-  mkdir -p /data/users/etc
-  mkdir -p /data/users/etc/ssh
-fi
-
-if [[ -n "$config_server_admin_passwd" ]]; then
-
-  admin_user=${config_server_admin_user:-admin}
-  admin_password=$(mkpasswd "$config_server_admin_passwd")
-  user_home=/data/users/home/$admin_user
-
-  set +e
-  id $admin_user >/dev/null 2>&1
-  if [[ $? -ne 0 ]]; then
-    useradd $admin_user -p $admin_password -m -d $user_home -s /bin/bash
-  else
-    usermod $admin_user -p $admin_password -m -d $user_home -s /bin/bash
-  fi
-  adduser $admin_user sudo
-
-  mkdir -p $user_home/.ssh
-  echo "$config_server_admin_ssh_public_key" \
-    > $user_home/.ssh/authorized_keys
-  
-  chmod 0700 $user_home/.ssh
-  chmod 0600 $user_home/.ssh/authorized_keys
-
-  chown -R $admin_user:$admin_user $user_home
-
-  # Remove any overrides that may 
-  # allow passwordless sudos
-  rm -fr /etc/sudoers.d/*
-  sed -i 's|%sudo ALL=(ALL:ALL) NOPASSWD:ALL|%sudo ALL=(ALL:ALL) ALL|' /etc/sudoers
-  
-  set -e
-  [[ -n "$config_server_admin_ssh_port" ]] && \
-    sed -i "s|^Port [0-9]*$|Port $config_server_admin_ssh_port|" /etc/ssh/sshd_config
-
-  service sshd restart
-fi
-
-# Fix to remove "mesg: ttyname failed: Inappropriate ioctl for device" 
-# from output when executing commands with 'sudo -i'
-sed -i 's/^mesg n || true$/tty -s \&\& mesg n/' /root/.profile
 
 #
 # Configure NICS
@@ -267,15 +217,43 @@ if [[ -z $public_itf ]]; then
   )
 fi
 
-# Enable IP forwarding
-sed -i "s/^.*net.ipv4.ip_forward=.*/net.ipv4.ip_forward=1/" /etc/sysctl.conf
-sed -i "s/^.*net.ipv6.conf.all.forwarding=.*/net.ipv6.conf.all.forwarding=1/" /etc/sysctl.conf
+# Enable IP forwarding and disble IPv6
+replace_or_append_key "net.ipv4.ip_forward" "1" /etc/sysctl.conf
+replace_or_append_key "net.ipv4.ip_no_pmtu_disc" "1" /etc/sysctl.conf
+replace_or_append_key "net.ipv4.conf.all.rp_filter" "1" /etc/sysctl.conf
+replace_or_append_key "net.ipv4.conf.all.accept_redirects" "0" /etc/sysctl.conf
+replace_or_append_key "net.ipv4.conf.all.send_redirects" "0" /etc/sysctl.conf
+replace_or_append_key "net.ipv6.conf.all.disable_ipv6" "1" /etc/sysctl.conf
+replace_or_append_key "net.ipv6.conf.default.disable_ipv6" "1" /etc/sysctl.conf
+replace_or_append_key "net.ipv6.conf.lo.disable_ipv6" "1" /etc/sysctl.conf
+
 sysctl -p
 
 if [[ -e /data/network/etc/iptables-dump.ipt ]]; then
   # Restore persisted configured rules
   iptables-restore < /data/network/etc/iptables-dump.ipt
 else
+  iptables -P INPUT   ACCEPT
+  iptables -P FORWARD ACCEPT
+  iptables -P OUTPUT  ACCEPT
+
+  iptables -F
+  iptables -t nat -F
+  iptables -t mangle -F
+
+  # INPUT
+
+  # Accept anything already accepted
+  iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+  # Accept anything on the loopback interface
+  iptables -A INPUT -i lo -j ACCEPT
+
+  # Drop invalid packets
+  iptables -A INPUT -m state --state INVALID -j DROP
+
+  # FORWARD
+
   # Allow established traffic to pass back and forth
   iptables -I FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 
@@ -323,44 +301,6 @@ if [[ $config_server_enable_dhcpd == true ]]; then
   systemctl enable isc-dhcp-server.service
   systemctl start isc-dhcp-server.service
 fi
-
-#
-# Configure Docker daemon
-#
-
-systemctl enable docker
-set +e
-
-if [[ -n $config_server_docker_mount_path ]]; then
-
-  i=0
-  mount | grep " $config_server_docker_mount_path " >/dev/null 2>&1
-  while [[ $i -lt 12 && $? -ne 0 ]]; do
-    echo "Waiting for docker root mount '$config_server_docker_mount_path' to become available..."
-    sleep 5
-    i=$(($i+1))
-    mount | grep " $config_server_docker_mount_path " >/dev/null 2>&1
-  done
-  if [[ $i -lt 12 ]]; then
-    echo "Changing docker root path to '$config_server_docker_mount_path'."
-
-    systemctl stop docker
-
-    mkdir -p /etc/systemd/system/docker.service.d
-    cat << ---EOF > /etc/systemd/system/docker.service.d/docker.root.conf
-[Service]
-ExecStart=
-ExecStart=/usr/bin/dockerd --data-root $config_server_docker_mount_path/docker
----EOF
-
-    systemctl daemon-reload
-  else
-    echo "Timed out waiting for docker root mount path to become available. No changes will be made to docker root path."
-  fi
-fi
-
-set -e
-systemctl restart docker
 
 set +ex
 touch /root/.network_installed

@@ -63,11 +63,13 @@ module "config" {
   bastion_admin_user     = "${var.bastion_admin_user}"
   squidproxy_server_port = "${var.squidproxy_server_port}"
 
-  vpn_server_port        = "${var.vpn_server_port}"
-  vpn_protocol           = "${var.vpn_protocol}"
+  vpn_type               = "${var.vpn_type}"
   vpn_network            = "${var.vpn_network}"
   vpn_tunnel_all_traffic = "${var.vpn_tunnel_all_traffic}"
   vpn_users              = "${var.vpn_users}"
+
+  ovpn_server_port = "${var.ovpn_server_port}"
+  ovpn_protocol    = "${var.ovpn_protocol}"
 
   smtp_relay_host    = "${var.smtp_relay_host}"
   smtp_relay_port    = "${var.smtp_relay_port}"

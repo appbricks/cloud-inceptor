@@ -37,16 +37,26 @@ resource "tls_self_signed_cert" "root-ca" {
 }
 
 #
-# Self-signed certificate for Bastion WWW server
+# Self-signed certificate for Bastion server
 #
-resource "tls_private_key" "bastion-web" {
+resource "tls_private_key" "bastion" {
   algorithm = "RSA"
   rsa_bits  = "4096"
 }
 
-resource "tls_cert_request" "bastion-web" {
+resource "tls_cert_request" "bastion" {
   key_algorithm   = "RSA"
-  private_key_pem = "${tls_private_key.bastion-web.private_key_pem}"
+  private_key_pem = "${tls_private_key.bastion.private_key_pem}"
+
+  dns_names = [
+    "${var.bastion_fqdn}"
+  ]
+
+  ip_addresses = [
+    "${var.bastion_public_ip}",
+    "${var.bastion_dmz_itf_ip}",
+    "${var.bastion_admin_itf_ip}",
+  ]
 
   subject {
     common_name         = "${var.bastion_fqdn}"
@@ -58,8 +68,8 @@ resource "tls_cert_request" "bastion-web" {
   }
 }
 
-resource "tls_locally_signed_cert" "bastion-web" {
-  cert_request_pem = "${tls_cert_request.bastion-web.cert_request_pem}"
+resource "tls_locally_signed_cert" "bastion" {
+  cert_request_pem = "${tls_cert_request.bastion.cert_request_pem}"
 
   ca_key_algorithm = "RSA"
 

@@ -7,27 +7,52 @@ timeout 180 /bin/bash -c \
 
 set -xeu
 
+export DEBIAN_FRONTEND=noninteractive
 echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
 
+# See https://github.com/jawj/IKEv2-setup/issues/66 and https://bugs.launchpad.net/subiquity/+bug/1783129
+# Note: software-properties-common is required for add-apt-repository
+apt-get -o Acquire::ForceIPv4=true update
+apt-get -o Acquire::ForceIPv4=true install -y software-properties-common
+add-apt-repository universe
+add-apt-repository restricted
+add-apt-repository multiverse
+
+# Setup debian repo for OpenVPN
 wget -O - https://swupdate.openvpn.net/repos/repo-public.gpg|apt-key add -
 echo "deb http://build.openvpn.net/debian/openvpn/release/2.4 $(lsb_release -c -s) main" > /etc/apt/sources.list.d/openvpn.list
 
 # Update and upgrade the distribution
 apt-get update
-apt-get -y \
-  --allow-downgrades --allow-remove-essential --allow-change-held-packages \
-  dist-upgrade
+apt-get -o Acquire::ForceIPv4=true dist-upgrade -y -q \
+  --allow-downgrades \
+  --allow-remove-essential \
+  --allow-change-held-packages \
+
+apt autoremove -y
 
 # Install pre-req packages
-apt-get install -y \
-  pkg-config cmake build-essential \
-  openssl libcurl4-openssl-dev libssl-dev \
-  libxml2 libxml2-dev \
-  pinentry-curses xclip \
-  git-core ipcalc
+apt-get -o Acquire::ForceIPv4=true install -y \
+  language-pack-en pkg-config unattended-upgrades iptables-persistent \
+  cmake build-essential openssl libcurl4-openssl-dev libssl-dev libxml2 libxml2-dev \
+  git-core ipcalc certbot uuid-runtime pinentry-curses xclip
+
+# Setup unattended upgrades
+sed -r \
+-e 's|^//Unattended-Upgrade::MinimalSteps "true";$|Unattended-Upgrade::MinimalSteps "true";|' \
+-e 's|^//Unattended-Upgrade::Automatic-Reboot "false";$|Unattended-Upgrade::Automatic-Reboot "true";|' \
+-e 's|^//Unattended-Upgrade::Remove-Unused-Dependencies "false";|Unattended-Upgrade::Remove-Unused-Dependencies "true";|' \
+-e 's|^//Unattended-Upgrade::Automatic-Reboot-Time "02:00";$|Unattended-Upgrade::Automatic-Reboot-Time "03:00";|' \
+-i /etc/apt/apt.conf.d/50unattended-upgrades
+
+echo 'APT::Periodic::Update-Package-Lists "1";
+APT::Periodic::Download-Upgradeable-Packages "1";
+APT::Periodic::AutocleanInterval "7";
+APT::Periodic::Unattended-Upgrade "1";
+' > /etc/apt/apt.conf.d/10periodic
 
 # Disable sshguard if it is installed
-apt-get install -y -q \
+apt-get -o Acquire::ForceIPv4=true install -y -q \
   --allow-downgrades \
   --allow-remove-essential \
   --allow-change-held-packages \
@@ -37,7 +62,7 @@ systemctl stop sshguard
 systemctl disable sshguard
 
 # DHCP
-apt-get install -y -q \
+apt-get -o Acquire::ForceIPv4=true install -y -q \
   --allow-downgrades \
   --allow-remove-essential \
   --allow-change-held-packages \
@@ -49,14 +74,14 @@ systemctl stop isc-dhcp-server6.service
 systemctl disable isc-dhcp-server6.service
 
 # NTP
-apt-get install -y -q \
+apt-get -o Acquire::ForceIPv4=true install -y -q \
   --allow-downgrades \
   --allow-remove-essential \
   --allow-change-held-packages \
   ntp
 
 # PowerDNS
-apt-get install -y -q \
+apt-get -o Acquire::ForceIPv4=true install -y -q \
   --allow-downgrades \
   --allow-remove-essential \
   --allow-change-held-packages \
@@ -69,7 +94,7 @@ systemctl disable pdns.service
 # stop otherwise recursor install fails
 sleep 5
 
-apt-get install -y -q \
+apt-get -o Acquire::ForceIPv4=true install -y -q \
   --allow-downgrades \
   --allow-remove-essential \
   --allow-change-held-packages \
@@ -78,17 +103,18 @@ apt-get install -y -q \
 systemctl stop pdns-recursor.service
 systemctl disable pdns-recursor.service
 
-# Docker
-curl -fsSL https://get.docker.com/gpg | sudo apt-key add -
-curl -fsSL https://get.docker.com/ | sh
+# StrongSwan IPSec
+apt-get -o Acquire::ForceIPv4=true install -y \
+  strongswan libstrongswan-standard-plugins strongswan-libcharon libcharon-standard-plugins libcharon-extra-plugins
 
-usermod -aG docker ubuntu
-
-systemctl stop docker
-systemctl disable docker
+systemctl stop strongswan.service
+systemctl disable strongswan.service
+systemctl stop ipsec.service
+systemctl disable ipsec.service
+ipsec stop
 
 # OpenVPN
-apt-get install -y whois openvpn easy-rsa libpam-google-authenticator zip
+apt-get -o Acquire::ForceIPv4=true install -y whois openvpn easy-rsa libpam-google-authenticator zip
 systemctl stop openvpn
 systemctl disable openvpn
 
@@ -106,19 +132,28 @@ curl -L https://swupdate.openvpn.org/community/releases/openvpn-install-${openvp
   -o /var/lib/openvpn/clients/openvpn-install-winsvr2016.exe
 
 # Apache Web Server
-apt-get install -y apache2 apache2-utils libapache2-mod-authnz-external pwauth
+apt-get -o Acquire::ForceIPv4=true install -y apache2 apache2-utils libapache2-mod-authnz-external pwauth
 systemctl stop apache2
 systemctl disable apache2
 
 # SMTP
-apt-get install -y postfix libsasl2-modules postfix-policyd-spf-python mailutils
+apt-get -o Acquire::ForceIPv4=true install -y postfix libsasl2-modules postfix-policyd-spf-python mailutils
 systemctl stop postfix
 systemctl disable postfix
 
 # Squid Proxy
-apt-get install -y squid3
+apt-get -o Acquire::ForceIPv4=true install -y squid3
 systemctl stop squid
 systemctl disable squid
+
+# Docker
+curl -fsSL https://get.docker.com/gpg | sudo apt-key add -
+curl -fsSL https://get.docker.com/ | sh
+
+usermod -aG docker ubuntu
+
+systemctl stop docker
+systemctl disable docker
 
 # Docker Compose CLI
 docker_compose_version=1.24.1

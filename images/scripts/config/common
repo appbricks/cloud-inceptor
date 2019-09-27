@@ -37,6 +37,16 @@ function wait_for_url {
     fi
 }
 
+function replace_or_append_key {
+    local key=$1
+    local value=$2
+    local file=$3
+
+    grep -q "^.*${key}\s*=\s*.*$" $file \
+        && sed -e "s|^.*${key}=.*|${key}=${value}|" -i $file \
+        || echo "${key}=${value}" >> $file
+}
+
 # This script needs to be run as root
 if [[ `whoami` != "root" ]]; then 
     echo -e "\nThis script needs to be run as root.\n"

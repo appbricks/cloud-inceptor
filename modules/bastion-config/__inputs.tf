@@ -149,12 +149,9 @@ variable "bastion_admin_user" {
 #
 # Bastion inception instance Open VPN configuration
 #
-variable "vpn_server_port" {
-  type = string
-}
-
-variable "vpn_protocol" {
-  type = string
+variable "vpn_type" {
+  # one of "openvpn" or "ipsec"
+  default = ""
 }
 
 variable "vpn_network" {
@@ -166,6 +163,17 @@ variable "vpn_tunnel_all_traffic" {
 }
 
 variable "vpn_users" {
+  type = string
+}
+
+#
+# OpenVPN configuration
+#
+variable "ovpn_server_port" {
+  type = string
+}
+
+variable "ovpn_protocol" {
   type = string
 }
 

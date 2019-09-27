@@ -5,6 +5,8 @@ set -exo pipefail
 SCRIPT_HOME=$(cd $(dirname "$(ls -l $0 | awk '{ print $NF }')") && pwd)
 source $SCRIPT_HOME/common
 
+[[ ! -e /root/.smtp_installed ]] || exit 0
+
 mkdir -p /var/mail
 chmod 777 /var/mail
 
@@ -60,4 +62,5 @@ chmod 600 /etc/postfix/sasl_passwd.db
 systemctl enable postfix
 systemctl restart postfix
 
+set +ex
 touch /root/.smtp_installed

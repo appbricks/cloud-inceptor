@@ -148,11 +148,11 @@ variable "bastion_allow_public_ssh" {
 #
 # Open VPN configuration
 #
-variable "vpn_server_port" {
+variable "ovpn_server_port" {
   default = ""
 }
 
-variable "vpn_protocol" {
+variable "ovpn_protocol" {
   default = "udp"
 }
 

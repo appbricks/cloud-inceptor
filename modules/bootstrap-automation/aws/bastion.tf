@@ -120,6 +120,21 @@ resource "aws_security_group" "bastion-public" {
   description = "Rules for ingress and egress of network traffic to bastion instance."
   vpc_id      = "${aws_vpc.main.id}"
 
+  # HTTP
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  # HTTPS
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   # SSH
   dynamic "ingress" {
     for_each = var.bastion_allow_public_ssh ? [1] : []
@@ -133,29 +148,29 @@ resource "aws_security_group" "bastion-public" {
 
   # VPN
   dynamic "ingress" {
-    for_each = length(var.vpn_server_port) > 0 ? [1] : []
+    for_each = var.vpn_type == "openvpn" && length(var.ovpn_server_port) > 0 ? [1] : []
     content {
-      from_port   = "${tonumber(var.vpn_server_port)}"
-      to_port     = "${tonumber(var.vpn_server_port)}"
-      protocol    = "${var.vpn_protocol}"
+      from_port   = "${tonumber(var.ovpn_server_port)}"
+      to_port     = "${tonumber(var.ovpn_server_port)}"
+      protocol    = "${var.ovpn_protocol}"
       cidr_blocks = ["0.0.0.0/0"]
     }
   }
   dynamic "ingress" {
-    for_each = length(var.vpn_server_port) > 0 ? [1] : []
+    for_each = var.vpn_type == "ipsec" ? [1] : []
     content {
-      from_port   = 80
-      to_port     = 80
-      protocol    = "tcp"
+      from_port   = 500
+      to_port     = 500
+      protocol    = "udp"
       cidr_blocks = ["0.0.0.0/0"]
     }
   }
   dynamic "ingress" {
-    for_each = length(var.vpn_server_port) > 0 ? [1] : []
+    for_each = var.vpn_type == "ipsec" ? [1] : []
     content {
-      from_port   = 443
-      to_port     = 443
-      protocol    = "tcp"
+      from_port   = 4500
+      to_port     = 4500
+      protocol    = "udp"
       cidr_blocks = ["0.0.0.0/0"]
     }
   }
