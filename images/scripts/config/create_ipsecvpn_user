@@ -112,8 +112,8 @@ cat << ---EOF > ${user_home}/vpn-ios-or-mac.mobileconfig
           <key>LifeTimeInMinutes</key>
           <integer>1440</integer>
         </dict>
-				<key>LocalIdentifier</key>
-				<string>${user}</string>
+        <key>LocalIdentifier</key>
+        <string>${user}</string>
         <key>OnDemandEnabled</key>
         <integer>0</integer>
         <key>OnDemandRules</key>
@@ -159,24 +159,24 @@ cat << ---EOF > ${user_home}/vpn-ios-or-mac.mobileconfig
       <key>VPNType</key>
       <string>IKEv2</string>
     </dict>
-		<dict>
-			<key>PayloadCertificateFileName</key>
-			<string>bastion-admin.p12</string>
-			<key>PayloadContent</key>
-			<data>${user_cert_data}</data>
-			<key>PayloadDescription</key>
-			<string>Adds a PKCS#12-formatted certificate</string>
-			<key>PayloadDisplayName</key>
-			<string>${user}'s VPN Certificate</string>
-			<key>PayloadIdentifier</key>
-			<string>com.apple.security.pkcs12.${vpn_cert_payload_uuid}</string>
-			<key>PayloadType</key>
-			<string>com.apple.security.pkcs12</string>
-			<key>PayloadUUID</key>
-			<string>${vpn_cert_payload_uuid}</string>
-			<key>PayloadVersion</key>
-			<integer>1</integer>
-		</dict>
+    <dict>
+      <key>PayloadCertificateFileName</key>
+      <string>bastion-admin.p12</string>
+      <key>PayloadContent</key>
+      <data>${user_cert_data}</data>
+      <key>PayloadDescription</key>
+      <string>Adds a PKCS#12-formatted certificate</string>
+      <key>PayloadDisplayName</key>
+      <string>${user}'s VPN Certificate</string>
+      <key>PayloadIdentifier</key>
+      <string>com.apple.security.pkcs12.${vpn_cert_payload_uuid}</string>
+      <key>PayloadType</key>
+      <string>com.apple.security.pkcs12</string>
+      <key>PayloadUUID</key>
+      <string>${vpn_cert_payload_uuid}</string>
+      <key>PayloadVersion</key>
+      <integer>1</integer>
+    </dict>
   </array>
   <key>PayloadDisplayName</key>
   <string>IKEv2 VPN configuration (${vpn_server})</string>
