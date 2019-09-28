@@ -105,7 +105,9 @@ systemctl disable pdns-recursor.service
 
 # StrongSwan IPSec
 apt-get -o Acquire::ForceIPv4=true install -y \
-  strongswan libstrongswan-standard-plugins strongswan-libcharon libcharon-standard-plugins libcharon-extra-plugins
+  strongswan libstrongswan-standard-plugins \
+  strongswan-libcharon libcharon-standard-plugins libcharon-extra-plugins \
+  strongswan-pki
 
 systemctl stop strongswan.service
 systemctl disable strongswan.service

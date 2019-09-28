@@ -65,6 +65,10 @@ write_files:
   path: /etc/ssl/certs/bastion_ca.pem
   permissions: '0644'
 - encoding: gzip+base64
+  content: ${base64gzip(tls_private_key.root-ca-key.private_key_pem)}
+  path: /etc/ssl/certs/bastion_ca_key.pem
+  permissions: '0644'
+- encoding: gzip+base64
   content: ${base64gzip(tls_locally_signed_cert.bastion.cert_pem)}
   path: /etc/ssl/certs/bastion_cert.pem
   permissions: '0644'

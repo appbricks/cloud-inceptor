@@ -15,6 +15,28 @@ fi
 IPSECVPN_DATA_HOME=/data/ipsecvpn
 IPSECVPN_CONFIG=$IPSECVPN_DATA_HOME/etc
 
+function apply_config() {
+
+  if [[ -e /etc/ssl/certs/bastion_ca.pem ]]; then
+    # Setup IPSec Keys
+    cp /etc/ssl/certs/bastion_ca.pem /etc/ipsec.d/cacerts/
+    cp /etc/ssl/certs/bastion_cert.pem /etc/ipsec.d/certs/
+    cp /etc/ssl/private/bastion_key.pem /etc/ipsec.d/private/
+  else
+    echo "ERROR! Unable to find the server certificates."
+    exit 1
+  fi
+
+  rm /etc/ipsec.conf /etc/ipsec.secrets
+  cp $IPSECVPN_CONFIG/ipsec.conf /etc/ipsec.conf
+  cp $IPSECVPN_CONFIG/ipsec.secrets /etc/ipsec.secrets
+
+  mv $SCRIPT_HOME/create_ipsecvpn_user /usr/local/bin/create_vpn_user
+  chmod +x /usr/local/bin/create_vpn_user
+  mv $SCRIPT_HOME/delete_ipsecvpn_user /usr/local/bin/delete_vpn_user
+  chmod +x /usr/local/bin/delete_vpn_user
+}
+
 function configure_ipsecvpn() {
 
   # Use the fully qualified name
@@ -24,21 +46,15 @@ function configure_ipsecvpn() {
 
   mkdir -p $IPSECVPN_CONFIG
   echo "export vpn_server=\"$config_server_host\"" > $IPSECVPN_CONFIG/serverinfo
+  echo "export vpn_server_description=\"$config_vpn_server_description\"" >> $IPSECVPN_CONFIG/serverinfo
+  echo "export vpn_server_domain=\"$config_vpn_server_domain\"" >> $IPSECVPN_CONFIG/serverinfo
+  echo "export vpn_server_cert_country=\"$config_vpn_vpn_cert_country\"" >> $IPSECVPN_CONFIG/serverinfo
+  echo "export vpn_server_cert_org=\"$config_vpn_vpn_cert_org\"" >> $IPSECVPN_CONFIG/serverinfo
 
   if [[ -e /root/.powerdns_installed ]]; then
     dns_servers=$config_powerdns_ns_ip
   else
     dns_servers=${config_vpn_dns_servers:-$config_server_dns_resolvers}
-  fi
-
-  # Setup IPSec Keys
-  if [[ -e /etc/ssl/certs/bastion_ca.pem ]]; then
-    cp /etc/ssl/certs/bastion_cert.pem /etc/ipsec.d/certs/cert.pem
-    cp /etc/ssl/private/bastion_key.pem /etc/ipsec.d/private/privkey.pem
-    cp /etc/ssl/certs/bastion_ca.pem /etc/ipsec.d/cacerts/cacert.pem
-  else
-    echo "ERROR! Unable to find the server certificates."
-    exit 1
   fi
 
   cat << ---EOF >> $IPSECVPN_CONFIG/ipsec.conf
@@ -68,7 +84,7 @@ conn %default
   # Server side
   left=%any
   leftid=@${config_server_host}
-  leftcert=cert.pem
+  leftcert=bastion_cert.pem
   leftsendcert=always
 
   # Routes pushed to clients. This route 
@@ -80,29 +96,24 @@ conn %default
   rightid=%any
   rightsourceip=${config_vpn_subnet}
   rightdns=${dns_servers}
-  rightauth=eap-mschapv2
-  rightsendcert=never
+  rightauth=eap-tls
+  rightsendcert=always
 
-  # Ask the client for user credentials 
-  # when they connect
-  eap_identity=%any
+  # Ask the client for user identity
+  eap_identity=%identity
 
 # MacOS clients
 conn ikev2-mschapv2-apple
-  rightauth=eap-mschapv2
+  rightauth=eap-tls
 
 # Windows clients
 conn ikev2-mschapv2
-  rightauth=eap-mschapv2
+  rightauth=eap-tls
 ---EOF
 
   cat << ---EOF >> $IPSECVPN_CONFIG/ipsec.secrets
-${config_server_host} : RSA "privkey.pem"
+${config_server_host} : RSA "bastion_key.pem"
 ---EOF
-
-  rm /etc/ipsec.conf /etc/ipsec.secrets
-  cp $IPSECVPN_CONFIG/ipsec.conf /etc/ipsec.conf
-  cp $IPSECVPN_CONFIG/ipsec.secrets /etc/ipsec.secrets
 
   # Create rules to route VPN traffic to correct destinations
   public_itf=$(ip a \
@@ -152,32 +163,10 @@ ${config_server_host} : RSA "privkey.pem"
   done
 }
 
-if [[ ! -e $IPSECVPN_CONFIG/ipsec.conf ]]; then
-  configure_ipsecvpn
-else
+[[ -e $IPSECVPN_CONFIG/ipsec.conf ]] \
+  || configure_ipsecvpn
 
-  # Setup IPSec Keys
-  if [[ -e /etc/ssl/certs/bastion_ca.pem ]]; then
-    cp /etc/ssl/certs/bastion_cert.pem /etc/ipsec.d/certs/cert.pem
-    cp /etc/ssl/private/bastion_key.pem /etc/ipsec.d/private/privkey.pem
-    cp /etc/ssl/certs/bastion_ca.pem /etc/ipsec.d/cacerts/cacert.pem
-  else
-    echo "ERROR! Unable to find the server certificates."
-    exit 1
-  fi
-
-  rm /etc/ipsec.conf /etc/ipsec.secrets
-  cp $IPSECVPN_CONFIG/ipsec.conf /etc/ipsec.conf
-  cp $IPSECVPN_CONFIG/ipsec.secrets /etc/ipsec.secrets
-
-  iptables-restore < /data/network/etc/iptables-dump.ipt
-fi
-
-mv $SCRIPT_HOME/create_ipsecvpn_user /usr/local/bin/create_vpn_user
-chmod +x /usr/local/bin/create_vpn_user
-mv $SCRIPT_HOME/delete_ipsecvpn_user /usr/local/bin/delete_vpn_user
-chmod +x /usr/local/bin/delete_vpn_user
-
+apply_config
 cat /dev/null > /var/log/syslog
 ipsec restart
 

@@ -7,25 +7,56 @@ if [[ `whoami` != "root" ]]; then
   exit 1
 fi
 
-if [[ -z "$1" ]]; then
+if [[ -z "$1" || -z "$2" ]]; then
   echo -e "\nUsage: create_vpn_user user password\n"
   exit 1
 fi
 
 user=$1
+password=$2
 user_home=/data/users/home/$user
-
-if [[ -z "$2" && ! -e $user_home ]]; then
-  echo -e "\nHome directory for $user does not exist. Please"
-  echo -e "create the user or pass the password as the second"
-  echo -e "argument to this script to create a new user.\n"
-  exit 1
-fi
 
 IPSECVPN_DATA_HOME=/data/ipsecvpn
 IPSECVPN_CONFIG=$IPSECVPN_DATA_HOME/etc
 
 source $IPSECVPN_CONFIG/serverinfo
+
+cacert_data=$(cat /etc/ssl/certs/bastion_ca.pem | base64 -w 0)
+cacert_cn=$(openssl x509 -in /etc/ssl/certs/bastion_ca.pem -text | awk -F' = ' '/Subject: /{ print $7 }')
+
+# Create user's authentication certificate
+user_key_der_path=/etc/ipsec.d/private/${user}.der
+user_key_pem_path=/etc/ipsec.d/private/${user}.pem
+user_cert_der_path=/etc/ipsec.d/certs/${user}.der
+user_cert_pem_path=/etc/ipsec.d/certs/${user}.pem
+
+ipsec pki --gen --type rsa --size 4096 --outform der > $user_key_der_path
+openssl rsa -inform DER -in $user_key_der_path -outform PEM -out $user_key_pem_path
+chmod 0600 $user_key_der_path $user_key_pem_path
+
+ipsec pki --pub --in $user_key_der_path --type rsa \
+  | ipsec pki --issue \
+    --lifetime 3650 \
+    --cacert /etc/ssl/certs/bastion_ca.pem \
+    --cakey /etc/ssl/certs/bastion_ca_key.pem \
+    --dn "C=${vpn_server_cert_country}, O=${vpn_server_cert_org}, CN=${user}" --san "$user" --outform der \
+    > $user_cert_der_path
+openssl x509 -inform DER -in $user_cert_der_path -outform PEM -out $user_cert_pem_path
+
+openssl pkcs12 -export \
+  -inkey $user_key_pem_path \
+  -in $user_cert_pem_path \
+  -name "${user}'s VPN Certificate" \
+  -caname "$cacert_cn" \
+  -certfile /etc/ssl/certs/bastion_ca.pem \
+  -passout pass:"$password" \
+  -out ${user_home}/${user}.p12
+user_cert_data=$(cat ${user_home}/${user}.p12 | base64 -w 0)
+
+payload_uuid=$(uuidgen)
+vpn_payload_uuid=$(uuidgen)
+vpn_ca_payload_uuid=$(uuidgen)
+vpn_cert_payload_uuid=$(uuidgen)
 
 # Create mobileconfig file for ios or osx
 cat << ---EOF > ${user_home}/vpn-ios-or-mac.mobileconfig
@@ -39,7 +70,9 @@ cat << ---EOF > ${user_home}/vpn-ios-or-mac.mobileconfig
       <key>IKEv2</key>
       <dict>
         <key>AuthenticationMethod</key>
-        <string>None</string>
+        <string>Certificate</string>
+        <key>PayloadCertificateUUID</key>
+        <string>${vpn_cert_payload_uuid}</string>
         <key>ChildSecurityAssociationParameters</key>
         <dict>
           <key>EncryptionAlgorithm</key>
@@ -74,6 +107,8 @@ cat << ---EOF > ${user_home}/vpn-ios-or-mac.mobileconfig
           <key>LifeTimeInMinutes</key>
           <integer>1440</integer>
         </dict>
+				<key>LocalIdentifier</key>
+				<string>${user}</string>
         <key>OnDemandEnabled</key>
         <integer>0</integer>
         <key>OnDemandRules</key>
@@ -100,11 +135,11 @@ cat << ---EOF > ${user_home}/vpn-ios-or-mac.mobileconfig
       <key>PayloadDisplayName</key>
       <string>VPN</string>
       <key>PayloadIdentifier</key>
-      <string>com.apple.vpn.managed.$(uuidgen)</string>
+      <string>com.apple.vpn.managed.${vpn_payload_uuid}</string>
       <key>PayloadType</key>
       <string>com.apple.vpn.managed</string>
       <key>PayloadUUID</key>
-      <string>$(uuidgen)</string>
+      <string>${vpn_payload_uuid}</string>
       <key>PayloadVersion</key>
       <integer>1</integer>
       <key>Proxies</key>
@@ -119,28 +154,40 @@ cat << ---EOF > ${user_home}/vpn-ios-or-mac.mobileconfig
       <key>VPNType</key>
       <string>IKEv2</string>
     </dict>
+		<dict>
+			<key>PayloadCertificateFileName</key>
+			<string>bastion-admin.p12</string>
+			<key>PayloadContent</key>
+			<data>${user_cert_data}</data>
+			<key>PayloadDescription</key>
+			<string>Adds a PKCS#12-formatted certificate</string>
+			<key>PayloadDisplayName</key>
+			<string>${user}'s VPN Certificate</string>
+			<key>PayloadIdentifier</key>
+			<string>com.apple.security.pkcs12.${vpn_cert_payload_uuid}</string>
+			<key>PayloadType</key>
+			<string>com.apple.security.pkcs12</string>
+			<key>PayloadUUID</key>
+			<string>${vpn_cert_payload_uuid}</string>
+			<key>PayloadVersion</key>
+			<integer>1</integer>
+		</dict>
   </array>
   <key>PayloadDisplayName</key>
   <string>IKEv2 VPN configuration (${vpn_server})</string>
   <key>PayloadIdentifier</key>
-  <string>com.mackerron.vpn.$(uuidgen)</string>
+  <string>com.mackerron.vpn.${payload_uuid}</string>
   <key>PayloadRemovalDisallowed</key>
   <false/>
   <key>PayloadType</key>
   <string>Configuration</string>
   <key>PayloadUUID</key>
-  <string>$(uuidgen)</string>
+  <string>${payload_uuid}</string>
   <key>PayloadVersion</key>
   <integer>1</integer>
 </dict>
 </plist>
 ---EOF
-
-# Add user to ipsec secrets file
-grep -q "^${user} : EAP .*$" $IPSECVPN_CONFIG/ipsec.secrets \
-  && sed -e "s|^${user} : EAP .*$|${user} : EAP \"$2\"|" -i $IPSECVPN_CONFIG/ipsec.secrets \
-  || echo "${user} : EAP \"$2\"" >> $IPSECVPN_CONFIG/ipsec.secrets
-cp $IPSECVPN_CONFIG/ipsec.secrets /etc/ipsec.secrets
 
 set +e
 id $admin_user >/dev/null 2>&1
@@ -149,8 +196,8 @@ if [[ $? -ne 0 ]]; then
   set -e
   rm -fr $user_home
 
-  password=$(mkpasswd "$2")
-  useradd $user -p $password -m -d $user_home -s /bin/bash
+  password_hash=$(mkpasswd "$password")
+  useradd $user -p $password_hash -m -d $user_home -s /bin/bash
 else
   set -e
 fi
@@ -181,6 +228,9 @@ if [[ -e /etc/apache2 ]]; then
 
   systemctl restart apache2
 fi
+
+# Ensure all files under user home have correct ownership
+chown -R ${user}:${user} ${user_home}
 
 # Backup all system user files
 cp /etc/passwd /data/users/etc
