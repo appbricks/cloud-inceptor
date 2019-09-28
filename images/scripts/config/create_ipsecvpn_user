@@ -16,6 +16,11 @@ user=$1
 password=$2
 user_home=/data/users/home/$user
 
+if [[ -e ${user_home}/${user}.p12 ]]; then
+  echo "User '${user}' is already configured."
+  exit 0
+fi
+
 IPSECVPN_DATA_HOME=/data/ipsecvpn
 IPSECVPN_CONFIG=$IPSECVPN_DATA_HOME/etc
 

@@ -17,15 +17,23 @@ IPSECVPN_CONFIG=$IPSECVPN_DATA_HOME/etc
 
 function apply_config() {
 
-  if [[ -e /etc/ssl/certs/bastion_ca.pem ]]; then
-    # Setup IPSec Keys
-    cp /etc/ssl/certs/bastion_ca.pem /etc/ipsec.d/cacerts/
-    cp /etc/ssl/certs/bastion_cert.pem /etc/ipsec.d/certs/
-    cp /etc/ssl/private/bastion_key.pem /etc/ipsec.d/private/
-  else
+  if [[ ! -e $IPSECVPN_CONFIG/ipsec.d ]]; then
+    echo "ERROR! It appears that IPSec configuration has not be run."
+    exit 1
+  fi
+
+  if [[ ! -e /etc/ssl/certs/bastion_ca.pem ]]; then
     echo "ERROR! Unable to find the server certificates."
     exit 1
   fi
+
+  rm -fr /etc/ipsec.d
+  cp -r $IPSECVPN_CONFIG/ipsec.d /etc
+
+  # Setup IPSec Keys
+  cp /etc/ssl/certs/bastion_ca.pem /etc/ipsec.d/cacerts/
+  cp /etc/ssl/certs/bastion_cert.pem /etc/ipsec.d/certs/
+  cp /etc/ssl/private/bastion_key.pem /etc/ipsec.d/private/
 
   rm /etc/ipsec.conf /etc/ipsec.secrets
   cp $IPSECVPN_CONFIG/ipsec.conf /etc/ipsec.conf
@@ -39,12 +47,14 @@ function apply_config() {
 
 function configure_ipsecvpn() {
 
+  mkdir -p $IPSECVPN_CONFIG
+  mv /etc/ipsec.d $IPSECVPN_CONFIG/ipsec.d
+
   # Use the fully qualified name
   # of the host instead of host ip.
   [[ $config_server_use_fqdn == "true" ]] && \
     config_server_host=$config_server_fqdn
 
-  mkdir -p $IPSECVPN_CONFIG
   echo "export vpn_server=\"$config_server_host\"" > $IPSECVPN_CONFIG/serverinfo
   echo "export vpn_server_description=\"$config_vpn_server_description\"" >> $IPSECVPN_CONFIG/serverinfo
   echo "export vpn_server_domain=\"$config_vpn_server_domain\"" >> $IPSECVPN_CONFIG/serverinfo
