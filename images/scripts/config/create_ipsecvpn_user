@@ -21,6 +21,47 @@ if [[ -e ${user_home}/${user}.p12 ]]; then
   exit 0
 fi
 
+set +e
+id $user >/dev/null 2>&1
+if [[ $? -ne 0 ]]; then
+  password_hash=$(mkpasswd "$password")
+  useradd $user -p $password_hash -m -d $user_home -s /bin/bash
+else
+  set -e
+fi
+
+if [[ -n $3 ]]; then
+  echo "$3" > $user_home/.ssh/authorized_keys
+
+  grep -q "^AllowUsers $user" /etc/ssh/sshd_config \
+    || echo -e "AllowUsers $user" >> /etc/ssh/sshd_config
+fi
+
+service sshd restart
+
+if [[ -e /etc/apache2 ]]; then
+
+  APACHE_USER_CONFIG=/data/users/etc/apache2
+  mkdir -p $APACHE_USER_CONFIG
+  cat << ---EOF > $APACHE_USER_CONFIG/$user.conf
+<Directory $user_home>
+  AuthType Basic
+    AuthName "Restricted Area"
+    AuthBasicProvider external
+    AuthExternal pwauth
+    Require user $user
+    Options +Indexes
+</Directory>
+---EOF
+
+  systemctl restart apache2
+fi
+
+#
+# Create user's VPN credentials 
+# and client configuration files
+#
+
 IPSECVPN_DATA_HOME=/data/ipsecvpn
 IPSECVPN_CONFIG=$IPSECVPN_DATA_HOME/etc
 
@@ -60,62 +101,64 @@ user_cert_data=$(cat ${user_home}/${user}.p12 | base64 -w 0)
 
 payload_uuid=$(uuidgen)
 vpn_payload_uuid=$(uuidgen)
-vpn_ca_payload_uuid=$(uuidgen)
 vpn_cert_payload_uuid=$(uuidgen)
+vpn_ca_payload_uuid=$(uuidgen)
 
-# Create mobileconfig file for ios or osx
-cat << ---EOF > ${user_home}/vpn-ios-or-mac.mobileconfig
+# Create mobileconfig file for ios and osx
+cat << ---EOF > ${user_home}/${vpn_server_description}.mobileconfig
 <?xml version='1.0' encoding='UTF-8'?>
 <!DOCTYPE plist PUBLIC '-//Apple//DTD PLIST 1.0//EN' 'http://www.apple.com/DTDs/PropertyList-1.0.dtd'>
 <plist version='1.0'>
 <dict>
+  <key>PayloadDisplayName</key><string>IKEv2 VPN - ${vpn_server_description}</string>
+  <key>PayloadIdentifier</key><string>com.mackerron.vpn.${payload_uuid}</string>
+  <key>PayloadUUID</key><string>${payload_uuid}</string>
+  <key>PayloadType</key><string>Configuration</string>
+  <key>PayloadVersion</key><integer>1</integer>
+  <key>PayloadRemovalDisallowed</key><false/>  
   <key>PayloadContent</key>
   <array>
+
+    <!-- VPN Configuration -->
     <dict>
+      <key>PayloadDisplayName</key><string>VPN Configuration (${vpn_server})</string>
+      <key>PayloadDescription</key><string>Configures VPN settings</string>
+      <key>PayloadIdentifier</key><string>com.apple.vpn.managed.${vpn_payload_uuid}</string>
+      <key>PayloadUUID</key><string>${vpn_payload_uuid}</string>
+      <key>PayloadType</key><string>com.apple.vpn.managed</string>
+      <key>PayloadVersion</key><integer>1</integer>
+      <key>UserDefinedName</key><string>${vpn_server}</string>
+      <key>VPNType</key><string>IKEv2</string>
+
       <key>IKEv2</key>
       <dict>
-        <key>AuthenticationMethod</key>
-        <string>Certificate</string>
-        <key>PayloadCertificateUUID</key>
-        <string>${vpn_cert_payload_uuid}</string>
-        <key>ChildSecurityAssociationParameters</key>
-        <dict>
-          <key>EncryptionAlgorithm</key>
-          <string>AES-256-GCM</string>
-          <key>IntegrityAlgorithm</key>
-          <string>SHA2-384</string>
-          <key>DiffieHellmanGroup</key>
-          <integer>21</integer>
-          <key>LifeTimeInMinutes</key>
-          <integer>1440</integer>
-        </dict>
-        <key>DeadPeerDetectionRate</key>
-        <string>Medium</string>
-        <key>DisableMOBIKE</key>
-        <integer>0</integer>
-        <key>DisableRedirect</key>
-        <integer>0</integer>
-        <key>EnableCertificateRevocationCheck</key>
-        <integer>0</integer>
-        <key>EnablePFS</key>
-        <true/>
-        <key>ExtendedAuthEnabled</key>
-        <true/>
-        <key>IKESecurityAssociationParameters</key>
-        <dict>
-          <key>EncryptionAlgorithm</key>
-          <string>AES-256-GCM</string>
-          <key>IntegrityAlgorithm</key>
-          <string>SHA2-384</string>
-          <key>DiffieHellmanGroup</key>
-          <integer>21</integer>
-          <key>LifeTimeInMinutes</key>
-          <integer>1440</integer>
-        </dict>
-        <key>LocalIdentifier</key>
-        <string>${user}</string>
-        <key>OnDemandEnabled</key>
-        <integer>0</integer>
+        <key>RemoteAddress</key><string>${vpn_server}</string>
+        <key>RemoteIdentifier</key><string>${vpn_server}</string>
+				<key>ServerCertificateCommonName</key><string>${vpn_server}</string>
+				<key>ServerCertificateIssuerCommonName</key><string>${cacert_cn}</string>        
+
+        <!-- Identifier must match CN of user's certificate for certificate based user authentication -->
+        <key>LocalIdentifier</key><string>${user}</string>
+        
+        <!-- Password based user authentication (eap-mschapv2) -->
+        <!--
+        <key>AuthName</key><string>${user}</string>
+        <key>AuthPassword</key><string>${password}</string>
+        -->
+
+        <!-- Certificate based user authentication (eap-tls) -->
+        <key>AuthenticationMethod</key><string>Certificate</string>
+        <key>PayloadCertificateUUID</key><string>${vpn_cert_payload_uuid}</string>
+        <key>ExtendedAuthEnabled</key><true/>
+
+        <key>DeadPeerDetectionRate</key><string>Medium</string>
+        <key>UseConfigurationAttributeInternalIPSubnet</key><integer>0</integer>
+        <key>DisableMOBIKE</key><integer>0</integer>
+        <key>DisableRedirect</key><integer>0</integer>
+        <key>EnablePFS</key><integer>1</integer>
+        <key>EnableCertificateRevocationCheck</key><integer>0</integer>
+        
+        <key>OnDemandEnabled</key><integer>0</integer>
         <key>OnDemandRules</key>
         <array>
           <dict>
@@ -123,30 +166,29 @@ cat << ---EOF > ${user_home}/vpn-ios-or-mac.mobileconfig
             <string>Connect</string>
           </dict>
         </array>
-        <key>RemoteAddress</key>
-        <string>${vpn_server}</string>
-        <key>RemoteIdentifier</key>
-        <string>${vpn_server}</string>
-        <key>UseConfigurationAttributeInternalIPSubnet</key>
-        <integer>0</integer>
+
+        <key>IKESecurityAssociationParameters</key>
+        <dict>
+          <key>EncryptionAlgorithm</key><string>AES-256-GCM</string>
+          <key>IntegrityAlgorithm</key><string>SHA2-384</string>
+          <key>DiffieHellmanGroup</key><integer>21</integer>
+          <key>LifeTimeInMinutes</key><integer>1440</integer>
+        </dict>
+        <key>ChildSecurityAssociationParameters</key>
+        <dict>
+          <key>EncryptionAlgorithm</key><string>AES-256-GCM</string>
+          <key>IntegrityAlgorithm</key><string>SHA2-384</string>
+          <key>DiffieHellmanGroup</key><integer>21</integer>
+          <key>LifeTimeInMinutes</key><integer>1440</integer>
+        </dict>
       </dict>
+
       <key>IPv4</key>
       <dict>
         <key>OverridePrimary</key>
         <integer>1</integer>
       </dict>
-      <key>PayloadDescription</key>
-      <string>Configures VPN settings</string>
-      <key>PayloadDisplayName</key>
-      <string>VPN</string>
-      <key>PayloadIdentifier</key>
-      <string>com.apple.vpn.managed.${vpn_payload_uuid}</string>
-      <key>PayloadType</key>
-      <string>com.apple.vpn.managed</string>
-      <key>PayloadUUID</key>
-      <string>${vpn_payload_uuid}</string>
-      <key>PayloadVersion</key>
-      <integer>1</integer>
+
       <key>Proxies</key>
       <dict>
         <key>HTTPEnable</key>
@@ -154,85 +196,37 @@ cat << ---EOF > ${user_home}/vpn-ios-or-mac.mobileconfig
         <key>HTTPSEnable</key>
         <integer>0</integer>
       </dict>
-      <key>UserDefinedName</key>
-      <string>${vpn_server}</string>
-      <key>VPNType</key>
-      <string>IKEv2</string>
     </dict>
+
+    <!-- User Authentication Certificate -->
     <dict>
-      <key>PayloadCertificateFileName</key>
-      <string>bastion-admin.p12</string>
-      <key>PayloadContent</key>
-      <data>${user_cert_data}</data>
-      <key>PayloadDescription</key>
-      <string>Adds a PKCS#12-formatted certificate</string>
-      <key>PayloadDisplayName</key>
-      <string>${user}'s VPN Certificate</string>
-      <key>PayloadIdentifier</key>
-      <string>com.apple.security.pkcs12.${vpn_cert_payload_uuid}</string>
-      <key>PayloadType</key>
-      <string>com.apple.security.pkcs12</string>
-      <key>PayloadUUID</key>
-      <string>${vpn_cert_payload_uuid}</string>
-      <key>PayloadVersion</key>
-      <integer>1</integer>
+      <key>PayloadDisplayName</key><string>User Certificate</string>
+      <key>PayloadDescription</key><string>Adds a PKCS#12-formatted certificate</string>
+      <key>PayloadIdentifier</key><string>com.apple.security.pkcs12.${vpn_cert_payload_uuid}</string>
+      <key>PayloadUUID</key><string>${vpn_cert_payload_uuid}</string>
+      <key>PayloadType</key><string>com.apple.security.pkcs12</string>
+      <key>PayloadVersion</key><integer>1</integer>
+      <key>PayloadCertificateFileName</key><string>${user}.p12</string>
+      <key>Password</key><string>${password}</string>
+      <key>PayloadContent</key><data>${user_cert_data}</data>
     </dict>
+
+    <!-- Root Certificate -->
+    <dict>
+      <key>PayloadDisplayName</key><string>Root CA</string>
+      <key>PayloadDescription</key><string>Adds a CA root certificate</string>
+      <key>PayloadIdentifier</key><string>com.apple.security.root.${vpn_ca_payload_uuid}</string>
+      <key>PayloadUUID</key><string>${vpn_ca_payload_uuid}</string>
+      <key>PayloadType</key><string>com.apple.security.root</string>
+      <key>PayloadVersion</key><integer>1</integer>
+      <key>PayloadCertificateFileName</key><string>bastion_ca.cer</string>
+      <key>PayloadContent</key><data>${cacert_data}</data>
+    </dict>
+
   </array>
-  <key>PayloadDisplayName</key>
-  <string>IKEv2 VPN configuration (${vpn_server})</string>
-  <key>PayloadIdentifier</key>
-  <string>com.mackerron.vpn.${payload_uuid}</string>
-  <key>PayloadRemovalDisallowed</key>
-  <false/>
-  <key>PayloadType</key>
-  <string>Configuration</string>
-  <key>PayloadUUID</key>
-  <string>${payload_uuid}</string>
-  <key>PayloadVersion</key>
-  <integer>1</integer>
 </dict>
 </plist>
 ---EOF
-
-set +e
-id $admin_user >/dev/null 2>&1
-if [[ $? -ne 0 ]]; then
-  userdel $user > /dev/null 2>&1
-  set -e
-  rm -fr $user_home
-
-  password_hash=$(mkpasswd "$password")
-  useradd $user -p $password_hash -m -d $user_home -s /bin/bash
-else
-  set -e
-fi
-
-if [[ -n $3 ]]; then
-  echo "$3" > $user_home/.ssh/authorized_keys
-
-  grep -q "^AllowUsers $user" /etc/ssh/sshd_config \
-    || echo -e "AllowUsers $user" >> /etc/ssh/sshd_config
-fi
-
-service sshd restart
-
-if [[ -e /etc/apache2 ]]; then
-
-  APACHE_USER_CONFIG=/data/users/etc/apache2
-  mkdir -p $APACHE_USER_CONFIG
-  cat << ---EOF > $APACHE_USER_CONFIG/$user.conf
-<Directory $user_home>
-  AuthType Basic
-    AuthName "Restricted Area"
-    AuthBasicProvider external
-    AuthExternal pwauth
-    Require user $user
-    Options +Indexes
-</Directory>
----EOF
-
-  systemctl restart apache2
-fi
 
 # Ensure all files under user home have correct ownership
 chown -R ${user}:${user} ${user_home}
