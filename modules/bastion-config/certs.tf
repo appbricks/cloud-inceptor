@@ -20,7 +20,7 @@ resource "tls_self_signed_cert" "root-ca" {
   private_key_pem = "${tls_private_key.root-ca-key.private_key_pem}"
 
   subject {
-    common_name         = "Local Root CA"
+    common_name         = "Root CA for ${var.vpc_name}"
     organization        = "${var.company_name}"
     organizational_unit = "${var.organization_name}"
     locality            = "${var.locality}"

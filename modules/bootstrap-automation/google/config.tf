@@ -30,6 +30,7 @@ module "config" {
 
   ssh_key_file_path = "${var.ssh_key_file_path}"
 
+  certify_bastion   = "${var.certify_bastion}"
   bastion_fqdn      = "${var.vpc_dns_zone}"
   bastion_use_fqdn  = "${var.bastion_use_fqdn}"
   bastion_public_ip = "${google_compute_address.bastion-public.address}"

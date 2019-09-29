@@ -156,6 +156,7 @@ server:
   host: ${var.bastion_public_ip}
   fqdn: ${var.bastion_fqdn}
   use_fqdn: ${var.bastion_use_fqdn}
+  certify_bastion: ${var.certify_bastion ? "yes" : "no"}
   dmz_itf_ip: ${var.bastion_dmz_itf_ip}
   lan_interfaces: '${join(",", var.bastion_nic_config)}'
   dns_resolvers: ${length(var.bastion_dns) == 0 ? local.bastion_internal_ip: var.bastion_dns}
@@ -215,6 +216,7 @@ data "template_file" "www-static-index" {
 
   vars = {
     environment = "${var.vpc_name}"
+    bastion_fqdn = "${var.bastion_fqdn}"
   }
 }
 

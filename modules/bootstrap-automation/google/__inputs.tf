@@ -31,7 +31,6 @@ variable "country" {
 #
 # Root CA key and cert to use for signing self signed certificates
 #
-
 variable "root_ca_key" {
   default = ""
 }
@@ -116,6 +115,13 @@ variable "bastion_host_name" {
 
 variable "bastion_use_fqdn" {
   default = true
+}
+
+#
+# Certify bastion host using letsencrypt certificates
+#
+variable "certify_bastion" {
+  default = false
 }
 
 #
