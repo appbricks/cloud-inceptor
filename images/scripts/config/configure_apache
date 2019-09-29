@@ -8,6 +8,53 @@ source $SCRIPT_HOME/common
 [[ ! -e /root/.apache_installed ]] || exit 0
 
 #
+# Configure server certificates
+#
+
+if [[ $config_server_certify_bastion == "yes" ]]; then
+
+  mkdir -p /etc/letsencrypt
+
+  cat << ---EOF > /etc/letsencrypt/cli.ini
+rsa-key-size = 4096
+pre-hook = /sbin/iptables -I INPUT -p tcp --dport 80 -j ACCEPT
+post-hook = /sbin/iptables -D INPUT -p tcp --dport 80 -j ACCEPT
+renew-hook = /usr/sbin/ipsec reload && /usr/sbin/ipsec secrets
+---EOF
+
+  certbot certonly \
+    --non-interactive \
+    --agree-tos \
+    --standalone \
+    --preferred-challenges http \
+    --email ${config_server_admin_user}@${config_server_fqdn} \
+    -d $config_server_fqdn
+
+  ln -f -s \
+    /etc/letsencrypt/live/${config_server_fqdn}/cert.pem \
+    /etc/ssl/certs/bastion_cert.pem
+  ln -f -s \
+    /etc/letsencrypt/live/${config_server_fqdn}/privkey.pem \
+    /etc/ssl/private/bastion_key.pem
+  ln -f -s \
+    /etc/letsencrypt/live/${config_server_fqdn}/chain.pem \
+    /etc/ssl/certs/bastion_chain.pem
+
+# Enable once AppArmor is configured on the bastion hosts
+#
+#   cat << ---EOF > /etc/apparmor.d/local/usr.lib.ipsec.charon
+# /etc/letsencrypt/archive/${config_server_fqdn}/* r,
+# ---EOF
+
+#   aa-status --enabled && invoke-rc.d apparmor reload
+
+elif [[ -e /etc/ssl/certs/bastion_ca.pem ]]; then
+  cp /etc/ssl/certs/bastion_ca.pem /etc/ssl/certs/bastion_chain.pem
+else
+  echo "ERROR! Unable to retrieve server certificates"
+fi
+
+#
 # Configure Apache2 Web Serve
 #
 
@@ -31,20 +78,7 @@ else
   redirect_https=https://$config_server_host:$web_server_https_port/
 fi
 
-if [[ ! -e /etc/ssl/certs/bastion_ca.pem ]]; then
-
-  key_country=$config_webserver_cert_country
-  key_province=$config_webserver_cert_province
-  key_city=$config_webserver_cert_city
-  key_org=$config_webserver_cert_org
-  key_cn=$config_webserver_cert_cn
-
-  openssl req -x509 -nodes -days 3650 \
-    -newkey rsa:4096 -keyout /etc/ssl/private/bastion_key.pem \
-    -out /etc/ssl/certs/bastion_cert.pem \
-    -subj "/C=${key_country}/ST=${key_province}/L=${key_city}/O=${key_org}/CN=${key_cn}"
-
-  cat << ---EOF > /etc/apache2/sites-available/bastion-web.conf
+cat << ---EOF > /etc/apache2/sites-available/bastion-web.conf
 <VirtualHost *:$web_server_http_port>
 ServerName $config_server_host
 Redirect permanent / $redirect_https
@@ -57,35 +91,7 @@ DocumentRoot /var/www/html
 SSLEngine on
 SSLCertificateFile /etc/ssl/certs/bastion_cert.pem
 SSLCertificateKeyFile /etc/ssl/private/bastion_key.pem
-
-<IfModule mod_authnz_external.c>
-AddExternalAuth pwauth /usr/sbin/pwauth
-SetExternalAuthMethod pwauth pipe
-</IfModule>
-
-# Bastion Users
-UserDir "/data/users/home/*"
-IncludeOptional "$APACHE_USER_CONFIG/*.conf"
-
-</VirtualHost>
----EOF
-
-else
-
-  cat << ---EOF > /etc/apache2/sites-available/bastion-web.conf
-<VirtualHost *:$web_server_http_port>
-ServerName $config_server_host
-Redirect permanent / $redirect_https
-</VirtualHost>
-
-<VirtualHost *:$web_server_https_port>
-ServerName $config_server_host
-DocumentRoot /var/www/html
-
-SSLEngine on
-SSLCertificateChainFile /etc/ssl/certs/bastion_ca.pem
-SSLCertificateFile /etc/ssl/certs/bastion_cert.pem
-SSLCertificateKeyFile /etc/ssl/private/bastion_key.pem
+SSLCertificateChainFile /etc/ssl/certs/bastion_chain.pem
 
 <IfModule mod_authnz_external.c>
 AddExternalAuth pwauth /usr/sbin/pwauth
@@ -98,8 +104,6 @@ IncludeOptional "$APACHE_USER_CONFIG/*.conf"
 
 </VirtualHost>
 ---EOF
-
-fi
 
 pushd /etc/apache2/mods-enabled
 [[ -e userdir.load ]] || ln -s ../mods-available/userdir.load userdir.load

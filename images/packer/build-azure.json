@@ -44,6 +44,11 @@
             "destination": "/tmp/inceptor-scripts"
         },
         {
+            "type": "file",
+            "source": "{{user `build_dir`}}/www-static-home",
+            "destination": "/tmp/www-static-home"
+        },
+        {
             "type": "shell",
             "expect_disconnect": "true",
             "inline": [
@@ -52,6 +57,7 @@
                 "sudo rm /tmp/inceptor-scripts/install_packages",
                 "sudo mv /tmp/inceptor-scripts/rc.local /etc/rc.local",
                 "sudo mv /tmp/inceptor-scripts /root/.bin",
+                "sudo mv /tmp/www-static-home/* /var/www/html",
                 "sudo rm -rf /var/lib/apt/lists/*",
                 "sudo rm -fr /tmp/*"
             ]
