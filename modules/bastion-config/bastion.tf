@@ -93,9 +93,11 @@ write_files:
   path: /root/bootstrap-vars.yml
   permissions: '0644'
 
-runcmd:
-- |
-  sudo -i -- <<INIT
+# Initial configuration script
+- path: /root/.bin/init_instance
+  permissions: '0744'
+  content: |
+    #!/bin/bash -x
     mv /root/bastion-config.yml /root/config.yml
 
     /root/.bin/mount_volume "${var.data_volume_name}" "/data" "false" 2>&1 \
@@ -143,6 +145,12 @@ runcmd:
 
     chmod 0600 /var/log/configure_*.log
     chmod 0600 /var/log/cloud-init*.log
+    touch /root/.init_instance_complete
+
+runcmd:
+- sudo -i -- <<INIT
+    [[ -e /root/.init_instance_complete ]] \
+      || nohup /root/.bin/init_instance 2>&1 | tee /var/log/init_instance.log &
   INIT
 
 USER_DATA
