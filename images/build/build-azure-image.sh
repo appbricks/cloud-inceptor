@@ -26,6 +26,12 @@ if [[ -z $ARM_SUBSCRIPTION_ID
     exit 1
 fi
 
+if [[ $1 == all ]]; then
+  locations=${location:-$(az account list-locations | jq -r '.[].name')}  
+else
+  locations=${1:-$(az group show --name $ARM_DEFAULT_RESOURCE_GROUP | jq -r .location)}
+fi
+
 set -euo pipefail
 az login --service-principal \
   --username "$ARM_CLIENT_ID" \
@@ -34,7 +40,6 @@ az login --service-principal \
 
 echo "Logged into Azure..."
 
-location=$(az group show --name $ARM_DEFAULT_RESOURCE_GROUP | jq -r .location)
 image_publisher=$SOURCE_IMAGE_PUBLISHER
 image_offer=$SOURCE_IMAGE_TYPE
 image_sku=$SOURCE_IMAGE_VERSION
@@ -75,7 +80,13 @@ function azure::build_image() {
     cd -
 }
 
-echo "Building image."
-azure::build_image "$location" \
-  "$BUILD_DIR/packer/build-azure.json" 2>&1 \
-  | tee $LOG_DIR/build-azure.log
+for l in $(echo "$locations"); do
+
+  echo "Building image for location $l in resource group $ARM_DEFAULT_RESOURCE_GROUP."
+  azure::build_image "$l" \
+    "$BUILD_DIR/packer/build-azure.json" 2>&1 \
+    | tee $LOG_DIR/build-azure-$l.log &
+done
+
+# Wait for all parallel jobs to finish
+wait
