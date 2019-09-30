@@ -32,6 +32,7 @@ function apply_config() {
 
   # Setup IPSec Keys
   cp /etc/ssl/certs/bastion_ca.pem /etc/ipsec.d/cacerts/
+  cp /etc/ssl/certs/bastion_chain.pem /etc/ipsec.d/cacerts/
   cp /etc/ssl/certs/bastion_cert.pem /etc/ipsec.d/certs/
   cp /etc/ssl/private/bastion_key.pem /etc/ipsec.d/private/
 

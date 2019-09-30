@@ -67,8 +67,12 @@ IPSECVPN_CONFIG=$IPSECVPN_DATA_HOME/etc
 
 source $IPSECVPN_CONFIG/serverinfo
 
-cacert_data=$(cat /etc/ssl/certs/bastion_ca.pem | base64 -w 0)
-cacert_cn=$(openssl x509 -in /etc/ssl/certs/bastion_ca.pem -text | awk -F' = ' '/Subject: /{ print $7 }')
+cacert_cn=$(openssl x509 -in /etc/ssl/certs/bastion_ca.pem -text \
+  | awk -F' = ' '/Subject: /{ print gensub(/^(\s*).*(CN = )(.*)$/, "\\3", "g", $0) }')
+
+server_cacert_data=$(cat /etc/ssl/certs/bastion_chain.pem | base64 -w 0)
+server_cacert_cn=$(openssl x509 -in /etc/ssl/certs/bastion_chain.pem -text \
+  | awk -F' = ' '/Subject: /{ print gensub(/^(\s*).*(CN = )(.*)$/, "\\3", "g", $0) }')
 
 # Create user's authentication certificate
 user_key_der_path=/etc/ipsec.d/private/${user}.der
@@ -135,7 +139,7 @@ cat << ---EOF > ${user_home}/${vpn_server_description}.mobileconfig
         <key>RemoteAddress</key><string>${vpn_server}</string>
         <key>RemoteIdentifier</key><string>${vpn_server}</string>
 				<key>ServerCertificateCommonName</key><string>${vpn_server}</string>
-				<key>ServerCertificateIssuerCommonName</key><string>${cacert_cn}</string>        
+				<key>ServerCertificateIssuerCommonName</key><string>${server_cacert_cn}</string>        
 
         <!-- Identifier must match CN of user's certificate for certificate based user authentication -->
         <key>LocalIdentifier</key><string>${user}</string>
@@ -211,16 +215,16 @@ cat << ---EOF > ${user_home}/${vpn_server_description}.mobileconfig
       <key>PayloadContent</key><data>${user_cert_data}</data>
     </dict>
 
-    <!-- Root Certificate -->
+    <!-- Server Certificate Chain -->
     <dict>
-      <key>PayloadDisplayName</key><string>Root CA</string>
-      <key>PayloadDescription</key><string>Adds a CA root certificate</string>
+      <key>PayloadDisplayName</key><string>Server CA</string>
+      <key>PayloadDescription</key><string>Adds a CA root certificate and/or chain</string>
       <key>PayloadIdentifier</key><string>com.apple.security.root.${vpn_ca_payload_uuid}</string>
       <key>PayloadUUID</key><string>${vpn_ca_payload_uuid}</string>
       <key>PayloadType</key><string>com.apple.security.root</string>
       <key>PayloadVersion</key><integer>1</integer>
       <key>PayloadCertificateFileName</key><string>bastion_ca.cer</string>
-      <key>PayloadContent</key><data>${cacert_data}</data>
+      <key>PayloadContent</key><data>${server_cacert_data}</data>
     </dict>
 
   </array>
