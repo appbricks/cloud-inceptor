@@ -3,23 +3,43 @@
 set -e
 
 if [[ `whoami` != "root" ]]; then 
-    echo -e "\nThis script needs to be run as root.\n"
-    exit 1
+  echo -e "\nThis script needs to be run as root.\n"
+  exit 1
 fi
 
 if [[ -z "$1" ]]; then
-    echo -e "\nUsage: create_vpn_user user [ password ]\n"
-    exit 1
+  echo -e "\nUsage: create_vpn_user user [ password ]\n"
+  exit 1
 fi
 
 user=$1
+password=$2
 user_home=/data/users/home/$user
 
-if [[ -z "$2" && ! -e $user_home ]]; then
-    echo -e "\nHome directory for $user does not exist. Please"
-    echo -e "create the user or pass the password as the second"
-    echo -e "argument to this script to create a new user.\n"
-    exit 1
+if [[ -z "$password" && ! -e $user_home ]]; then
+  echo -e "\nHome directory for $user does not exist. Please"
+  echo -e "create the user or pass the password as the second"
+  echo -e "argument to this script to create a new user.\n"
+  exit 1
+fi
+
+if [[ -n $password ]]; then
+  set +e
+  userdel $user > /dev/null 2>&1
+  set -e
+  rm -fr $user_home
+
+  password_hash=$(mkpasswd "$password")
+  useradd $user -p $password_hash -m -d $user_home -s /bin/bash
+fi
+
+if [[ -n $3 ]]; then
+  echo "$3" > $user_home/.ssh/authorized_keys
+
+  grep -q "^AllowUsers $user" /etc/ssh/sshd_config \
+    || echo -e "AllowUsers $user" >> /etc/ssh/sshd_config
+
+  service sshd restart
 fi
 
 rm -fr /etc/openvpn/users/${user}
@@ -55,13 +75,123 @@ echo -e "reneg-sec 0" >> "$dest_dir/client.conf"
 
 popd
 
+case "$vpn_auth_strategy" in
+  google_mfa)
+    google-authenticator -f -t -d -r 3 -R 30 -w 8 -l "${user}@${vpn_server_domain}" -s $user_home/.google_authenticator
+    cp $user_home/.google_authenticator /etc/openvpn/users/${user}/gauth.secret
+    chown ubuntu:ubuntu /etc/openvpn/users/${user}/gauth.secret
+    ;;
+  *)
+    ;;
+esac
+
 pushd /etc/openvpn/users/${user}
 
+#
+# Create mobileconfig file for IOS
+#
+
+# Retrieve keys from client conf
+IFS=$'\n'
+client_conf=( $(cat client/client.conf | awk '/^[a-zA-Z].*/{ print $0 }') )
+unset IFS
+
+payload_uuid=$(uuidgen)
+vpn_payload_uuid=$(uuidgen)
+vpn_cert_payload_uuid=$(uuidgen)
+vpn_ca_payload_uuid=$(uuidgen)
+
+mobileconfig_file=${user_home}/${vpn_server_description}.mobileconfig
+cat << ---EOF > $mobileconfig_file
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE plist PUBLIC '-//Apple//DTD PLIST 1.0//EN' 'http://www.apple.com/DTDs/PropertyList-1.0.dtd'>
+<plist version='1.0'>
+<dict>
+  <key>PayloadDisplayName</key><string>OpenVPN - ${vpn_server_description}</string>
+  <key>PayloadType</key><string>Configuration</string>
+  <key>PayloadIdentifier</key><string>io.appbricks.openvpn.${payload_uuid}</string>
+  <key>PayloadUUID</key><string>${payload_uuid}</string>
+  <key>PayloadVersion</key><integer>1</integer>
+  <key>PayloadRemovalDisallowed</key><false/>  
+  <key>PayloadContent</key>
+  <array>
+
+    <!-- OpenVPN Configuration -->
+    <dict>
+      <key>PayloadDisplayName</key><string>VPN Configuration (${vpn_server})</string>
+      <key>PayloadDescription</key><string>Configures OpenVPN settings</string>
+      <key>PayloadType</key><string>com.apple.vpn.managed</string>
+      <key>PayloadIdentifier</key><string>com.apple.vpn.managed.${vpn_payload_uuid}</string>
+      <key>PayloadUUID</key><string>${vpn_payload_uuid}</string>
+      <key>PayloadVersion</key><integer>1</integer>
+      <key>UserDefinedName</key><string>${vpn_server}</string>
+      <key>VPNType</key><string>VPN</string>
+      <key>VPNSubType</key><string>net.openvpn.connect.app</string>
+
+      <!-- IOS VPN Settings -->
+      <key>UserDefinedName</key><string>${user}@${vpn_server}</string>
+      <key>VPN</key>
+      <dict>
+        <key>AuthenticationMethod</key><string>Password</string>
+        <key>RemoteAddress</key><string>DEFAULT</string>
+      </dict>
+      
+      <!-- OpenVPN Client App Configuration -->
+      <key>VendorConfig</key>
+      <dict>
+---EOF
+
+for client_conf in "${client_conf[@]}"; do
+
+  key=$(echo "$client_conf" | cut -d " " -f1)
+  value=$(echo "$client_conf" | cut -d " " -f2-)
+
+  case $key in
+    $value)
+      echo "        <key>$key</key><string>NOARGS</string>" >> $mobileconfig_file
+      ;;
+    ca | cert | key)
+      echo "        <key>$key</key><string>$(cat client/$value | awk '$1=$1' ORS='\\n')</string>" >> $mobileconfig_file
+      ;;
+    *)
+      echo "        <key>$key</key><string>$value</string>" >> $mobileconfig_file
+      ;;
+  esac
+done
+
+cat << ---EOF >> $mobileconfig_file
+      </dict>
+
+      <key>IPv4</key>
+      <dict>
+        <key>OverridePrimary</key>
+        <integer>0</integer>
+      </dict>
+
+      <key>Proxies</key>
+      <dict>
+        <key>HTTPEnable</key>
+        <integer>0</integer>
+        <key>HTTPSEnable</key>
+        <integer>0</integer>
+      </dict>      
+    </dict>
+  </array>
+</dict>
+</plist>
+---EOF
+
+#
 # Create Tunnelblick configuration for OSX
+#
+
 mv client "$vpn_server_description.tblk"
 zip -r /etc/openvpn/users/${user}/openvpn-config.tunnelblick.zip "$vpn_server_description.tblk"
 
+#
 # Create OpenVPN client configuration for windows
+#
+
 mv "$vpn_server_description.tblk" "$vpn_server_description"
 mv "$vpn_server_description/client.conf" "$vpn_server_description/$vpn_server_description.ovpn"
 zip -r /etc/openvpn/users/${user}/openvpn-config.client.zip "$vpn_server_description"
@@ -70,55 +200,28 @@ rm -fr "$vpn_server_description"
 
 popd
 
-if [[ -n $2 ]]; then
-    set +e
-    userdel $user > /dev/null 2>&1
-    set -e
-    rm -fr $user_home
-
-    password=$(mkpasswd "$2")
-    useradd $user -p $password -m -d $user_home -s /bin/bash
-fi
-
-if [[ -n $3 ]]; then
-    echo "$3" > $user_home/.ssh/authorized_keys
-
-    grep -q "^AllowUsers $user" /etc/ssh/sshd_config \
-        || echo -e "AllowUsers $user" >> /etc/ssh/sshd_config
-fi
-
-service sshd restart
-
-case "$vpn_auth_strategy" in
-    google_mfa)
-        google-authenticator -f -t -d -r 3 -R 30 -w 8 -l "${user}@${vpn_server_domain}" -s $user_home/.google_authenticator
-        cp $user_home/.google_authenticator /etc/openvpn/users/${user}/gauth.secret
-        chown ubuntu:ubuntu /etc/openvpn/users/${user}/gauth.secret
-        ;;
-    *)
-        ;;
-esac
-
 cp /etc/openvpn/users/${user}/*.zip $user_home
 cp /var/lib/openvpn/clients/openvpn-install-*.exe $user_home
+cp /var/www/html/directory-listing/htaccess.txt $user_home/.htaccess
 chown -R $user:$user $user_home
 
 if [[ -e /etc/apache2 ]]; then
 
-    APACHE_USER_CONFIG=/data/users/etc/apache2
-    mkdir -p $APACHE_USER_CONFIG
-    cat << ---EOF > ${APACHE_USER_CONFIG}/$user.conf
+  APACHE_USER_CONFIG=/data/users/etc/apache2
+  mkdir -p $APACHE_USER_CONFIG
+  cat << ---EOF > ${APACHE_USER_CONFIG}/$user.conf
 <Directory $user_home>
-    AuthType Basic
-    AuthName "Restricted Area"
-    AuthBasicProvider external
-    AuthExternal pwauth
-    Require user $user
-    Options +Indexes
+  AuthType Basic
+  AuthName "Restricted Area"
+  AuthBasicProvider external
+  AuthExternal pwauth
+  AllowOverride All
+  Require user $user
+  Options +Indexes
 </Directory>
 ---EOF
 
-    systemctl restart apache2
+  systemctl restart apache2
 fi
 
 # Backup all system user files
