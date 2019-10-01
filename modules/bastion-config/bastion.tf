@@ -98,6 +98,16 @@ write_files:
   permissions: '0744'
   content: |
     #!/bin/bash -x
+
+    echo "waiting 180 seconds for cloud-init to finish boot"
+    timeout 180 /bin/bash -c \
+      'until stat /var/lib/cloud/instance/boot-finished 2>/dev/null; do echo waiting ...; sleep 10; done'
+
+    if [[ $? -ne 0 ]]; then
+      echo "Timed out waiting for cloud-init to complete boot phase."
+      exit 1
+    fi
+
     mv /root/bastion-config.yml /root/config.yml
 
     /root/.bin/mount_volume "${var.data_volume_name}" "/data" "false" 2>&1 \
