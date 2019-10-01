@@ -2,6 +2,10 @@
 # External variables
 #
 
+variable "region" {
+  default = "eu-central-1"
+}
+
 variable "smtp_relay_host" {
   default = ""
 }
@@ -41,12 +45,12 @@ module "bootstrap" {
   #
   # VPC details
   #
-  region = "eu-central-14"
+  region = "${var.region}"
 
-  vpc_name = "inceptor"
+  vpc_name = "inceptor-${var.region}"
 
   # DNS Name for VPC will be 'test.aws.appbricks.cloud'
-  vpc_dns_zone = "test.aws.appbricks.cloud"
+  vpc_dns_zone = "test-${var.region}.aws.appbricks.cloud"
 
   # Local DNS zone. This could also be the same as the public
   # which will enable setting up a split DNS of the public zone
@@ -57,13 +61,12 @@ module "bootstrap" {
   ssh_key_file_path = "${path.module}"
 
   # VPN
-  vpn_type = "ipsec"
-  # vpn_type = "openvpn"
-
+  # vpn_type = "ipsec"
+  vpn_type = "openvpn"
   ovpn_server_port = "2295"
-
-  # Default for IPSec
   vpn_tunnel_all_traffic = "yes"
+
+  vpn_users = "user1|P@ssw0rd1,user2|P@ssw0rd2"
 
   # Concourse Port
   concourse_server_port = "8080"
@@ -73,6 +76,9 @@ module "bootstrap" {
 
   bastion_host_name = "inceptor"
   bastion_use_fqdn = true
+
+  # Issue certificates from letsencrypt.org
+  certify_bastion = true
 
   # If the SMTP relay settings are provided then
   # and SMTP server will be setup which will send
