@@ -35,26 +35,8 @@ if [[ -n $3 ]]; then
 
   grep -q "^AllowUsers $user" /etc/ssh/sshd_config \
     || echo -e "AllowUsers $user" >> /etc/ssh/sshd_config
-fi
 
-service sshd restart
-
-if [[ -e /etc/apache2 ]]; then
-
-  APACHE_USER_CONFIG=/data/users/etc/apache2
-  mkdir -p $APACHE_USER_CONFIG
-  cat << ---EOF > $APACHE_USER_CONFIG/$user.conf
-<Directory $user_home>
-  AuthType Basic
-    AuthName "Restricted Area"
-    AuthBasicProvider external
-    AuthExternal pwauth
-    Require user $user
-    Options +Indexes
-</Directory>
----EOF
-
-  systemctl restart apache2
+  service sshd restart
 fi
 
 #
@@ -103,21 +85,22 @@ openssl pkcs12 -export \
   -out ${user_home}/${user}.p12
 user_cert_data=$(cat ${user_home}/${user}.p12 | base64 -w 0)
 
+# Create mobileconfig file for ios and osx
+
 payload_uuid=$(uuidgen)
 vpn_payload_uuid=$(uuidgen)
 vpn_cert_payload_uuid=$(uuidgen)
 vpn_ca_payload_uuid=$(uuidgen)
 
-# Create mobileconfig file for ios and osx
 cat << ---EOF > ${user_home}/${vpn_server_description}.mobileconfig
 <?xml version='1.0' encoding='UTF-8'?>
 <!DOCTYPE plist PUBLIC '-//Apple//DTD PLIST 1.0//EN' 'http://www.apple.com/DTDs/PropertyList-1.0.dtd'>
 <plist version='1.0'>
 <dict>
   <key>PayloadDisplayName</key><string>IKEv2 VPN - ${vpn_server_description}</string>
-  <key>PayloadIdentifier</key><string>com.mackerron.vpn.${payload_uuid}</string>
-  <key>PayloadUUID</key><string>${payload_uuid}</string>
   <key>PayloadType</key><string>Configuration</string>
+  <key>PayloadIdentifier</key><string>io.appbricks.ikev2vpn.${payload_uuid}</string>
+  <key>PayloadUUID</key><string>${payload_uuid}</string>
   <key>PayloadVersion</key><integer>1</integer>
   <key>PayloadRemovalDisallowed</key><false/>  
   <key>PayloadContent</key>
@@ -126,10 +109,10 @@ cat << ---EOF > ${user_home}/${vpn_server_description}.mobileconfig
     <!-- VPN Configuration -->
     <dict>
       <key>PayloadDisplayName</key><string>VPN Configuration (${vpn_server})</string>
-      <key>PayloadDescription</key><string>Configures VPN settings</string>
+      <key>PayloadDescription</key><string>Configures IKEv2/IPSec VPN settings</string>
+      <key>PayloadType</key><string>com.apple.vpn.managed</string>
       <key>PayloadIdentifier</key><string>com.apple.vpn.managed.${vpn_payload_uuid}</string>
       <key>PayloadUUID</key><string>${vpn_payload_uuid}</string>
-      <key>PayloadType</key><string>com.apple.vpn.managed</string>
       <key>PayloadVersion</key><integer>1</integer>
       <key>UserDefinedName</key><string>${vpn_server}</string>
       <key>VPNType</key><string>IKEv2</string>
@@ -206,9 +189,9 @@ cat << ---EOF > ${user_home}/${vpn_server_description}.mobileconfig
     <dict>
       <key>PayloadDisplayName</key><string>User Certificate</string>
       <key>PayloadDescription</key><string>Adds a PKCS#12-formatted certificate</string>
+      <key>PayloadType</key><string>com.apple.security.pkcs12</string>
       <key>PayloadIdentifier</key><string>com.apple.security.pkcs12.${vpn_cert_payload_uuid}</string>
       <key>PayloadUUID</key><string>${vpn_cert_payload_uuid}</string>
-      <key>PayloadType</key><string>com.apple.security.pkcs12</string>
       <key>PayloadVersion</key><integer>1</integer>
       <key>PayloadCertificateFileName</key><string>${user}.p12</string>
       <key>Password</key><string>${password}</string>
@@ -219,9 +202,9 @@ cat << ---EOF > ${user_home}/${vpn_server_description}.mobileconfig
     <dict>
       <key>PayloadDisplayName</key><string>Server CA</string>
       <key>PayloadDescription</key><string>Adds a CA root certificate and/or chain</string>
+      <key>PayloadType</key><string>com.apple.security.root</string>
       <key>PayloadIdentifier</key><string>com.apple.security.root.${vpn_ca_payload_uuid}</string>
       <key>PayloadUUID</key><string>${vpn_ca_payload_uuid}</string>
-      <key>PayloadType</key><string>com.apple.security.root</string>
       <key>PayloadVersion</key><integer>1</integer>
       <key>PayloadCertificateFileName</key><string>bastion_ca.cer</string>
       <key>PayloadContent</key><data>${server_cacert_data}</data>
@@ -232,8 +215,27 @@ cat << ---EOF > ${user_home}/${vpn_server_description}.mobileconfig
 </plist>
 ---EOF
 
-# Ensure all files under user home have correct ownership
+cp /var/www/html/directory-listing/htaccess.txt $user_home/.htaccess
 chown -R ${user}:${user} ${user_home}
+
+if [[ -e /etc/apache2 ]]; then
+  
+  APACHE_USER_CONFIG=/data/users/etc/apache2
+  mkdir -p $APACHE_USER_CONFIG
+  cat << ---EOF > ${APACHE_USER_CONFIG}/$user.conf
+<Directory $user_home>
+  AuthType Basic
+  AuthName "Restricted Area"
+  AuthBasicProvider external
+  AuthExternal pwauth
+  AllowOverride All
+  Require user $user
+  Options +Indexes
+</Directory>
+---EOF
+
+  systemctl restart apache2
+fi
 
 # Backup all system user files
 cp /etc/passwd /data/users/etc
