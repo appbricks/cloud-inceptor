@@ -1,16 +1,23 @@
 #!/bin/bash
 
-attached_device_name=$1
-mount_directory=$2
-world_readable=$3
+set -xo pipefail
 
-if [[ -z "${attached_device_name}" 
-  || -z "${mount_directory}" 
-  || -z "${world_readable}" ]]; then 
+SCRIPT_HOME=$(cd $(dirname "$(ls -l $0 | awk '{ print $NF }')") && pwd)
+source $SCRIPT_HOME/common
 
-  echo -e "\nERROR! Missing arguments.\n\n./mount-volume.sh <attached_device_name> <mount_directory> <world_readable=true/false>\n"
+[[ ! -e /usr/local/etc/.data_volume_mounted \
+  && -n "$config_data_attached_device_name" ]] || exit 0
+
+if [[ -z "$config_data_mount_directory" \
+  || -z "$config_data_world_readable" ]]; then
+
+  echo "ERROR! Configuration values 'mount_directory' and 'world_readable' not provided."
   exit 1
 fi
+
+attached_device_name=$config_data_attached_device_name
+mount_directory=$config_data_mount_directory
+world_readable=$config_data_world_readable
 
 # Mount and format the data volume if available and unformatted
 
@@ -28,19 +35,23 @@ done
 
 if [[ $device == /dev/${attached_device_name} ]]; then
 
-  sed -i 's|^/dev/${attached_device_name}\s*${mount_directory}\s*.*$||' /etc/fstab
+  sed -i "s|^/dev/${attached_device_name}\s*${mount_directory}\s*.*$||" /etc/fstab
 
   # Ensure mount point free
+  set +e
   umount ${mount_directory} > /dev/null 2>&1  
   tune2fs -l $device > /dev/null 2>&1
   if [[ $? -eq 1 ]]; then
+    set -e
     # Format new volume
     mkfs.ext4 $device
+  else
+    set -e
   fi
 
   # Mount data volume
   mkdir -p ${mount_directory}
-  echo -e "\n$device\t${mount_directory}\text4\tdefaults\t0 1" >> /etc/fstab
+  echo -e "\n${device}\t${mount_directory}\text4\tdefaults\t0 1" >> /etc/fstab
   mount -a
 
   if [[ ${world_readable} == true ]]; then
@@ -49,3 +60,6 @@ if [[ $device == /dev/${attached_device_name} ]]; then
 else
   echo "WARNING! Timed out waiting for data volume. Proceeding as a new install."
 fi
+
+set +x
+touch /usr/local/etc/.data_volume_mounted

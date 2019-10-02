@@ -56,7 +56,7 @@ write_files:
 # Service configuration
 - encoding: gzip+base64
   content: ${base64gzip(data.template_file.bastion-config.rendered)}
-  path: /root/bastion-config.yml
+  path: /usr/local/etc/bastion-config.yml
   permissions: '0744'
 
 # Web Server SSL certificates
@@ -93,74 +93,10 @@ write_files:
   path: /root/bootstrap-vars.yml
   permissions: '0644'
 
-# Initial configuration script
-- path: /root/.bin/init_instance
-  permissions: '0744'
-  content: |
-    #!/bin/bash -x
-
-    echo "waiting 180 seconds for cloud-init to finish boot"
-    timeout 180 /bin/bash -c \
-      'until stat /var/lib/cloud/instance/boot-finished 2>/dev/null; do echo waiting ...; sleep 10; done'
-
-    if [[ $? -ne 0 ]]; then
-      echo "Timed out waiting for cloud-init to complete boot phase."
-      exit 1
-    fi
-
-    mv /root/bastion-config.yml /root/config.yml
-
-    /root/.bin/mount_volume "${var.data_volume_name}" "/data" "false" 2>&1 \
-      | tee -a /var/log/mount_volume.log
-
-    /root/.bin/configure_users 2>&1 \
-      | tee -a /var/log/configure_users.log \
-      || echo "ERROR! Script configure_users exited with error: $?"
-
-    /root/.bin/configure_network 2>&1 \
-      | tee -a /var/log/configure_network.log \
-      || echo "ERROR! Script configure_network exited with error: $?"
-
-    /root/.bin/configure_powerdns 2>&1 \
-      | tee -a /var/log/configure_powerdns.log \
-      || echo "ERROR! Script configure_powerdns exited with error: $?"
-
-    /root/.bin/configure_smtp 2>&1 \
-      | tee -a /var/log/configure_smtp.log \
-      || echo "ERROR! Script configure_smtp exited with error: $?"
-
-    /root/.bin/configure_apache 2>&1 \
-      | tee -a /var/log/configure_apache.log \
-      || echo "ERROR! Script configure_apache exited with error: $?"
-
-    /root/.bin/configure_openvpn 2>&1 \
-      | tee -a /var/log/configure_openvpn.log \
-      || echo "ERROR! Script configure_openvpn exited with error: $?"
-
-    /root/.bin/configure_ipsecvpn 2>&1 \
-      | tee -a /var/log/configure_ipsecvpn.log \
-      || echo "ERROR! Script configure_ipsecvpn exited with error: $?"
-
-    /root/.bin/configure_squidproxy 2>&1 \
-      | tee -a /var/log/configure_squidproxy.log \
-      || echo "ERROR! Script configure_squidproxy exited with error: $?"
-
-    /root/.bin/configure_docker 2>&1 \
-      | tee -a /var/log/configure_docker.log \
-      || echo "ERROR! Script configure_docker exited with error: $?"
-
-    /root/.bin/configure_concourse 2>&1 \
-      | tee -a /var/log/configure_concourse.log \
-      || echo "ERROR! Script configure_concourse exited with error: $?"
-
-    chmod 0600 /var/log/configure_*.log
-    chmod 0600 /var/log/cloud-init*.log
-    touch /root/.init_instance_complete
-
 runcmd:
 - sudo -i -- <<INIT
     [[ -e /root/.init_instance_complete ]] \
-      || nohup /root/.bin/init_instance 2>&1 | tee /var/log/init_instance.log &
+      || nohup /usr/local/lib/cloud-inceptor/init_instance 2>&1 | tee /var/log/init_instance.log &
   INIT
 
 USER_DATA
@@ -184,6 +120,11 @@ server:
   admin_passwd: ${random_string.bastion-admin-password.result}
   admin_ssh_public_key: ${tls_private_key.bastion-ssh-key.public_key_openssh}
   docker_mount_path: /data
+
+data:
+  attached_device_name: ${var.data_volume_name}
+  mount_directory: /data
+  world_readable: false
 
 powerdns:
   dns_zones: ${join(" ", var.vpc_internal_dns_zones)}

@@ -126,16 +126,18 @@ systemctl stop openvpn
 systemctl disable openvpn
 
 tblk_version="3.7.9a_build_5321"
-openvpn_version="2.4.7-I607"
+openvpn_version="2.4.7"
+openvpn_build="I607"
+openvpn_winsvr_build="I603"
 
 mkdir -p /var/lib/openvpn/clients
 curl -L https://tunnelblick.net/release/Tunnelblick_${tblk_version}.dmg \
   -o /var/lib/openvpn/clients/tunnelblick_osx.dmg
-curl -L https://swupdate.openvpn.org/community/releases/openvpn-install-${openvpn_version}-Win7.exe \
+curl -L https://swupdate.openvpn.org/community/releases/openvpn-install-${openvpn_version}-${openvpn_build}-Win7.exe \
   -o /var/lib/openvpn/clients/openvpn-install-win7.exe
-curl -L https://swupdate.openvpn.org/community/releases/openvpn-install-${openvpn_version}-Win10.exe \
+curl -L https://swupdate.openvpn.org/community/releases/openvpn-install-${openvpn_version}-${openvpn_build}-Win10.exe \
   -o /var/lib/openvpn/clients/openvpn-install-win10.exe
-curl -L https://swupdate.openvpn.org/community/releases/openvpn-install-${openvpn_version}-I603.exe \
+curl -L https://swupdate.openvpn.org/community/releases/openvpn-install-${openvpn_version}--${openvpn_winsvr_build}.exe \
   -o /var/lib/openvpn/clients/openvpn-install-winsvr2016.exe
 
 # Apache Web Server
@@ -178,5 +180,17 @@ bosh_version=6.0.0
 curl -L https://github.com/cloudfoundry/bosh-cli/releases/download/v${bosh_version}/bosh-cli-${bosh_version}-linux-amd64 \
   -o /usr/local/bin/bosh
 chmod +x /usr/local/bin/bosh
+
+# Setup cloud-inceptor initialization scripts
+rm /tmp/inceptor-scripts/install_packages
+mv /tmp/inceptor-scripts/rc.local /etc/rc.local
+
+mv /tmp/inceptor-scripts /usr/local/lib/cloud-inceptor
+
+# Copy static web content
+mv /tmp/www-static-home/* /var/www/html
+
+rm -rf /var/lib/apt/lists/*
+rm -fr /tmp/*
 
 set +xe

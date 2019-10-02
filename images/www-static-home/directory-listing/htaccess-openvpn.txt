@@ -14,12 +14,22 @@ Options +Indexes
   IndexHeadInsert "<meta name='viewport' content='width=device-width, initial-scale=1'><meta http-equiv='X-UA-Compatible' content='IE=edge'>"
 
   HeaderName "/directory-listing/header.html"
-  ReadmeName "/directory-listing/footer.html"
+  ReadmeName "/directory-listing/footer-openvpn.html"
   IndexStyleSheet "/directory-listing/table-noheader.css"
 
   # Registering icons
   # Default icon
   DefaultIcon "/directory-listing/icons/unknown.svg"
+
+  # Inceptor VPN config and installer icons
+  # Inceptor VPN config and installer icons
+  AddIcon "/directory-listing/icons/tunnelblick.png" openvpn-config.tunnelblick.zip
+  AddIcon "/directory-listing/icons/openvpn.svg" openvpn-config.client.zip
+  AddIcon "/directory-listing/icons/ios-logo.svg" *.mobileconfig
+  AddIcon "/directory-listing/icons/osx-dmg.png" *.dmg
+  AddIcon "/directory-listing/icons/win7-msi.png" *-install-win7.exe
+  AddIcon "/directory-listing/icons/win10-msi.png" *-install-win10.exe
+  AddIcon "/directory-listing/icons/win10-msi.png" *-install-winsvr*.exe
 
   # Some generic icons
   AddIcon "/directory-listing/icons/blank.svg" ^^BLANKICON^^
@@ -62,11 +72,5 @@ Options +Indexes
   AddIconByType (IMG,/directory-listing/icons/img.svg) image/*
   AddIconByType (SND,/directory-listing/icons/audio.svg) audio/*
   AddIconByType (VID,/directory-listing/icons/video.svg) video/*
-
-  # Inceptor VPN config and installer icons
-  AddIcon "/directory-listing/icons/tunnelblick.png" openvpn-config.tunnelblick.zip
-  AddIcon "/directory-listing/icons/openvpn.svg" openvpn-config.client.zip
-  AddIcon "/directory-listing/icons/ios-logo.svg" *.mobileconfig
-  AddIcon "/directory-listing/icons/msi.png" *-install-win*.exe
 
 </IfModule>

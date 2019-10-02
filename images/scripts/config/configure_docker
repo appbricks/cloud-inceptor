@@ -5,7 +5,7 @@ set -exo pipefail
 SCRIPT_HOME=$(cd $(dirname "$(ls -l $0 | awk '{ print $NF }')") && pwd)
 source $SCRIPT_HOME/common
 
-[[ ! -e /root/.docker_installed ]] || exit 0
+[[ ! -e /usr/local/etc/.docker_installed ]] || exit 0
 
 #
 # Configure Docker daemon
@@ -46,4 +46,4 @@ set -e
 systemctl restart docker
 
 set +ex
-touch /root/.docker_installed
+touch /usr/local/etc/.docker_installed

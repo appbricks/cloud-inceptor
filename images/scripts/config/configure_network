@@ -5,7 +5,7 @@ set -exo pipefail
 SCRIPT_HOME=$(cd $(dirname "$(ls -l $0 | awk '{ print $NF }')") && pwd)
 source $SCRIPT_HOME/common
 
-[[ ! -e /root/.network_installed ]] || exit 0
+[[ ! -e /usr/local/etc/.network_installed ]] || exit 0
 
 if [[ -z $config_server_dmz_itf_ip ]]; then
   exit 0
@@ -303,4 +303,4 @@ if [[ $config_server_enable_dhcpd == true ]]; then
 fi
 
 set +ex
-touch /root/.network_installed
+touch /usr/local/etc/.network_installed

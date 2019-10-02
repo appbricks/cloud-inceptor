@@ -5,7 +5,7 @@ set -exo pipefail
 SCRIPT_HOME=$(cd $(dirname "$(ls -l $0 | awk '{ print $NF }')") && pwd)
 source $SCRIPT_HOME/common
 
-[[ ! -e /root/.users_installed ]] || exit 0
+[[ ! -e /usr/local/etc/.users_installed ]] || exit 0
 
 #
 # Configure Users and SSH Access
@@ -60,4 +60,4 @@ fi
 sed -i 's/^mesg n || true$/tty -s \&\& mesg n/' /root/.profile
 
 set +ex
-touch /root/.users_installed
+touch /usr/local/etc/.users_installed

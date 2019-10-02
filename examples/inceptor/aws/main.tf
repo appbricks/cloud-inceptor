@@ -3,7 +3,7 @@
 #
 
 variable "region" {
-  default = "eu-central-1"
+  default = "ap-south-1"
 }
 
 variable "smtp_relay_host" {
@@ -110,7 +110,7 @@ PIPELINE_VARS
 #
 terraform {
   backend "s3" {
-    bucket = "tfstate-eu-central-1"
+    bucket = "tfstate-ap-south-1"
     key    = "test/cloud-inceptor"
   }
 }

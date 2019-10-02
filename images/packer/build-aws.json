@@ -33,15 +33,11 @@
         {
             "type": "shell",
             "expect_disconnect": "true",
-            "inline": [
-                "sudo chmod 0755 /tmp/inceptor-scripts/*",
-                "sudo /tmp/inceptor-scripts/install_packages",
-                "sudo rm /tmp/inceptor-scripts/install_packages",
-                "sudo mv /tmp/inceptor-scripts/rc.local /etc/rc.local",
-                "sudo mv /tmp/inceptor-scripts /root/.bin",
-                "sudo mv /tmp/www-static-home/* /var/www/html",
-                "sudo rm -rf /var/lib/apt/lists/*",
-                "sudo rm -fr /tmp/*"
+            "inline_shebang": "/bin/bash -x",
+            "execute_command": "chmod +x {{ .Path }}; {{ .Vars }} sudo -E sh '{{ .Path }}'",
+            "inline": [ 
+                "chmod +x /tmp/inceptor-scripts/*",
+                "/tmp/inceptor-scripts/install_packages" 
             ]
         }
     ]

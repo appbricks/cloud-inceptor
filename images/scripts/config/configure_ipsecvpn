@@ -5,7 +5,7 @@ set -exo pipefail
 SCRIPT_HOME=$(cd $(dirname "$(ls -l $0 | awk '{ print $NF }')") && pwd)
 source $SCRIPT_HOME/common
 
-[[ ! -e /root/.ipsecvpn_installed ]] || exit 0
+[[ ! -e /usr/local/etc/.ipsecvpn_installed ]] || exit 0
 
 if [[ "$config_vpn_type" != "ipsec" ]]; then
   echo "Skipping VPN setup as no VPN configuration found."
@@ -62,7 +62,7 @@ function configure_ipsecvpn() {
   echo "export vpn_server_cert_country=\"$config_vpn_vpn_cert_country\"" >> $IPSECVPN_CONFIG/serverinfo
   echo "export vpn_server_cert_org=\"$config_vpn_vpn_cert_org\"" >> $IPSECVPN_CONFIG/serverinfo
 
-  if [[ -e /root/.powerdns_installed ]]; then
+  if [[ -e /usr/local/etc/.powerdns_installed ]]; then
     dns_servers=$config_powerdns_ns_ip
   else
     dns_servers=${config_vpn_dns_servers:-$config_server_dns_resolvers}
@@ -197,4 +197,4 @@ for u in $(echo $config_vpn_users | sed "s/,/ /g"); do
 done
 
 set +ex
-touch /root/.ipsecvpn_installed
+touch /usr/local/etc/.ipsecvpn_installed

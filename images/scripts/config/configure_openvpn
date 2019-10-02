@@ -5,7 +5,7 @@ set -exo pipefail
 SCRIPT_HOME=$(cd $(dirname "$(ls -l $0 | awk '{ print $NF }')") && pwd)
 source $SCRIPT_HOME/common
 
-[[ ! -e /root/.openvpn_installed ]] || exit 0
+[[ ! -e /usr/local/etc/.openvpn_installed ]] || exit 0
 
 if [[ "$config_vpn_type" != "openvpn" ]]; then
   echo "Skipping VPN setup as no VPN configuration found."
@@ -90,7 +90,7 @@ function configure_openvpn() {
     sed -i "s/^;push \"redirect-gateway def1 bypass-dhcp\"/push \"redirect-gateway def1 bypass-dhcp\"/" $OPENVPN_CONFIG/server.conf
   fi
 
-  if [[ -e /root/.powerdns_installed ]]; then
+  if [[ -e /usr/local/etc/.powerdns_installed ]]; then
     openvpn_dns_servers=$config_powerdns_ns_ip
   else
     openvpn_dns_servers=${config_vpn_dns_servers:-$config_server_dns_resolvers}
@@ -210,4 +210,4 @@ for u in $(echo $config_vpn_users | sed "s/,/ /g"); do
 done
 
 set +ex
-touch /root/.openvpn_installed
+touch /usr/local/etc/.openvpn_installed

@@ -101,7 +101,7 @@ vpn_payload_uuid=$(uuidgen)
 vpn_cert_payload_uuid=$(uuidgen)
 vpn_ca_payload_uuid=$(uuidgen)
 
-mobileconfig_file=${user_home}/${vpn_server_description}.mobileconfig
+mobileconfig_file=${user_home}/openvpn-config.mobileconfig
 cat << ---EOF > $mobileconfig_file
 <?xml version='1.0' encoding='UTF-8'?>
 <!DOCTYPE plist PUBLIC '-//Apple//DTD PLIST 1.0//EN' 'http://www.apple.com/DTDs/PropertyList-1.0.dtd'>
@@ -129,11 +129,12 @@ cat << ---EOF > $mobileconfig_file
       <key>VPNSubType</key><string>net.openvpn.connect.app</string>
 
       <!-- IOS VPN Settings -->
-      <key>UserDefinedName</key><string>${user}@${vpn_server}</string>
+      <key>UserDefinedName</key><string>${vpn_server}</string>
       <key>VPN</key>
       <dict>
         <key>AuthenticationMethod</key><string>Password</string>
         <key>RemoteAddress</key><string>DEFAULT</string>
+        <key>AuthName</key><string>DEFAULT</string>
       </dict>
       
       <!-- OpenVPN Client App Configuration -->
@@ -153,6 +154,10 @@ for client_conf in "${client_conf[@]}"; do
     ca | cert | key)
       echo "        <key>$key</key><string>$(cat client/$value | awk '$1=$1' ORS='\\n')</string>" >> $mobileconfig_file
       ;;
+    tls-auth)
+      echo "        <key>$key</key><string>$(cat client/ta.key | awk '$1=$1' ORS='\\n')</string>" >> $mobileconfig_file
+      echo "        <key>key-direction</key><string>1</string>" >> $mobileconfig_file
+      ;;
     *)
       echo "        <key>$key</key><string>$value</string>" >> $mobileconfig_file
       ;;
@@ -160,6 +165,7 @@ for client_conf in "${client_conf[@]}"; do
 done
 
 cat << ---EOF >> $mobileconfig_file
+        <key>vpn-on-demand</key><string>0</string>
       </dict>
 
       <key>IPv4</key>
@@ -201,8 +207,9 @@ rm -fr "$vpn_server_description"
 popd
 
 cp /etc/openvpn/users/${user}/*.zip $user_home
-cp /var/lib/openvpn/clients/openvpn-install-*.exe $user_home
-cp /var/www/html/directory-listing/htaccess.txt $user_home/.htaccess
+cp /var/lib/openvpn/clients/*.dmg $user_home
+cp /var/lib/openvpn/clients/*.exe $user_home
+cp /var/www/html/directory-listing/htaccess-openvpn.txt $user_home/.htaccess
 chown -R $user:$user $user_home
 
 if [[ -e /etc/apache2 ]]; then
