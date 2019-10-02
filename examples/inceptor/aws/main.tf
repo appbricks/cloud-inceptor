@@ -78,7 +78,7 @@ module "bootstrap" {
   bastion_use_fqdn = true
 
   # Issue certificates from letsencrypt.org
-  certify_bastion = true
+  certify_bastion = false
 
   # If the SMTP relay settings are provided then
   # and SMTP server will be setup which will send
