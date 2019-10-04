@@ -164,7 +164,7 @@ variable "vpn_tunnel_all_traffic" {
 }
 
 variable "vpn_users" {
-  default = ""
+  default = []
 }
 
 #

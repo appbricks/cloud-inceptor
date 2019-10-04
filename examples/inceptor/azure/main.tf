@@ -66,7 +66,10 @@ module "bootstrap" {
   ovpn_server_port = "2295"
   vpn_tunnel_all_traffic = "yes"
 
-  vpn_users = "user1|P@ssw0rd1,user2|P@ssw0rd2"
+  vpn_users = [
+    "user1|P@ssw0rd1",
+    "user2|P@ssw0rd2"
+  ]
 
   # Concourse Port
   concourse_server_port = "8080"
