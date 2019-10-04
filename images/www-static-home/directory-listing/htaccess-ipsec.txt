@@ -23,6 +23,7 @@ Options +Indexes
 
   # Inceptor VPN config and installer icons
   AddIcon "/directory-listing/icons/ios-logo.svg" *.mobileconfig
+  AddIcon "/directory-listing/icons/keychain.png" *.p12
 
   # Some generic icons
   AddIcon "/directory-listing/icons/blank.svg" ^^BLANKICON^^

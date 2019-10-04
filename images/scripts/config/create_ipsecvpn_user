@@ -215,7 +215,7 @@ cat << ---EOF > ${user_home}/${vpn_server_description}.mobileconfig
 </plist>
 ---EOF
 
-cp /var/www/html/directory-listing/htaccess.txt $user_home/.htaccess
+cp /var/www/html/directory-listing/htaccess-ipsec.txt $user_home/.htaccess
 chown -R ${user}:${user} ${user_home}
 
 if [[ -e /etc/apache2 ]]; then
