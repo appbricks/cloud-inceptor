@@ -168,6 +168,10 @@ variable "vpn_tunnel_all_traffic" {
   type = string
 }
 
+variable "vpn_idle_action" {
+  type = string
+}
+
 variable "vpn_users" {
   type = string
 }

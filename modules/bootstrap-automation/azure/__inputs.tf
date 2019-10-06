@@ -167,6 +167,10 @@ variable "vpn_tunnel_all_traffic" {
   default = "no"
 }
 
+variable "vpn_idle_action" {
+  default = "none"
+}
+
 variable "vpn_users" {
   default = []
 }

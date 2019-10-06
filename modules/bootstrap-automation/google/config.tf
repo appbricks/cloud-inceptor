@@ -67,8 +67,8 @@ module "config" {
   vpn_type               = "${var.vpn_type}"
   vpn_network            = "${var.vpn_network}"
   vpn_tunnel_all_traffic = "${var.vpn_tunnel_all_traffic}"
+  vpn_idle_action        = "${var.vpn_idle_action}"
   vpn_users              = "${join(",", var.vpn_users)}"
-
 
   ovpn_server_port = "${var.ovpn_server_port}"
   ovpn_protocol    = "${var.ovpn_protocol}"

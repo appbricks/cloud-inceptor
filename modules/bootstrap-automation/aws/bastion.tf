@@ -91,7 +91,11 @@ resource "aws_network_interface" "bastion-dmz" {
 resource "aws_network_interface" "bastion-admin" {
   subnet_id       = "${aws_subnet.admin[0].id}"
   private_ips     = ["${local.bastion_admin_itf_ip}"]
-  security_groups = ["${aws_security_group.bastion-private.id}"]
+  security_groups = [
+    "${var.bastion_as_nat 
+      ? aws_security_group.internal.id 
+      : aws_security_group.bastion-private.id}"
+  ]
 
   tags = {
     Name = "${var.vpc_name}: bastion-admin"
@@ -217,14 +221,7 @@ resource "aws_security_group" "bastion-private" {
   description = "Rules for ingress and egress of network traffic to bastion instance."
   vpc_id      = "${aws_vpc.main.id}"
 
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["${var.vpn_network}"]
-  }
-
-  # VPN
+  # Squid Proxy
   dynamic "ingress" {
     for_each = length(var.squidproxy_server_port) > 0 ? [1] : []
     content {

@@ -119,6 +119,13 @@ variable "bastion_use_fqdn" {
 }
 
 #
+# Setup Bastion as the NAT
+#
+variable "bastion_as_nat" {
+  default = true
+}
+
+#
 # Certify bastion host using letsencrypt certificates
 #
 variable "certify_bastion" {
@@ -161,6 +168,10 @@ variable "vpn_network" {
 
 variable "vpn_tunnel_all_traffic" {
   default = "no"
+}
+
+variable "vpn_idle_action" {
+  default = "none"
 }
 
 variable "vpn_users" {

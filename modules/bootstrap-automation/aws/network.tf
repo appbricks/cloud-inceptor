@@ -68,7 +68,7 @@ resource "aws_route_table" "igw" {
 #
 
 resource "aws_eip" "nat" {
-  count = "${local.num_azs_to_configure}"
+  count = "${var.bastion_as_nat ? 0 : local.num_azs_to_configure}"
   vpc   = true
 
   tags = {
@@ -77,7 +77,7 @@ resource "aws_eip" "nat" {
 }
 
 resource "aws_nat_gateway" "nat" {
-  count = "${local.num_azs_to_configure}"
+  count = "${var.bastion_as_nat ? 0 :local.num_azs_to_configure}"
 
   allocation_id = "${element(aws_eip.nat.*.id, count.index)}"
   subnet_id     = "${element(aws_subnet.dmz.*.id, count.index)}"
@@ -94,9 +94,21 @@ resource "aws_route_table" "nat" {
 
   vpc_id = "${aws_vpc.main.id}"
 
-  route {
-    cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = "${element(aws_nat_gateway.nat.*.id, count.index)}"
+  # Use Bastion as NAT
+  dynamic "route" {
+    for_each = var.bastion_as_nat ? [1] : []
+    content {
+      cidr_block           = "0.0.0.0/0"
+      network_interface_id = "${aws_network_interface.bastion-admin.id}"
+    }
+  }
+  # Use NAT instance
+  dynamic "route" {
+    for_each = !var.bastion_as_nat ? [1] : []
+    content {
+      cidr_block     = "0.0.0.0/0"
+      nat_gateway_id = "${element(aws_nat_gateway.nat.*.id, count.index)}"
+    }
   }
 
   tags = {
