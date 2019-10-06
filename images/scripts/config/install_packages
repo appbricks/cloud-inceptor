@@ -38,7 +38,7 @@ apt autoremove -y
 
 # Install pre-req packages
 apt-get -o Acquire::ForceIPv4=true install -y \
-  language-pack-en pkg-config unattended-upgrades iptables-persistent \
+  language-pack-en pkg-config unattended-upgrades iptables-persistent expect \
   cmake build-essential openssl libcurl4-openssl-dev libssl-dev libxml2 libxml2-dev \
   git-core ipcalc certbot uuid-runtime pinentry-curses xclip
 

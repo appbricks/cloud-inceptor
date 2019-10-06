@@ -78,15 +78,17 @@ function configure_openvpn() {
   sed -i "s/^;user nobody/user nobody/" $OPENVPN_CONFIG/server.conf
   sed -i "s/^;group nogroup/group nogroup/" $OPENVPN_CONFIG/server.conf
 
-  if [ "$config_vpn_protocol" == "tcp" ]; then
+  echo -e "\n# Enable management port\nmanagement localhost 7505" >> $OPENVPN_CONFIG/server.conf
+
+  if [[ "$config_vpn_protocol" == "tcp" ]]; then
     sed -i "s/^explicit-exit-notify 1/;explicit-exit-notify 1/" $OPENVPN_CONFIG/server.conf
   fi
 
-  if [ "$config_vpn_allow_multiple_logins" == "yes" ]; then
+  if [[ "$config_vpn_allow_multiple_logins" == "yes" ]]; then
     sed -i "s/^;duplicate-cn/duplicate-cn/" $OPENVPN_CONFIG/server.conf
   fi
 
-  if [ "$config_vpn_tunnel_all_traffic" == "yes" ]; then
+  if [[ "$config_vpn_tunnel_all_traffic" == "yes" ]]; then
     sed -i "s/^;push \"redirect-gateway def1 bypass-dhcp\"/push \"redirect-gateway def1 bypass-dhcp\"/" $OPENVPN_CONFIG/server.conf
   fi
 
@@ -95,7 +97,7 @@ function configure_openvpn() {
   else
     openvpn_dns_servers=${config_vpn_dns_servers:-$config_server_dns_resolvers}
   fi
-  if [ -n "$openvpn_dns_servers" ]; then
+  if [[ -n "$openvpn_dns_servers" ]]; then
     dns_servers=$(for ip in $(echo -e "$openvpn_dns_servers" | sed 's/,/ /g'); do echo -n "push \\\"dhcp-option DNS $ip\\\"\\n"; done)
     sed -i "s/^;push \"dhcp-option DNS 208.67.220.220\"/;push \"dhcp-option DNS 208.67.220.220\"\n$dns_servers/" $OPENVPN_CONFIG/server.conf
   fi
@@ -187,8 +189,18 @@ mv $SCRIPT_HOME/delete_openvpn_user /usr/local/bin/delete_vpn_user
 chmod +x /usr/local/bin/delete_vpn_user
 
 cat /dev/null > /var/log/syslog
-systemctl enable openvpn
+systemctl enable openvpn@server.service
 systemctl start openvpn
+
+if [[ "$config_vpn_idle_action" == "shutdown" ]]; then
+
+  # Setup CRON job to shutdown when no clients connected
+  cat << ---EOF >> /etc/cron.d/vpn_inactivity_action
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+* * * * *   root    test -x /usr/local/lib/cloud-inceptor/idle_shutdown_openvpn && /usr/local/lib/cloud-inceptor/idle_shutdown_openvpn
+---EOF
+fi
 
 #
 # Create VPN users
