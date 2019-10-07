@@ -3,7 +3,7 @@
 #
 
 variable "region" {
-  default = "ap-south-1"
+  default = "eu-central-1"
 }
 
 variable "smtp_relay_host" {
@@ -63,13 +63,15 @@ module "bootstrap" {
   # VPN
   # vpn_type = "ipsec"
   vpn_type = "openvpn"
-  ovpn_server_port = "2295"
   vpn_tunnel_all_traffic = "yes"
+  # vpn_idle_action = "shutdown"
 
   vpn_users = [
     "user1|P@ssw0rd1",
     "user2|P@ssw0rd2"
   ]
+
+  ovpn_server_port = "2295"
 
   # Concourse Port
   concourse_server_port = "8080"
@@ -113,7 +115,7 @@ PIPELINE_VARS
 #
 terraform {
   backend "s3" {
-    bucket = "tfstate-ap-south-1"
+    bucket = "tfstate-eu-central-1"
     key    = "test/cloud-inceptor"
   }
 }
