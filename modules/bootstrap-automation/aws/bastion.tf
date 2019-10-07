@@ -97,6 +97,10 @@ resource "aws_network_interface" "bastion-admin" {
       : aws_security_group.bastion-private.id}"
   ]
 
+  # Enable traffic not destined 
+  # for bastion to pass through
+  source_dest_check = "${!var.bastion_as_nat}"
+
   tags = {
     Name = "${var.vpc_name}: bastion-admin"
   }

@@ -52,20 +52,20 @@ resource "aws_security_group" "internal" {
   description = "Rules for ingress and egress of network traffic within VPC."
   vpc_id      = "${aws_vpc.main.id}"
 
+  # Allow all ingress traffic from instances 
+  # having same security group
   ingress {
     from_port = 0
     to_port   = 65535
     protocol  = "tcp"
     self      = true
   }
-
   ingress {
     from_port = 0
     to_port   = 65535
     protocol  = "udp"
     self      = true
   }
-
   ingress {
     from_port = -1
     to_port   = -1
@@ -73,25 +73,36 @@ resource "aws_security_group" "internal" {
     self      = true
   }
 
-  ingress {
-    from_port   = 0
-    to_port     = 65535
-    protocol    = "tcp"
-    cidr_blocks = ["${local.bastion_admin_itf_ip}/32"]
+  # If bastion is not acting as the NAT then it 
+  # will not have the internal security group. So 
+  # need to explicitly grant access to traffic 
+  # from the bastion.
+  dynamic "ingress" {
+    for_each = !var.bastion_as_nat ? [1] : []
+    content {
+      from_port   = 0
+      to_port     = 65535
+      protocol    = "tcp"
+      cidr_blocks = ["${local.bastion_admin_itf_ip}/32"]
+    }
   }
-
-  ingress {
-    from_port   = 0
-    to_port     = 65535
-    protocol    = "udp"
-    cidr_blocks = ["${local.bastion_admin_itf_ip}/32"]
+  dynamic "ingress" {
+    for_each = !var.bastion_as_nat ? [1] : []
+    content {
+      from_port   = 0
+      to_port     = 65535
+      protocol    = "udp"
+      cidr_blocks = ["${local.bastion_admin_itf_ip}/32"]
+    }
   }
-
-  ingress {
-    from_port   = -1
-    to_port     = -1
-    protocol    = "icmp"
-    cidr_blocks = ["${local.bastion_admin_itf_ip}/32"]
+  dynamic "ingress" {
+    for_each = !var.bastion_as_nat ? [1] : []
+    content {
+      from_port   = -1
+      to_port     = -1
+      protocol    = "icmp"
+      cidr_blocks = ["${local.bastion_admin_itf_ip}/32"]
+    }
   }
 
   egress {
