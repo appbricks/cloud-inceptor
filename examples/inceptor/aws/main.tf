@@ -72,6 +72,12 @@ module "bootstrap" {
   ]
 
   ovpn_server_port = "2295"
+  ovpn_protocol = "tcp"
+
+  # Tunnel for VPN to handle situations where 
+  # OpenVPN is blocked or throttled by ISP
+  tunnel_vpn_port_start = "2294"
+  tunnel_vpn_port_end   = "3394"
 
   # Concourse Port
   concourse_server_port = "8080"

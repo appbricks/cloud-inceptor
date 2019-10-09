@@ -54,24 +54,140 @@ source vars
 ./build-key $user
 cp keys/${user}.crt keys/${user}.key "$dest_dir"
 cp /etc/openvpn/ca.crt /etc/openvpn/ta.key "$dest_dir"
-cp /usr/share/doc/openvpn/examples/sample-config-files/client.conf "$dest_dir/client.conf"
 
-sed -i "s/^remote .*/remote $vpn_server $vpn_server_port/" "$dest_dir/client.conf"
-sed -i "s/^proto .*/proto $vpn_server_proto/" "$dest_dir/client.conf"
-sed -i "s/^ca .*\.crt/ca ca.crt/" "$dest_dir/client.conf"
-sed -i "s/^cert .*\.crt/cert $user.crt/" "$dest_dir/client.conf"
-sed -i "s/^key .*\.key/key $user.key/" "$dest_dir/client.conf"
-sed -i "s/^;tls-auth/tls-auth/" "$dest_dir/client.conf"
-sed -i "s/^;cipher .*/cipher AES-256-CBC/" "$dest_dir/client.conf"
+cat << ---EOF > $dest_dir/client.conf
+#
+# OpenVPN client configuration
+#
+client
 
-echo -e "\n# Enable Multi-Factor Authentication" >> "$dest_dir/client.conf"
-echo -e "auth-user-pass" >> "$dest_dir/client.conf"
+# Create a routed IP tunnel same as server
+dev tun
+---EOF
 
-echo -e "\n# Prevent the password file from being cached" >> "$dest_dir/client.conf"
-echo -e "auth-nocache" >> "$dest_dir/client.conf"
+  if [[ -n "$vpn_obfuscation_tunnel_port" ]]; then
 
-echo -e "\n# Prevent re-authorization every 3600 seconds" >> "$dest_dir/client.conf"
-echo -e "reneg-sec 0" >> "$dest_dir/client.conf"
+    cat << ---EOF >> $dest_dir/client.conf
+
+# When tunnelling the gateway needs to be  
+# explicitly set as the public IP of the 
+# VPN server
+route $vpn_server_ip 255.255.255.255 net_gateway
+---EOF
+
+    if [[ "$vpn_server_protocol" == "udp" ]]; then
+      cat << ---EOF >> $dest_dir/client.conf
+
+# Set same limits on datagram fragmentation
+# as have been configured on the server
+fragment 1450
+mssfix 1450
+
+<connection>
+  #
+  # Connect through a UDP tunnel. This will require
+  # a local tunnel client connecting to a remote
+  # tunnel server using a utility like UDPSpeeder.
+  #
+  # https://github.com/wangyu-/UDPspeeder 
+  #
+  # Run the UDPSpeeder from the build folder as 
+  # follows:
+  #
+  # ./speederv2 -c -f "20:10" \\
+  #     -l "127.0.0.1:$vpn_server_port" \\
+  #     -r "$vpn_server_ip:$vpn_obfuscation_tunnel_port" \\
+  #     -k "$vpn_obfuscation_key"
+---EOF
+    else
+      cat << ---EOF >> $dest_dir/client.conf
+      
+<connection>
+  #
+  # Connect through a TCP tunnel. This will require
+  # a local tunnel client connecting to a remote
+  # tunnel server using a utility like STunnel or
+  # KCPTun. 
+  #
+  # https://github.com/xtaci/kcptun/releases
+  #
+  # Run KCPTun client as follows
+  #
+  # ./client_darwin_amd64 -mode fast3 -nocomp -autoexpire 900 -sockbuf 16777217 -dscp 46 \\
+  #     -l "127.0.0.1:$vpn_server_port" \\
+  #     -r "$vpn_server_ip:$vpn_obfuscation_tunnel_port" \\
+  #     -key "$vpn_obfuscation_key"
+---EOF
+    fi
+
+  cat << ---EOF >> $dest_dir/client.conf
+  #
+  # This enables bypassing firewalls and telcos that 
+  # block or throttle the OpenVPN protocol via DPI.
+  #
+
+  # The hostname/IP and port of the server
+  remote 127.0.0.1 $vpn_server_port
+  # Protocol to use
+  proto $vpn_server_protocol
+
+  # Timeout waiting for local tunnel connection
+  server-poll-timeout 10
+  connect-timeout 20
+</connection>
+---EOF
+  fi
+
+cat << ---EOF >> $dest_dir/client.conf
+
+<connection>
+  #
+  # Connect to VPN server directly
+  #
+
+  # The hostname/IP and port of the server
+  remote $vpn_server $vpn_server_port
+  # Protocol to use
+  proto $vpn_server_protocol
+</connection>
+
+# Keep trying indefinitely to resolve the
+# host name of the OpenVPN server.
+resolv-retry infinite
+
+# Most clients don't need to bind to
+# a specific local port number
+nobind
+
+# Try to preserve some state across restarts
+persist-key
+persist-tun
+
+# SSL/TLS client authentication certificates
+ca ca.crt
+cert $user.crt
+key $user.key
+
+# As tls-auth key is set on the server
+# the client must also have the key
+tls-auth ta.key 1
+
+# The cryptographic cipher which should be the
+# same as the server
+cipher AES-256-GCM
+
+# Log file verbosity
+verb 3
+
+# Enable Multi-Factor Authentication
+auth-user-pass
+
+# Prevent the password file from being cached
+auth-nocache
+
+# Prevent re-authorization every 3600 seconds
+reneg-sec 0
+---EOF
 
 popd
 
@@ -93,7 +209,10 @@ pushd /etc/openvpn/users/${user}
 
 # Retrieve keys from client conf
 IFS=$'\n'
-client_conf=( $(cat client/client.conf | awk '/^[a-zA-Z].*/{ print $0 }') )
+client_conf=( \
+  $(cat client/client.conf | awk '/^  [a-zA-Z].*/{ print substr($0, 3) }' | tail -2) \
+  $(cat client/client.conf | awk '/^[a-zA-Z].*/{ print $0 }') \
+)
 unset IFS
 
 payload_uuid=$(uuidgen)

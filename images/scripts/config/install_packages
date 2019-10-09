@@ -140,6 +140,31 @@ curl -L https://swupdate.openvpn.org/community/releases/openvpn-install-${openvp
 curl -L https://swupdate.openvpn.org/community/releases/openvpn-install-${openvpn_version}--${openvpn_winsvr_build}.exe \
   -o /var/lib/openvpn/clients/openvpn-install-winsvr2016.exe
 
+# Compile UDP Tunnel binaries (EXPERIMENTAL)
+git clone https://github.com/wangyu-/UDPspeeder.git /tmp/udp-speeder
+pushd /tmp/udp-speeder
+git checkout branch_libev
+make
+mv /tmp/udp-speeder/speederv2 /usr/local/bin/udp-speeder
+popd
+
+git clone https://github.com/wangyu-/udp2raw-tunnel.git /tmp/udp2raw-tunnel
+pushd /tmp/udp2raw-tunnel
+git checkout master
+make
+mv /tmp/udp2raw-tunnel/udp2raw /usr/local/bin/udp2raw
+popd
+
+# Download KCP tunnel server (EXPERIMENTAL)
+kcp_tunnel_version=20190924
+
+pushd /tmp
+curl -L https://github.com/xtaci/kcptun/releases/download/v${kcp_tunnel_version}/kcptun-linux-amd64-${kcp_tunnel_version}.tar.gz \
+  -o kcptun-linux-amd64.tgz
+tar xvzf kcptun-linux-amd64.tgz
+mv server_linux_amd64 /usr/local/bin/kcptun-server
+popd
+
 # Apache Web Server
 apt-get -o Acquire::ForceIPv4=true install -y apache2 apache2-utils libapache2-mod-authnz-external pwauth
 systemctl stop apache2

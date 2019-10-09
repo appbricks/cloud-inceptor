@@ -183,6 +183,26 @@ resource "aws_security_group" "bastion-public" {
     }
   }
 
+  # VPN obfuscation tunnel
+  dynamic "ingress" {
+    for_each = length(var.tunnel_vpn_port_start) > 0 && length(var.tunnel_vpn_port_end) > 0 ? [1] : []
+    content {
+      from_port   = "${tonumber(var.tunnel_vpn_port_start)}"
+      to_port     = "${tonumber(var.tunnel_vpn_port_end)}"
+      protocol    = "udp"
+      cidr_blocks = ["0.0.0.0/0"]
+    }
+  }
+  dynamic "ingress" {
+    for_each = length(var.tunnel_vpn_port_start) > 0 && length(var.tunnel_vpn_port_end) > 0 ? [1] : []
+    content {
+      from_port   = "${tonumber(var.tunnel_vpn_port_start)}"
+      to_port     = "${tonumber(var.tunnel_vpn_port_end)}"
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]
+    }
+  }
+
   # SMTP
   dynamic "ingress" {
     for_each = length(var.smtp_relay_host) > 0 ? [1] : []

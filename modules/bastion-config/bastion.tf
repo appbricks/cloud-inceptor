@@ -149,8 +149,11 @@ vpn:
   netmask: ${cidrnetmask(var.vpn_network)}
   server_domain: ${var.vpc_dns_zone}
   server_description: ${var.vpc_name}-vpn
-  tunnel_all_traffic: ${var.vpn_tunnel_all_traffic}
+  tunnel_client_traffic: ${var.vpn_tunnel_all_traffic}
   idle_action: ${var.vpn_idle_action}
+  tunnel_vpn:
+    port_start: ${var.tunnel_vpn_port_start}
+    port_end: ${var.tunnel_vpn_port_end}
   vpn_cert:
     name: ${var.vpc_name}_VPN
     org: ${var.organization_name}
