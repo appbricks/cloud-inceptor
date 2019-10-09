@@ -50,12 +50,24 @@ resource "aws_route53_zone" "vpc-private" {
 # VPC Bastion instance DNS
 #
 
-resource "aws_route53_record" "vpc-public" {
+resource "aws_route53_record" "vpc-public-external" {
   zone_id = "${aws_route53_zone.vpc-public.zone_id}"
   name    = "${var.vpc_dns_zone}."
-  type    = "A"
-  ttl     = "300"
+  
+  type = "A"
+  ttl  = "300"
+  
   records = ["${aws_eip.bastion-public.public_ip}"]
+}
+
+resource "aws_route53_record" "vpc-public-internal" {
+  zone_id = "${aws_route53_zone.vpc-private.zone_id}"
+  name    = "${var.vpc_dns_zone}."
+
+  type = "A"
+  ttl  = "300"
+  
+  records = ["${local.bastion_dmz_itf_ip}"]
 }
 
 resource "aws_route53_record" "vpc-admin" {
@@ -87,7 +99,7 @@ resource "aws_route53_record" "vpc-mx" {
   name    = "${var.vpc_dns_zone}."
   type    = "MX"
   ttl     = "300"
-  records = ["1 ${aws_route53_record.vpc-public.name}"]
+  records = ["1 ${aws_route53_record.vpc-public-external.name}"]
 }
 
 resource "aws_route53_record" "vpc-txt" {
