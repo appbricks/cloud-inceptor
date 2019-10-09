@@ -13,8 +13,10 @@ set -xo pipefail
 
 # If config file provided then use it otherwise 
 # it will be read from the meta-data service
-[[ ! -e /usr/local/etc/bastion-config.yml ]] || \
+if [[ -e /usr/local/etc/bastion-config.yml ]]; then
   mv /usr/local/etc/bastion-config.yml /usr/local/etc/config.yml
+  chmod 0600 /usr/local/etc/config.yml
+fi
 
 /usr/local/lib/cloud-inceptor/mount_volume 2>&1 \
   | tee -a /var/log/mount_volume.log \
