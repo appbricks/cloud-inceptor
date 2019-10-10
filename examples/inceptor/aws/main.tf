@@ -72,7 +72,7 @@ module "bootstrap" {
   ]
 
   ovpn_server_port = "2295"
-  ovpn_protocol = "tcp"
+  ovpn_protocol = "udp"
 
   # Tunnel for VPN to handle situations where 
   # OpenVPN is blocked or throttled by ISP
