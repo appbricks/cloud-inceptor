@@ -215,6 +215,12 @@ mv /tmp/inceptor-scripts /usr/local/lib/cloud-inceptor
 # Copy static web content
 mv /tmp/www-static-home/* /var/www/html
 
+# Clear all logs
+find /var/log/* -name "*.log" -type f -exec cat /dev/null > {} \;
+# Delete cache and temp files
+apt-get autoremove
+apt-get autoclean
+apt-get clean
 rm -rf /var/lib/apt/lists/*
 rm -fr /tmp/*
 
