@@ -62,6 +62,8 @@ fi
   | tee -a /var/log/configure_concourse.log \
   || echo "ERROR! Script configure_concourse exited with error: $?"
 
+iptables-save > /data/network/etc/iptables-dump.ipt
+
 chmod 0600 /var/log/configure_*.log
 chmod 0600 /var/log/cloud-init*.log
 touch /usr/local/etc/.init_instance_complete

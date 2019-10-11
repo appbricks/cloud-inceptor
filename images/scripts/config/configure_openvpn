@@ -268,7 +268,6 @@ push "route $subnet_ip $netmask"
 ---EOF
     fi
   done
-  iptables-save > /data/network/etc/iptables-dump.ipt
 
   # Configure client authentication in addition to client certificate authentication
 
@@ -362,8 +361,6 @@ if [[ ! -e $OPENVPN_CONFIG/ta.key ]]; then
 else
   rm -fr /etc/openvpn
   ln -s $OPENVPN_CONFIG /etc/openvpn
-
-  iptables-restore < /data/network/etc/iptables-dump.ipt
 fi
 
 mv $SCRIPT_HOME/create_openvpn_user /usr/local/bin/create_vpn_user

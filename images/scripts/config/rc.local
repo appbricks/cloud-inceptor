@@ -12,7 +12,7 @@
 # By default this script does nothing.
 
 # Ensure custom iptables rules are loaded
-[[ -e /data/network/etc/iptables-dump.ipt ]] \
-  && iptables-restore < /data/network/etc/iptables-dump.ipt
+[[ ! -e /data/network/etc/iptables-dump.ipt ]] \
+  || iptables-restore < /data/network/etc/iptables-dump.ipt
 
 exit 0
