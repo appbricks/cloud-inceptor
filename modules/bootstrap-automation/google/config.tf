@@ -73,6 +73,9 @@ module "config" {
   ovpn_server_port = "${var.ovpn_server_port}"
   ovpn_protocol    = "${var.ovpn_protocol}"
 
+  tunnel_vpn_port_start = "${var.tunnel_vpn_port_start}"
+  tunnel_vpn_port_end   = "${var.tunnel_vpn_port_end}"
+
   smtp_relay_host    = "${var.smtp_relay_host}"
   smtp_relay_port    = "${var.smtp_relay_port}"
   smtp_relay_api_key = "${var.smtp_relay_api_key}"

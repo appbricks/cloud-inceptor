@@ -129,7 +129,7 @@ resource "google_compute_firewall" "bastion-ssh" {
 }
 
 resource "google_compute_firewall" "bastion-vpn" {
-  count = "${length(var.ovpn_server_port) == 0 ? 0 : 1 }"
+  count = "${length(var.vpn_type) == 0 ? 0 : 1 }"
 
   name    = "${var.vpc_name}-bastion-vpn"
   network = "${google_compute_network.dmz.self_link}"
@@ -139,9 +139,36 @@ resource "google_compute_firewall" "bastion-vpn" {
     ports    = ["80", "443"]
   }
 
-  allow {
-    protocol = "${var.ovpn_protocol}"
-    ports    = ["${var.ovpn_server_port}"]
+  # OpenVPN
+  dynamic "allow" {
+    for_each = var.vpn_type == "openvpn" && length(var.ovpn_server_port) > 0 ? [1] : []
+    content {
+      protocol = "${var.ovpn_protocol}"
+      ports    = ["${var.ovpn_server_port}"]
+    }
+  }
+  # IPSec/IKEv2
+  dynamic "allow" {
+    for_each = var.vpn_type == "ipsec" ? [1] : []
+    content {
+      protocol = "udp"
+      ports    = ["500", "4500"]
+    }
+  }
+  # VPN Tunnel
+  dynamic "allow" {
+    for_each = length(var.tunnel_vpn_port_start) > 0 && length(var.tunnel_vpn_port_end) > 0 ? [1] : []
+    content {
+      protocol = "udp"
+      ports    = ["${var.tunnel_vpn_port_start}-${var.tunnel_vpn_port_end}"]
+    }
+  }
+  dynamic "allow" {
+    for_each = length(var.tunnel_vpn_port_start) > 0 && length(var.tunnel_vpn_port_end) > 0 ? [1] : []
+    content {
+      protocol = "tcp"
+      ports    = ["${var.tunnel_vpn_port_start}-${var.tunnel_vpn_port_end}"]
+    }
   }
 
   priority      = "500"

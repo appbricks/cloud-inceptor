@@ -187,6 +187,19 @@ variable "ovpn_protocol" {
 }
 
 #
+# Enable tunnelling of VPN within another tunnel 
+# when firewalls and telco's block OpenVPN via
+# deep-packet-inspection.
+#
+variable "tunnel_vpn_port_start" {
+  default = ""
+}
+
+variable "tunnel_vpn_port_end" {
+  default = ""
+}
+
+#
 # Concourse
 #
 variable "concourse_server_port" {

@@ -221,6 +221,26 @@ resource "azurerm_network_security_rule" "bastion-ipsecvpn" {
   destination_address_prefix = "${azurerm_network_interface.bastion-dmz.ip_configuration[0].private_ip_address}"
 }
 
+resource "azurerm_network_security_rule" "bastion-vpntunnel" {
+  count = "${length(var.tunnel_vpn_port_start) > 0 && length(var.tunnel_vpn_port_end) > 0 ? 1 : 0 }"
+
+  name = "${var.vpc_name}-bastion-vpntunnel"
+
+  network_security_group_name = "${azurerm_network_security_group.bastion-dmz.name}"
+  resource_group_name         = "${azurerm_resource_group.bootstrap.name}"
+
+  access    = "Allow"
+  protocol  = "*"
+  priority  = "504"
+  direction = "Inbound"
+  
+  source_port_range     = "*"
+  source_address_prefix = "0.0.0.0/0"
+
+  destination_port_range     = "${var.tunnel_vpn_port_start}-${var.tunnel_vpn_port_end}"
+  destination_address_prefix = "${azurerm_network_interface.bastion-dmz.ip_configuration[0].private_ip_address}"
+}
+
 resource "azurerm_network_security_rule" "bastion-smtp-ext" {
   count = "${length(var.smtp_relay_host) == 0 ? 0 : 1 }"
 
@@ -231,7 +251,7 @@ resource "azurerm_network_security_rule" "bastion-smtp-ext" {
 
   access    = "Allow"
   protocol  = "tcp"
-  priority  = "504"
+  priority  = "505"
   direction = "Inbound"
 
   source_port_range     = "*"

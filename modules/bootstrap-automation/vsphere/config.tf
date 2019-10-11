@@ -57,6 +57,9 @@ module "config" {
   ovpn_server_port = "${var.ovpn_server_port}"
   ovpn_protocol    = "${var.ovpn_protocol}"
 
+  tunnel_vpn_port_start = "${var.tunnel_vpn_port_start}"
+  tunnel_vpn_port_end   = "${var.tunnel_vpn_port_end}"
+
   pipeline_automation_path = "${var.pipeline_automation_path}"
   notification_email       = "${var.notification_email}"
 
