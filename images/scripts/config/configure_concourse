@@ -191,16 +191,16 @@ if [[ $s == "---" ]]; then
   if [[ -n '$config_concourse_notification_email' ]]; then
     /usr/local/lib/cloud-inceptor/patch_job_notifications.sh /root/bootstrap.yml bootstrap \
       > bootstrap-1.yml
+
+    bosh interpolate \
+      -l /root/bootstrap-vars.yml \
+      -o /usr/local/lib/cloud-inceptor/notifications_job_patch.yml \
+      bootstrap-1.yml \
+      > /root/bootstrap-pipeline.yml
   else
     /usr/local/lib/cloud-inceptor/remove_job_notifications.sh /root/bootstrap.yml bootstrap \
-      > bootstrap-1.yml
+      > bootstrap-pipeline.yml
   fi
-
-  bosh interpolate \
-    -l /root/bootstrap-vars.yml \
-    -o /usr/local/lib/cloud-inceptor/notifications_job_patch.yml \
-    bootstrap-1.yml \
-    > /root/bootstrap-pipeline.yml
 
   fly --target local set-pipeline -n \
     -p bootstrap \

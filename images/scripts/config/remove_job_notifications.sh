@@ -1,0 +1,1 @@
+../../../tasks/patches/remove_job_notifications.sh
