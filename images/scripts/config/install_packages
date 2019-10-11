@@ -217,6 +217,8 @@ mv /tmp/www-static-home/* /var/www/html
 
 # Clear all logs
 find /var/log/* -name "*.log" -type f -exec cat /dev/null > {} \;
+# Clean cloud-init
+cloud-init clean -l
 # Delete cache and temp files
 apt-get autoremove
 apt-get autoclean
