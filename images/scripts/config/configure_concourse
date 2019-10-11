@@ -189,15 +189,23 @@ if [[ $s == "---" ]]; then
   set -ex
 
   if [[ -n '$config_concourse_notification_email' ]]; then
-      /usr/local/lib/cloud-inceptor/patch_job_notifications.sh /root/bootstrap.yml bootstrap > bootstrap-1.yml
-      bosh interpolate -l /root/bootstrap-vars.yml -o /usr/local/lib/cloud-inceptor/notifications_job_patch.yml bootstrap-1.yml > /root/bootstrap-2.yml
-
-      fly --target local set-pipeline -n -p bootstrap \
-        -c /root/bootstrap-2.yml -l /root/bootstrap-vars.yml
+    /usr/local/lib/cloud-inceptor/patch_job_notifications.sh /root/bootstrap.yml bootstrap \
+      > bootstrap-1.yml
   else
-      fly --target local set-pipeline -n -p bootstrap \
-        -c /root/bootstrap.yml -l /root/bootstrap-vars.yml
+    /usr/local/lib/cloud-inceptor/remove_job_notifications.sh /root/bootstrap.yml bootstrap \
+      > bootstrap-1.yml
   fi
+
+  bosh interpolate \
+    -l /root/bootstrap-vars.yml \
+    -o /usr/local/lib/cloud-inceptor/notifications_job_patch.yml \
+    bootstrap-1.yml \
+    > /root/bootstrap-pipeline.yml
+
+  fly --target local set-pipeline -n \
+    -p bootstrap \
+    -c /root/bootstrap-pipeline.yml \
+    -l /root/bootstrap-vars.yml
 
   fly --target local unpause-pipeline -p bootstrap
 BOOTSTRAP
