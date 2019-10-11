@@ -1,7 +1,7 @@
 #!/bin/bash -x
 
 echo "waiting 180 seconds for cloud-init to finish boot"
-timeout 180 /bin/bash -c \
+timeout 300 /bin/bash -c \
   'until stat /var/lib/cloud/instance/boot-finished 2>/dev/null; do echo waiting ...; sleep 10; done'
 
 if [[ $? -ne 0 ]]; then

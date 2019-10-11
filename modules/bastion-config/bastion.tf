@@ -43,9 +43,6 @@ data "template_cloudinit_config" "bastion-cloudinit" {
     content = <<USER_DATA
 #cloud-config
 
-network:
-  config: disabled
-
 users:
 - name: ${var.bastion_admin_user}
   sudo: ALL=(ALL) NOPASSWD:ALL
@@ -95,7 +92,7 @@ write_files:
 
 runcmd:
 - sudo -i -- <<INIT
-    [[ -e /root/.init_instance_complete ]] \
+    [[ -e /usr/local/etc/.init_instance_complete ]] \
       || nohup /usr/local/lib/cloud-inceptor/init_instance 2>&1 | tee /var/log/init_instance.log &
   INIT
 

@@ -11,10 +11,8 @@
 #
 # By default this script does nothing.
 
-systemctl daemon-reload
-
 # Ensure custom iptables rules are loaded
-[ -e /data/network/etc/iptables-dump.ipt ] \
+[[ -e /data/network/etc/iptables-dump.ipt ]] \
   && iptables-restore < /data/network/etc/iptables-dump.ipt
 
 exit 0
