@@ -121,6 +121,13 @@ variable "bastion_use_fqdn" {
   default = true
 }
 
+# Note: this has no effect on azure
+# as you cannot create an explicit
+# rule for ICMP.
+variable "allow_bastion_icmp" {
+  defautl = false
+}
+
 #
 # Certify bastion host using letsencrypt certificates
 #

@@ -117,6 +117,10 @@ variable "bastion_use_fqdn" {
   default = true
 }
 
+variable "allow_bastion_icmp" {
+  defautl = false
+}
+
 #
 # Certify bastion host using letsencrypt certificates
 #

@@ -164,6 +164,10 @@ variable "bastion_nic_hostnum" {
   default = "2"
 }
 
+variable "allow_bastion_icmp" {
+  defautl = false
+}
+
 #
 # DNS resolvers for the  server
 #

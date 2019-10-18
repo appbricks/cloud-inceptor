@@ -214,6 +214,17 @@ resource "aws_security_group" "bastion-public" {
     }
   }
 
+  # Allow ICMP
+  dynamic "ingress" {
+    for_each = var.allow_bastion_icmp ? [1] : []
+    content {
+      from_port   = "-1"
+      to_port     = "-1"
+      protocol    = "icmp"
+      cidr_blocks = ["0.0.0.0/0"]
+    }
+  }
+
   #
   # Egress
   #

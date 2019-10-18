@@ -170,6 +170,13 @@ resource "google_compute_firewall" "bastion-vpn" {
       ports    = ["${var.tunnel_vpn_port_start}-${var.tunnel_vpn_port_end}"]
     }
   }
+  # Allow ICMP
+  dynamic "allow" {
+    for_each = var.allow_bastion_icmp ? [1] : []
+    content {
+      protocol = "icmp"
+    }
+  }
 
   priority      = "500"
   direction     = "INGRESS"

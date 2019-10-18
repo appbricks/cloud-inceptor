@@ -118,6 +118,10 @@ variable "bastion_use_fqdn" {
   default = true
 }
 
+variable "allow_bastion_icmp" {
+  defautl = false
+}
+
 #
 # Setup Bastion as the NAT
 #
