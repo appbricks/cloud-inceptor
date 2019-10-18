@@ -232,59 +232,9 @@ resources:
 - name: automation
   type: git
   source:
-    uri: git@gitlab.com:appbricks/cloud-inceptor.git
+    uri: ((automation_repo_url))
     branch: master
-    private_key: |
-      -----BEGIN OPENSSH PRIVATE KEY-----
-      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
-      -----END OPENSSH PRIVATE KEY-----
-
+    private_key: ((automation_repo_key))
 
 - name: hello-message
   type: s3
