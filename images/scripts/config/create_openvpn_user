@@ -65,7 +65,7 @@ client
 dev tun
 ---EOF
 
-  if [[ -n "$vpn_obfuscation_tunnel_port" ]]; then
+  if [[ -n "$vpn_obfuscation_tunnel_port_1" ]]; then
 
     cat << ---EOF >> $dest_dir/client.conf
 
@@ -87,16 +87,47 @@ mssfix 1450
   #
   # Connect through a UDP tunnel. This will require
   # a local tunnel client connecting to a remote
-  # tunnel server using a utility like UDPSpeeder.
+  # tunnel server using the utilities udp2raw or 
+  # UDPSpeeder .
+  #
+  # https://github.com/wangyu-/udp2raw-multiplatform
+  #
+  # Run the UDP2Raw CLI as root from the its
+  # folder as follows using the best option:
+  #
+  # sudo ./udp2raw_mp -c \\
+  #     -l "127.0.0.1:$vpn_server_port" \\
+  #     -r "$vpn_server_ip:$vpn_obfuscation_tunnel_port_1" \\
+  #     --key "$vpn_obfuscation_key" \\
+  #     --cipher-mode "xor" \\
+  #     --auth-mode "simple" \\
+  #     --raw-mode "faketcp"
+  #
+  # sudo ./udp2raw_mp -c \\
+  #     -l "127.0.0.1:$vpn_server_port" \\
+  #     -r "$vpn_server_ip:$vpn_obfuscation_tunnel_port_2" \\
+  #     --key "$vpn_obfuscation_key" \\
+  #     --cipher-mode "xor" \\
+  #     --auth-mode "simple" \\
+  #     --raw-mode "udp"
+  #
+  # sudo ./udp2raw_mp -c \\
+  #     -l "127.0.0.1:$vpn_server_port" \\
+  #     -r "$vpn_server_ip:$vpn_obfuscation_tunnel_port_3" \\
+  #     --key "$vpn_obfuscation_key" \\
+  #     --cipher-mode "xor" \\
+  #     --auth-mode "simple" \\
+  #     --raw-mode "icmp"
   #
   # https://github.com/wangyu-/UDPspeeder 
   #
-  # Run the UDPSpeeder from the build folder as 
-  # follows:
+  # Unlike UDP2Raw, UDPSpeeder does not need
+  # to be run as root. You can run the CLI 
+  # from the its folder as follows:
   #
   # ./speederv2 -c -f "20:10" \\
   #     -l "127.0.0.1:$vpn_server_port" \\
-  #     -r "$vpn_server_ip:$vpn_obfuscation_tunnel_port" \\
+  #     -r "$vpn_server_ip:$vpn_obfuscation_tunnel_port_4" \\
   #     -k "$vpn_obfuscation_key"
 ---EOF
     else
@@ -115,7 +146,7 @@ mssfix 1450
   #
   # ./client_darwin_amd64 -mode fast3 -nocomp -autoexpire 900 -sockbuf 16777217 -dscp 46 \\
   #     -l "127.0.0.1:$vpn_server_port" \\
-  #     -r "$vpn_server_ip:$vpn_obfuscation_tunnel_port" \\
+  #     -r "$vpn_server_ip:$vpn_obfuscation_tunnel_port_1" \\
   #     -key "$vpn_obfuscation_key"
 ---EOF
     fi

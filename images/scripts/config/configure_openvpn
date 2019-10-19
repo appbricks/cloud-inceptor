@@ -16,7 +16,7 @@ OPENVPN_DATA_HOME=/data/openvpn
 OPENVPN_CONFIG=$OPENVPN_DATA_HOME/etc
 
 if [[ -n $config_vpn_tunnel_vpn_port_start && -n $config_vpn_tunnel_vpn_port_end ]]; then
-  vpn_obfuscation_tunnel_port=$(shuf -i ${config_vpn_tunnel_vpn_port_start}-${config_vpn_tunnel_vpn_port_end} -n 1)
+  vpn_obfuscation_tunnel_port=( $(shuf -i ${config_vpn_tunnel_vpn_port_start}-${config_vpn_tunnel_vpn_port_end} -n 4) )
   vpn_obfuscation_key=$(openssl rand --hex 10)
 fi
 
@@ -40,7 +40,10 @@ function configure_openvpn() {
   echo "export vpn_server_description=\"$config_vpn_server_description\"" >> $OPENVPN_CONFIG/serverinfo
   echo "export vpn_server_domain=\"$config_vpn_server_domain\"" >> $OPENVPN_CONFIG/serverinfo
   echo "export vpn_server_organization=\"$config_vpn_vpn_cert_org\"" >> $OPENVPN_CONFIG/serverinfo
-  echo "export vpn_obfuscation_tunnel_port=$vpn_obfuscation_tunnel_port" >> $OPENVPN_CONFIG/serverinfo
+  echo "export vpn_obfuscation_tunnel_port_1=${vpn_obfuscation_tunnel_port[0]}" >> $OPENVPN_CONFIG/serverinfo
+  echo "export vpn_obfuscation_tunnel_port_2=${vpn_obfuscation_tunnel_port[1]}" >> $OPENVPN_CONFIG/serverinfo
+  echo "export vpn_obfuscation_tunnel_port_3=${vpn_obfuscation_tunnel_port[2]}" >> $OPENVPN_CONFIG/serverinfo
+  echo "export vpn_obfuscation_tunnel_port_4=${vpn_obfuscation_tunnel_port[3]}" >> $OPENVPN_CONFIG/serverinfo
   echo "export vpn_obfuscation_key=$vpn_obfuscation_key" >> $OPENVPN_CONFIG/serverinfo
   echo "export vpn_auth_strategy=$config_vpn_auth_strategy" >> $OPENVPN_CONFIG/serverinfo
 
@@ -303,10 +306,95 @@ auth required pam_unix.so
   popd
 }
 
-function configure_udp_tunnel_service() {
+function configure_udp_tunnel_services() {
 
+  # Set IPTable rules for tunneling UDP over the
+  # raw tunnel which can by either tcp/udp/icmp
+  iptables -I INPUT -d $config_server_dmz_itf_ip -p tcp -m tcp --dport ${vpn_obfuscation_tunnel_port[0]} -j DROP
+  iptables -I INPUT -d $config_server_dmz_itf_ip -p udp -m udp --dport ${vpn_obfuscation_tunnel_port[1]} -j DROP
+  iptables -I INPUT -d $config_server_dmz_itf_ip -p icmp --icmp-type 8 -j DROP
+
+  # Grant udp2raw CAP_NET_RAW capability
+  setcap cap_net_raw+ep /usr/local/bin/udp2raw
+  # Non-root user to run tunnel services on
   useradd udp-tunnel -p $(openssl rand -base64 32)
 
+  # UDP tunnel over raw sockets using TCP
+  cat << ---EOF > /etc/systemd/system/udp-rawtunnel-over-tcp.service
+[Unit]
+Description=UDP over RAW TCP Tunnel Server
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=udp-tunnel
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=udp2raw-tcp
+ExecStart=/usr/local/bin/udp2raw -s -l "$config_server_dmz_itf_ip:${vpn_obfuscation_tunnel_port[0]}" -r "$config_server_dmz_itf_ip:$config_vpn_port" --key "$vpn_obfuscation_key" --cipher-mode "xor" --auth-mode "simple" --raw-mode "faketcp"
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target
+---EOF
+
+  systemctl enable udp-rawtunnel-over-tcp.service
+  systemctl start udp-rawtunnel-over-tcp.service
+
+  # UDP tunnel over raw sockets using UDP
+  cat << ---EOF > /etc/systemd/system/udp-rawtunnel-over-udp.service
+[Unit]
+Description=UDP over RAW UDP Tunnel Server
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=udp-tunnel
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=udp2raw-udp
+ExecStart=/usr/local/bin/udp2raw -s -l "$config_server_dmz_itf_ip:${vpn_obfuscation_tunnel_port[1]}" -r "$config_server_dmz_itf_ip:$config_vpn_port" --key "$vpn_obfuscation_key" --cipher-mode "xor" --auth-mode "simple" --raw-mode "udp"
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target
+---EOF
+
+  systemctl enable udp-rawtunnel-over-udp
+  systemctl start udp-rawtunnel-over-udp
+
+  # UDP tunnel over raw sockets using ICMP
+  cat << ---EOF > /etc/systemd/system/udp-rawtunnel-over-icmp.service
+[Unit]
+Description=UDP over RAW ICMP Tunnel Server
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=udp-tunnel
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=udp2raw-icmp
+ExecStart=/usr/local/bin/udp2raw -s -l "$config_server_dmz_itf_ip:${vpn_obfuscation_tunnel_port[2]}" -r "$config_server_dmz_itf_ip:$config_vpn_port" --key "$vpn_obfuscation_key" --cipher-mode "xor" --auth-mode "simple" --raw-mode "icmp"
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target
+---EOF
+
+  systemctl enable udp-rawtunnel-over-icmp.service
+  systemctl start udp-rawtunnel-over-icmp.service
+
+  # UDP tunnel over UDP using forward-error-correction
   cat << ---EOF > /etc/systemd/system/udp-tunnel.service
 [Unit]
 Description=UDP Tunnel Server
@@ -318,7 +406,10 @@ Type=simple
 Restart=always
 RestartSec=1
 User=udp-tunnel
-ExecStart=/usr/local/bin/udp-speeder -s -f "20:10" -l "$config_server_dmz_itf_ip:$vpn_obfuscation_tunnel_port" -r "$config_server_dmz_itf_ip:$config_vpn_port" -k "$vpn_obfuscation_key"
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=udp-speeder
+ExecStart=/usr/local/bin/udp-speeder -s -f "20:10" -l "$config_server_dmz_itf_ip:${vpn_obfuscation_tunnel_port[3]}" -r "$config_server_dmz_itf_ip:$config_vpn_port" -k "$vpn_obfuscation_key"
 KillMode=process
 
 [Install]
@@ -344,8 +435,11 @@ Type=simple
 Restart=always
 RestartSec=1
 User=tcp-tunnel
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=kcptun-server
 LimitNOFILE=65535
-ExecStart=/usr/local/bin/kcptun-server -mode fast3 -nocomp -sockbuf 16777217 -dscp 46 -l "$config_server_dmz_itf_ip:$vpn_obfuscation_tunnel_port" -t "$config_server_dmz_itf_ip:$config_vpn_port" -key "$vpn_obfuscation_key"
+ExecStart=/usr/local/bin/kcptun-server -mode fast3 -nocomp -sockbuf 16777217 -dscp 46 -l "$config_server_dmz_itf_ip:${vpn_obfuscation_tunnel_port[0]}" -t "$config_server_dmz_itf_ip:$config_vpn_port" -key "$vpn_obfuscation_key"
 KillMode=process
 
 [Install]
@@ -376,7 +470,7 @@ if [[ -n "$vpn_obfuscation_tunnel_port" ]]; then
   case "$config_vpn_protocol" in
     udp)
       # Configure VPN UDP obfuscation tunnel
-      configure_udp_tunnel_service
+      configure_udp_tunnel_services
       ;;
     tcp)
       # Configure VPN TCP obfuscation tunnel
