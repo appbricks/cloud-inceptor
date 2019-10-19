@@ -125,7 +125,7 @@ variable "bastion_use_fqdn" {
 # as you cannot create an explicit
 # rule for ICMP.
 variable "allow_bastion_icmp" {
-  defautl = false
+  default = false
 }
 
 #

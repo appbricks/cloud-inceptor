@@ -165,7 +165,7 @@ variable "bastion_nic_hostnum" {
 }
 
 variable "allow_bastion_icmp" {
-  defautl = false
+  default = false
 }
 
 #

@@ -119,7 +119,7 @@ variable "bastion_use_fqdn" {
 }
 
 variable "allow_bastion_icmp" {
-  defautl = false
+  default = false
 }
 
 #
