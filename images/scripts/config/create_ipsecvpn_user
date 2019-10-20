@@ -163,9 +163,8 @@ cat << ---EOF > ${user_home}/${vpn_server_description}.mobileconfig
         </dict>
         <key>ChildSecurityAssociationParameters</key>
         <dict>
-          <key>EncryptionAlgorithm</key><string>AES-256-GCM</string>
-          <key>IntegrityAlgorithm</key><string>SHA2-384</string>
-          <key>DiffieHellmanGroup</key><integer>21</integer>
+          <key>EncryptionAlgorithm</key><string>AES-128-GCM</string>
+          <key>DiffieHellmanGroup</key><integer>2</integer>
           <key>LifeTimeInMinutes</key><integer>1440</integer>
         </dict>
       </dict>
