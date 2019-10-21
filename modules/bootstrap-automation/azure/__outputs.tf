@@ -46,6 +46,10 @@ output "vpc_dns_zone_name" {
 #
 # Bastion resource attributes
 #
+output "bastion_instance_id" {
+  value = "${azurerm_virtual_machine.bastion.id}"
+}
+
 output "bastion_fqdn" {
   value = "${var.vpc_dns_zone}"
 }

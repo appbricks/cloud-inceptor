@@ -43,6 +43,10 @@ output "vpc_dns_private_zone_name" {
 #
 # Bastion resource attributes
 #
+output "bastion_instance_id" {
+  value = "${aws_instance.bastion.id}"
+}
+
 output "bastion_fqdn" {
   value = "${aws_route53_record.vpc-public-external.name}"
 }

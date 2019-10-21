@@ -39,6 +39,10 @@ output "vpc_dns_zone_name" {
 #
 # Bastion resource attributes
 #
+output "bastion_instance_id" {
+  value = "${google_compute_instance.bastion.id}"
+}
+
 output "bastion_fqdn" {
   value = "${google_dns_record_set.vpc-public.name}"
 }
