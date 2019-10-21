@@ -3,7 +3,7 @@
 #
 
 variable "region" {
-  default = "eu-central-1"
+  default = "ap-south-1"
 }
 
 variable "smtp_relay_host" {
@@ -61,18 +61,18 @@ module "bootstrap" {
   ssh_key_file_path = "${path.module}"
 
   # VPN
-  # vpn_type = "ipsec"
-  vpn_type = "openvpn"
-  vpn_tunnel_all_traffic = "yes"
-  # vpn_idle_action = "shutdown"
+  vpn_idle_action = "shutdown"
 
   vpn_users = [
     "user1|P@ssw0rd1",
     "user2|P@ssw0rd2"
   ]
 
-  ovpn_server_port = "2295"
-  ovpn_protocol = "udp"
+  vpn_type = "ipsec"
+  # vpn_type = "openvpn"
+  # vpn_tunnel_all_traffic = "yes"
+  # ovpn_server_port = "2295"
+  # ovpn_protocol = "udp"
 
   # Tunnel for VPN to handle situations where 
   # OpenVPN is blocked or throttled by ISP
@@ -91,6 +91,9 @@ module "bootstrap" {
   # Issue certificates from letsencrypt.org
   certify_bastion = false
 
+  # ICMP needs to be allowed to enable ICMP tunneling
+  allow_bastion_icmp = true
+
   # If the SMTP relay settings are provided then
   # and SMTP server will be setup which will send
   # notifications when builds fail
@@ -104,7 +107,7 @@ module "bootstrap" {
   # Whether to deploy a jumpbox in the admin network. The
   # jumpbox will be deployed only if a local DNS zone is
   # provided and the DNS will be jumpbox.[first local zone].
-  deploy_jumpbox = true
+  deploy_jumpbox = false
 
   #
   # Bootstrap pipeline
@@ -121,7 +124,7 @@ PIPELINE_VARS
 #
 terraform {
   backend "s3" {
-    bucket = "tfstate-eu-central-1"
+    bucket = "tfstate-ap-south-1"
     key    = "test/cloud-inceptor"
   }
 }
@@ -129,6 +132,10 @@ terraform {
 #
 # Echo output of bootstrap module
 #
+output "bastion_instance_id" {
+  value = "${module.bootstrap.bastion_instance_id}"
+}
+
 output "bastion_fqdn" {
   value = "${module.bootstrap.bastion_fqdn}"
 }
