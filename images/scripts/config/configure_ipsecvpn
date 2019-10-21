@@ -183,7 +183,19 @@ ${config_server_host} : RSA "bastion_key.pem"
 
 apply_config
 cat /dev/null > /var/log/syslog
-ipsec restart
+
+systemctl enable strongswan.service
+systemctl start strongswan.service
+
+if [[ "$config_vpn_idle_action" == "shutdown" ]]; then
+
+  # Setup CRON job to shutdown when no clients connected
+  cat << ---EOF >> /etc/cron.d/vpn_inactivity_action
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+* * * * *   root    test -x /usr/local/lib/cloud-inceptor/idle_shutdown_ipsecvpn && /usr/local/lib/cloud-inceptor/idle_shutdown_ipsecvpn
+---EOF
+fi
 
 #
 # Create VPN users
