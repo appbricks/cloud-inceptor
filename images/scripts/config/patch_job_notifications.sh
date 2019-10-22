@@ -1,1 +1,0 @@
-../../../tasks/patches/patch_job_notifications.sh
