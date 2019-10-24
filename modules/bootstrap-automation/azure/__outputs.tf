@@ -63,8 +63,8 @@ output "bastion_admin_password" {
   value = "${module.config.bastion_admin_password}"
 }
 
-output "bastion_openssh_public_key" {
-  value = "${module.config.bastion_openssh_public_key}"
+output "bastion_openssh_private_key" {
+  value = "${module.config.bastion_openssh_private_key}"
 }
 
 output "bastion_openssh_public_key" {
@@ -81,10 +81,16 @@ output "powerdns_api_key" {
 # Default SSH key to use within VPC
 #
 
+output "default_openssh_private_key" {
+  value = "${tls_private_key.default-ssh-key.private_key_pem}"
+}
+
 output "default_openssh_public_key" {
   value = "${tls_private_key.default-ssh-key.public_key_openssh}"
 }
 
-output "default_openssh_private_key" {
-  value = "${tls_private_key.default-ssh-key.private_key_pem}"
-}
+# ==== DEBUG OUTPUT ====
+
+# output "debug_output" {
+#   value = "${module.config.debug_output}"
+# }
