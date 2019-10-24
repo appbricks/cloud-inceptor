@@ -8,6 +8,8 @@ resource "tls_private_key" "bastion-ssh-key" {
 }
 
 resource "local_file" "bastion-ssh-key" {
+  count = "${length(var.ssh_key_file_path) == 0 ? 0 : 1}"
+
   content  = "${tls_private_key.bastion-ssh-key.private_key_pem}"
   filename = "${var.ssh_key_file_path}/bastion-admin-ssh-key.pem"
 
