@@ -63,6 +63,14 @@ output "bastion_admin_password" {
   value = "${module.config.bastion_admin_password}"
 }
 
+output "bastion_openssh_public_key" {
+  value = "${module.config.bastion_openssh_public_key}"
+}
+
+output "bastion_openssh_public_key" {
+  value = "${module.config.bastion_openssh_public_key}"
+}
+
 # The api-key required to adminster the 
 # internal zone managed by powerdns
 output "powerdns_api_key" {

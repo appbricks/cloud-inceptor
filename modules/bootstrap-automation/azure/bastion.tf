@@ -39,7 +39,7 @@ resource "azurerm_virtual_machine" "bastion" {
     disable_password_authentication = true
 
     ssh_keys { 
-      key_data = "${module.config.bastion_admin_public_ssh_key}"
+      key_data = "${module.config.bastion_openssh_public_key}"
       path     = "/home/${var.bastion_admin_user}/.ssh/authorized_keys"
     }    
   }
