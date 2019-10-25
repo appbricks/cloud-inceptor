@@ -125,6 +125,10 @@ resource "aws_security_group" "internal" {
     protocol    = "icmp"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  tags = {
+    Name = "${var.vpc_name}: internal admin security group"
+  }
 }
 
 #

@@ -124,7 +124,7 @@ resource "aws_eip" "bastion-public" {
 #
 
 resource "aws_security_group" "bastion-public" {
-  name        = "${var.vpc_name}: bastion rules public"
+  name        = "${var.vpc_name}: bastion public"
   description = "Rules for ingress and egress of network traffic to bastion instance."
   vpc_id      = "${aws_vpc.main.id}"
 
@@ -249,10 +249,14 @@ resource "aws_security_group" "bastion-public" {
     protocol    = "icmp"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  tags = {
+    Name = "${var.vpc_name}: bastion public security group"
+  }
 }
 
 resource "aws_security_group" "bastion-private" {
-  name        = "${var.vpc_name}: bastion rules private"
+  name        = "${var.vpc_name}: bastion private"
   description = "Rules for ingress and egress of network traffic to bastion instance."
   vpc_id      = "${aws_vpc.main.id}"
 
@@ -286,5 +290,9 @@ resource "aws_security_group" "bastion-private" {
     to_port     = -1
     protocol    = "icmp"
     cidr_blocks = ["${var.vpc_cidr}"]
+  }
+
+  tags = {
+    Name = "${var.vpc_name}: bastion private security group"
   }
 }
