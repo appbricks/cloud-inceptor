@@ -33,5 +33,5 @@ resource "azurerm_subnet" "admin" {
     ? var.admin_cidr
     : ( length(var.dmz_cidr) != 0 
       ? cidrsubnet(var.vpc_cidr, var.vpc_subnet_bits, var.vpc_subnet_start)
-      : cidrsubnet(var.vpc_cidr, var.vpc_subnet_bits, var.vpc_subnet_start + 1)}"
+      : cidrsubnet(var.vpc_cidr, var.vpc_subnet_bits, var.vpc_subnet_start + 1))}"
 }

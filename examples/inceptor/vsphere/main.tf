@@ -3,7 +3,7 @@
 #
 
 module "bootstrap" {
-  source = "../../../modules/bootstrap-automation/vsphere"
+  source = "../../../modules/bootstrap/vsphere"
 
   #
   # Company information used in certificate creation

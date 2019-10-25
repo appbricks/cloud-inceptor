@@ -30,7 +30,7 @@ resource "google_compute_subnetwork" "admin" {
     ? var.admin_cidr
     : ( length(var.dmz_cidr) != 0 
       ? cidrsubnet(var.vpc_cidr, var.vpc_subnet_bits, var.vpc_subnet_start)
-      : cidrsubnet(var.vpc_cidr, var.vpc_subnet_bits, var.vpc_subnet_start + 1)}"
+      : cidrsubnet(var.vpc_cidr, var.vpc_subnet_bits, var.vpc_subnet_start + 1))}"
 
   network = "${google_compute_network.admin.self_link}"
   region  = "${var.region}"

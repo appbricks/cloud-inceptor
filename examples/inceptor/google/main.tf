@@ -1,33 +1,9 @@
 #
-# External variables
-#
-
-variable "region" {
-  default = "asia-south1"
-}
-
-variable "smtp_relay_host" {
-  default = ""
-}
-
-variable "smtp_relay_port" {
-  default = ""
-}
-
-variable "smtp_relay_api_key" {
-  default = ""
-}
-
-variable "notification_email" {
-  default = ""
-}
-
-#
 # Bootstrap an base environment named "inceptor"
 #
 
 module "bootstrap" {
-  source = "../../../modules/bootstrap-automation/google"
+  source = "../../../modules/bootstrap/google"
 
   #
   # Company information used in certificate creation
@@ -48,6 +24,7 @@ module "bootstrap" {
   region = "${var.region}"
 
   vpc_name = "inceptor-${var.region}"
+  vpc_cidr = "${var.regional_vpc_cidr[var.region]["vpc_cidr"]}"
 
   # DNS Name for VPC will be 'test.gcp.appbricks.cloud'
   vpc_dns_zone = "test-${var.region}.gcp.appbricks.cloud"
@@ -72,16 +49,16 @@ module "bootstrap" {
     "user2|P@ssw0rd2"
   ]
 
-  vpn_type = "ipsec"
-  # vpn_type = "openvpn"
-  # vpn_tunnel_all_traffic = "yes"
-  # ovpn_server_port = "2295"
-  # ovpn_protocol = "udp"
+  # vpn_type = "ipsec"
+  vpn_type = "openvpn"
+  vpn_tunnel_all_traffic = "yes"
+  ovpn_server_port = "2295"
+  ovpn_protocol = "udp"
 
   # Tunnel for VPN to handle situations where 
   # OpenVPN is blocked or throttled by ISP
-  tunnel_vpn_port_start = "2296"
-  tunnel_vpn_port_end   = "3396"
+  # tunnel_vpn_port_start = "2296"
+  # tunnel_vpn_port_end   = "3396"
 
   # Concourse Port
   concourse_server_port = "8080"
@@ -127,8 +104,7 @@ PIPELINE_VARS
 # Backend state
 #
 terraform {
-  backend "gcs" {
-    bucket = "tfstate-asia-south1"
+  backend "gcs" {    
     prefix = "test/cloud-inceptor"
   }
 }
