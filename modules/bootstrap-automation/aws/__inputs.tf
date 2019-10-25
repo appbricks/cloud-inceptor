@@ -64,7 +64,7 @@ variable "vpc_subnet_bits" {
 variable "vpc_subnet_start" {
   // Used to calculate subnet CIDR 
   // if not explicitly provided
-  default = 200
+  default = 10
 }
 
 variable "vpc_internal_dns_zones" {
@@ -80,6 +80,11 @@ variable "dmz_cidr" {
   default = []
 }
 
+variable "admin_cidr" {
+  // Amin Subnet CIDR for each AZ
+  default = []
+}
+
 variable "max_azs" {
   default = 1
 }
@@ -88,7 +93,7 @@ variable "max_azs" {
 # Local file path to write SSH private key for bastion instance
 #
 variable "ssh_key_file_path" {
-  type = string
+  default = ""
 }
 
 #

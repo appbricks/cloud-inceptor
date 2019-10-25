@@ -29,9 +29,11 @@ resource "aws_subnet" "admin" {
   # they are laid out in sequence. i.e. DMZ AZ1 CIDR 1, 
   # DMZ AZ2 CIDR 2, ADMIN AZ CIDR 4, ADMIN AZ CIDR 5 assuming 
   # the region has 3 AZs but only 2 are being configured.
-  cidr_block = "${length(var.dmz_cidr) != 0 
-    ? cidrsubnet(var.vpc_cidr, var.vpc_subnet_bits, var.vpc_subnet_start + count.index)
-    : cidrsubnet(var.vpc_cidr, var.vpc_subnet_bits, var.vpc_subnet_start + local.num_azs + count.index)}"
+  cidr_block = "${length(var.admin_cidr) != 0 
+    ? var.admin_cidr[count.index] 
+    : ( length(var.dmz_cidr) != 0 
+      ? cidrsubnet(var.vpc_cidr, var.vpc_subnet_bits, var.vpc_subnet_start + count.index)
+      : cidrsubnet(var.vpc_cidr, var.vpc_subnet_bits, var.vpc_subnet_start + local.num_azs + count.index) )}"
 
   tags = {
     Name = "${var.vpc_name}: admin subnet ${count.index}"
@@ -50,7 +52,7 @@ resource "aws_internet_gateway" "igw" {
   }
 }
 
-resource "aws_route_table" "igw" {
+resource "aws_route_table" "dmz" {
   vpc_id = "${aws_vpc.main.id}"
 
   route {
@@ -59,7 +61,7 @@ resource "aws_route_table" "igw" {
   }
 
   tags = {
-    Name = "${var.vpc_name}: internet gateway route"
+    Name = "${var.vpc_name}: dmz route table with igw"
   }
 }
 
@@ -89,7 +91,7 @@ resource "aws_nat_gateway" "nat" {
   depends_on = ["aws_internet_gateway.igw"]
 }
 
-resource "aws_route_table" "nat" {
+resource "aws_route_table" "admin" {
   count = "${local.num_azs_to_configure}"
 
   vpc_id = "${aws_vpc.main.id}"
@@ -112,7 +114,7 @@ resource "aws_route_table" "nat" {
   }
 
   tags = {
-    Name = "${var.vpc_name}: nat ${count.index} gateway route"
+    Name = "${var.vpc_name}: admin route table ${count.index} with nat"
   }
 }
 
@@ -124,12 +126,12 @@ resource "aws_route_table_association" "dmz" {
   count = "${local.num_azs_to_configure}"
 
   subnet_id      = "${element(aws_subnet.dmz.*.id, count.index)}"
-  route_table_id = "${aws_route_table.igw.id}"
+  route_table_id = "${aws_route_table.dmz.id}"
 }
 
 resource "aws_route_table_association" "admin" {
   count = "${local.num_azs_to_configure}"
 
   subnet_id      = "${element(aws_subnet.admin.*.id, count.index)}"
-  route_table_id = "${element(aws_route_table.nat.*.id, count.index)}"
+  route_table_id = "${element(aws_route_table.admin.*.id, count.index)}"
 }

@@ -26,9 +26,11 @@ resource "google_compute_network" "admin" {
 resource "google_compute_subnetwork" "admin" {
   name = "${var.vpc_name}-admin-subnet"
 
-  ip_cidr_range = "${length(var.dmz_cidr) != 0 
-    ? cidrsubnet(var.vpc_cidr, var.vpc_subnet_bits, var.vpc_subnet_start) 
-    : cidrsubnet(var.vpc_cidr, var.vpc_subnet_bits, var.vpc_subnet_start + 1)}"
+  ip_cidr_range = "${length(var.admin_cidr) != 0
+    ? var.admin_cidr
+    : ( length(var.dmz_cidr) != 0 
+      ? cidrsubnet(var.vpc_cidr, var.vpc_subnet_bits, var.vpc_subnet_start)
+      : cidrsubnet(var.vpc_cidr, var.vpc_subnet_bits, var.vpc_subnet_start + 1)}"
 
   network = "${google_compute_network.admin.self_link}"
   region  = "${var.region}"
