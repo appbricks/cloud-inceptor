@@ -38,7 +38,7 @@ module "bootstrap" {
   ssh_key_file_path = "${path.module}"
 
   # VPN
-  vpn_idle_action = "shutdown"
+  # vpn_idle_action = "shutdown"
 
   vpn_users = [
     "user1|P@ssw0rd1",
