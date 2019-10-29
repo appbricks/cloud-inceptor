@@ -89,6 +89,12 @@ variable "max_azs" {
   default = 1
 }
 
+# Internal CIDR for all VPC address 
+# spaces across all regions
+variable "global_internal_cidr" {
+  default = ""
+}
+
 #
 # Local file path to write SSH private key for bastion instance
 #

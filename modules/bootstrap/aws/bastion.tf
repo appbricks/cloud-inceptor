@@ -88,14 +88,14 @@ resource "aws_network_interface" "bastion-dmz" {
   }
 }
 
+resource "aws_eip_association" "bastion" {
+  network_interface_id = "${aws_network_interface.bastion-dmz.id}"
+  allocation_id        = "${aws_eip.bastion-public.id}"
+}
+
 resource "aws_network_interface" "bastion-admin" {
   subnet_id       = "${aws_subnet.admin[0].id}"
   private_ips     = ["${local.bastion_admin_itf_ip}"]
-  security_groups = [
-    "${var.bastion_as_nat 
-      ? aws_security_group.internal.id 
-      : aws_security_group.bastion-private.id}"
-  ]
 
   # Enable traffic not destined 
   # for bastion to pass through
@@ -106,9 +106,11 @@ resource "aws_network_interface" "bastion-admin" {
   }
 }
 
-resource "aws_eip_association" "bastion" {
-  network_interface_id = "${aws_network_interface.bastion-dmz.id}"
-  allocation_id        = "${aws_eip.bastion-public.id}"
+resource "aws_network_interface_sg_attachment" "bastion-admin" {
+  network_interface_id = "${aws_network_interface.bastion-admin.id}"
+  security_group_id    = "${var.bastion_as_nat 
+    ? aws_security_group.internal.id 
+    : aws_security_group.bastion-private.id}"
 }
 
 resource "aws_eip" "bastion-public" {

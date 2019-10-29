@@ -127,7 +127,7 @@ resource "aws_security_group" "internal" {
   }
 
   tags = {
-    Name = "${var.vpc_name}: internal admin security group"
+    Name = "${var.vpc_name}: internal"
   }
 }
 

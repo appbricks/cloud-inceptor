@@ -52,7 +52,7 @@ module "config" {
       list(
         google_compute_address.bastion-admin.address, 
         google_compute_subnetwork.admin.ip_cidr_range,
-        var.vpc_cidr,
+        length(var.global_internal_cidr) == 0 ? var.vpc_cidr : var.global_internal_cidr,
         google_compute_subnetwork.admin.gateway_address
       )
     )}",

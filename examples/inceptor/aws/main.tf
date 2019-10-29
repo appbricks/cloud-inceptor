@@ -7,7 +7,6 @@ data "aws_region" "default" {
 #
 # Bootstrap an base environment named "inceptor"
 #
-
 module "bootstrap" {
   source = "../../../modules/bootstrap/aws"
 
@@ -40,8 +39,11 @@ module "bootstrap" {
   # for names to map to external and internal addresses.
   vpc_internal_dns_zones = ["appbricks.local"]
 
+  # Address space for all VPC regions
+  global_internal_cidr = "10.0.0.0/8"
+
   # Local file path to write SSH private key for bastion instance
-  ssh_key_file_path = "${path.module}"
+  ssh_key_file_path = "${path.module}/.${data.aws_region.default.name}"
 
   # VPN
   # vpn_idle_action = "shutdown"
@@ -110,36 +112,3 @@ terraform {
     key = "test/cloud-inceptor"
   }
 }
-
-#
-# Echo output of bootstrap module
-#
-output "vpc_id" {
-  value = "${module.bootstrap.vpc_id}"
-}
-
-output "bastion_instance_id" {
-  value = "${module.bootstrap.bastion_instance_id}"
-}
-
-output "bastion_fqdn" {
-  value = "${module.bootstrap.bastion_fqdn}"
-}
-
-output "bastion_admin_fqdn" {
-  value = "${module.bootstrap.bastion_admin_fqdn}"
-}
-
-output "bastion_admin_password" {
-  value = "${module.bootstrap.bastion_admin_password}"
-}
-
-output "concourse_admin_password" {
-  value = "Passw0rd"
-}
-
-# ==== DEBUG OUTPUT ====
-
-# output "debug_output" {
-#   value = "${module.bootstrap.debug_output}"
-# }

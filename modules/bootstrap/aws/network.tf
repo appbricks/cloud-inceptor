@@ -79,7 +79,7 @@ resource "aws_eip" "nat" {
 }
 
 resource "aws_nat_gateway" "nat" {
-  count = "${var.bastion_as_nat ? 0 :local.num_azs_to_configure}"
+  count = "${var.bastion_as_nat ? 0 : local.num_azs_to_configure}"
 
   allocation_id = "${element(aws_eip.nat.*.id, count.index)}"
   subnet_id     = "${element(aws_subnet.dmz.*.id, count.index)}"
@@ -96,26 +96,29 @@ resource "aws_route_table" "admin" {
 
   vpc_id = "${aws_vpc.main.id}"
 
-  # Use Bastion as NAT
-  dynamic "route" {
-    for_each = var.bastion_as_nat ? [1] : []
-    content {
-      cidr_block           = "0.0.0.0/0"
-      network_interface_id = "${aws_network_interface.bastion-admin.id}"
-    }
-  }
-  # Use NAT instance
-  dynamic "route" {
-    for_each = !var.bastion_as_nat ? [1] : []
-    content {
-      cidr_block     = "0.0.0.0/0"
-      nat_gateway_id = "${element(aws_nat_gateway.nat.*.id, count.index)}"
-    }
-  }
-
   tags = {
     Name = "${var.vpc_name}: admin route table ${count.index} with nat"
   }
+}
+
+# Use Bastion as NAT
+resource "aws_route" "nat-bastion" {
+  count = "${var.bastion_as_nat ? local.num_azs_to_configure : 0}"
+  
+  route_table_id = "${aws_route_table.admin[count.index].id}"
+
+  destination_cidr_block = "0.0.0.0/0"
+  network_interface_id   = "${aws_network_interface.bastion-admin.id}"
+}
+
+# Use NAT instance
+resource "aws_route" "nat-gateway" {
+  count = "${!var.bastion_as_nat ? local.num_azs_to_configure : 0}"
+  
+  route_table_id = "${aws_route_table.admin[count.index].id}"
+
+  destination_cidr_block = "0.0.0.0/0"
+  nat_gateway_id         = "${element(aws_nat_gateway.nat.*.id, count.index)}"
 }
 
 #

@@ -52,7 +52,7 @@ module "config" {
       list(
         azurerm_network_interface.bastion-admin.ip_configuration[0].private_ip_address,
         azurerm_subnet.admin.address_prefix,
-        var.vpc_cidr,
+        length(var.global_internal_cidr) == 0 ? var.vpc_cidr : var.global_internal_cidr,
         cidrhost(azurerm_subnet.admin.address_prefix, 1)
       )
     )}",

@@ -52,7 +52,7 @@ module "config" {
       list(
         local.bastion_admin_itf_ip, 
         aws_subnet.admin[0].cidr_block,
-        var.vpc_cidr,
+        length(var.global_internal_cidr) == 0 ? var.vpc_cidr : var.global_internal_cidr,
         cidrhost(aws_subnet.admin[0].cidr_block, 1)
       )
     )}",
