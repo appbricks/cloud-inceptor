@@ -76,6 +76,9 @@ module "config" {
   tunnel_vpn_port_start = "${var.tunnel_vpn_port_start}"
   tunnel_vpn_port_end   = "${var.tunnel_vpn_port_end}"
 
+  wireguard_port      = "${var.wireguard_port}"
+  wireguard_subnet_ip = "${var.wireguard_subnet_ip}"
+
   smtp_relay_host    = "${var.smtp_relay_host}"
   smtp_relay_port    = "${var.smtp_relay_port}"
   smtp_relay_api_key = "${var.smtp_relay_api_key}"

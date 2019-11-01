@@ -7,12 +7,11 @@ provider "aws" {
 
   # If create is false then set default 
   # region as it is a required attribute
-  region = "${var.create ? var.ingress_region : "us-east-1"}"
+  region = "${var.ingress_region}"
 }
 
 data "aws_vpc" "ingress-vpc" {
   provider = "aws.ingress"
-  count    = "${var.create ? 1 : 0}"
 
   id = "${var.ingress_vpc_id}"
 }
@@ -21,9 +20,8 @@ data "aws_vpc" "ingress-vpc" {
 
 data "aws_subnet_ids" "ingress-admin" {
   provider = "aws.ingress"
-  count    = "${var.create ? 1 : 0}"
 
-  vpc_id = "${data.aws_vpc.ingress-vpc[0].id}"
+  vpc_id = "${data.aws_vpc.ingress-vpc.id}"
 
   filter {
     name   = "tag:Name"
@@ -33,15 +31,14 @@ data "aws_subnet_ids" "ingress-admin" {
 
 data "aws_subnet" "ingress-admin" {
   provider = "aws.ingress"
-  count    = "${var.create ? length(data.aws_subnet_ids.ingress-admin[0].ids) : 0}"
-  id       = "${element(flatten(data.aws_subnet_ids.ingress-admin[0].ids), count.index)}"
+  count    = "${length(data.aws_subnet_ids.ingress-admin.ids)}"
+  id       = "${element(flatten(data.aws_subnet_ids.ingress-admin.ids), count.index)}"
 }
 
 data "aws_route_tables" "ingress-admin" {
   provider = "aws.ingress"
-  count    = "${var.create ? 1 : 0}"
 
-  vpc_id = "${data.aws_vpc.ingress-vpc[0].id}"
+  vpc_id = "${data.aws_vpc.ingress-vpc.id}"
 
   filter {
     name   = "tag:Name"
@@ -53,7 +50,7 @@ data "aws_route_tables" "ingress-admin" {
 
 data "aws_network_interface" "ingress-bastion-nic" {
   provider = "aws.ingress"
-  count    = "${var.create ? length(data.aws_subnet_ids.ingress-admin[0].ids) : 0}"
+  count    = "${length(data.aws_subnet_ids.ingress-admin.ids)}"
 
   filter {
     name   = "attachment.instance-id"
@@ -61,6 +58,6 @@ data "aws_network_interface" "ingress-bastion-nic" {
   }
   filter {
     name   = "subnet-id"
-    values = [ "${element(flatten(data.aws_subnet_ids.ingress-admin[0].ids), count.index)}" ]
+    values = [ "${element(flatten(data.aws_subnet_ids.ingress-admin.ids), count.index)}" ]
   }
 }

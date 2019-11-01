@@ -24,7 +24,7 @@ output "bastion_admin_password" {
   value = "${random_string.bastion-admin-password.result}"
 }
 
-output "bastion_openssh_private_key" {
+output "bastion_admin_sshkey" {
   value = "${tls_private_key.bastion-ssh-key.private_key_pem}"
 }
 

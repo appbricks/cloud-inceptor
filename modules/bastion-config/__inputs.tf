@@ -188,6 +188,17 @@ variable "ovpn_protocol" {
 }
 
 #
+# Wireguard configuration
+#
+variable "wireguard_port" {
+  type = string
+}
+
+variable "wireguard_subnet_ip" {
+  type = string
+}
+
+#
 # Enable tunnelling of VPN within another tunnel 
 # when firewalls and telco's block OpenVPN via
 # deep-packet-inspection.

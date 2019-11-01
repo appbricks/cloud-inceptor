@@ -1,7 +1,10 @@
-#
 # AWS region from environment
-#
 data "aws_region" "default" {
+}
+
+locals {
+  vpc_cidr = "${var.regional_vpc_cidr[data.aws_region.default.name]["vpc_cidr"]}"
+  vpc_subnet_index = "${element(regex("\\d{1,3}\\.(\\d{1,3})\\.\\d{1,3}\\.\\d{1,3}\\/\\d+", local.vpc_cidr), 0)}"
 }
 
 #
@@ -29,7 +32,7 @@ module "bootstrap" {
   region = "${data.aws_region.default.name}"
 
   vpc_name = "inceptor-${data.aws_region.default.name}"
-  vpc_cidr = "${var.regional_vpc_cidr[data.aws_region.default.name]["vpc_cidr"]}"
+  vpc_cidr = "${local.vpc_cidr}"
 
   # DNS Name for VPC will be 'test.aws.appbricks.cloud'
   vpc_dns_zone = "test-${data.aws_region.default.name}.aws.appbricks.cloud"
@@ -56,8 +59,12 @@ module "bootstrap" {
   # vpn_type = "ipsec"
   vpn_type = "openvpn"
   vpn_tunnel_all_traffic = "yes"
+
   ovpn_server_port = "2295"
   ovpn_protocol = "udp"
+
+  wireguard_port = "3399"
+  wireguard_subnet_ip = "192.168.112.${local.vpc_subnet_index}/24"
 
   # Tunnel for VPN to handle situations where 
   # OpenVPN is blocked or throttled by ISP

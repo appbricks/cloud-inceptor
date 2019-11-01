@@ -218,6 +218,17 @@ variable "tunnel_vpn_port_end" {
 }
 
 #
+# Wireguard configuration
+#
+variable "wireguard_port" {
+  default = ""
+}
+
+variable "wireguard_subnet_ip" {
+  default = "192.168.112.1/24"
+}
+
+#
 # Concourse
 #
 variable "concourse_server_port" {

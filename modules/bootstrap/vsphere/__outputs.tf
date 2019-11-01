@@ -35,6 +35,10 @@ output "bastion_admin_fqdn" {
     : local.bastion_admin_itf_ip}"
 }
 
+output "bastion_admin_user" {
+  value = "${var.bastion_admin_user}"
+}
+
 output "bastion_admin_password" {
   value = "${module.config.bastion_admin_password}"
 }

@@ -51,12 +51,16 @@ output "bastion_admin_fqdn" {
   value = "${google_dns_record_set.vpc-admin.name}"
 }
 
+output "bastion_admin_user" {
+  value = "${var.bastion_admin_user}"
+}
+
 output "bastion_admin_password" {
   value = "${module.config.bastion_admin_password}"
 }
 
-output "bastion_openssh_private_key" {
-  value = "${module.config.bastion_openssh_private_key}"
+output "bastion_admin_sshkey" {
+  value = "${module.config.bastion_admin_sshkey}"
 }
 
 output "bastion_openssh_public_key" {
