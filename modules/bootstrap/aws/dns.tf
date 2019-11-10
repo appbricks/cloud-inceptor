@@ -3,7 +3,8 @@
 #
 
 data "aws_route53_zone" "parent" {
-  name = "${replace(var.vpc_dns_zone, "/^[-0-9a-zA-Z]+\\./", "")}."
+  count = "${var.attach_dns_zone ? 1 : 0}"
+  name  = "${replace(var.vpc_dns_zone, "/^[-0-9a-zA-Z]+\\./", "")}."
 }
 
 #
@@ -18,7 +19,9 @@ resource "aws_route53_zone" "vpc-public" {
 }
 
 resource "aws_route53_record" "vpc-public-ns" {
-  zone_id = "${data.aws_route53_zone.parent.zone_id}"
+  count = "${var.attach_dns_zone ? 1 : 0}"
+
+  zone_id = "${data.aws_route53_zone.parent[0].zone_id}"
   name    = "${var.vpc_dns_zone}"
   type    = "NS"
   ttl     = "30"

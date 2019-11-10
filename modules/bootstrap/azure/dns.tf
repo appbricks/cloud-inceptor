@@ -10,7 +10,9 @@ locals {
 }
 
 data "azurerm_dns_zone" "parent" {
-  name = "${local.parent_dns_name}"
+  count = "${var.attach_dns_zone ? 1 : 0}"
+
+  name                = "${local.parent_dns_name}"
   resource_group_name = "${var.source_resource_group}"
 }
 
@@ -18,8 +20,10 @@ data "azurerm_dns_zone" "parent" {
 # Add Public DNS zone's nameservers to the parent zone
 #
 resource "azurerm_dns_ns_record" "vpc" {
+  count = "${var.attach_dns_zone ? 1 : 0}"
+
   name         = "${local.vpc_dns_hostname}"
-  zone_name    = "${data.azurerm_dns_zone.parent.name}"
+  zone_name    = "${data.azurerm_dns_zone.parent[0].name}"
 
   resource_group_name = "${var.source_resource_group}"
 
@@ -46,8 +50,10 @@ resource "azurerm_dns_zone" "vpc-public" {
 #
 
 resource "azurerm_dns_a_record" "vpc-public" {
+  count = "${var.attach_dns_zone ? 1 : 0}"
+
   name      = "${local.vpc_dns_hostname}"
-  zone_name = "${data.azurerm_dns_zone.parent.name}"
+  zone_name = "${data.azurerm_dns_zone.parent[0].name}"
 
   resource_group_name = "${var.source_resource_group}"
 

@@ -51,6 +51,16 @@ variable "vpc_dns_zone" {
   type = string
 }
 
+# Attach DNS to parent zone. This 
+# requires the parent zone to exist 
+# within the same cloud provider.
+# Otherwise once deployed the VPC
+# zone's nameservers need to be added
+# manually to the parent zone.
+variable "attach_dns_zone" {
+  default = false
+}
+
 variable "vpc_cidr" {
   default = "10.0.0.0/16"
 }
@@ -111,6 +121,10 @@ variable "bastion_instance_type" {
 
 variable "bastion_image_name" {
   default = "appbricks-inceptor-bastion"
+}
+
+variable "bastion_image_owner" {
+  default = "self"
 }
 
 variable "bastion_root_disk_size" {

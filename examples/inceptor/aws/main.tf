@@ -35,7 +35,8 @@ module "bootstrap" {
   vpc_cidr = "${local.vpc_cidr}"
 
   # DNS Name for VPC will be 'test.aws.appbricks.cloud'
-  vpc_dns_zone = "test-${data.aws_region.default.name}.aws.appbricks.cloud"
+  vpc_dns_zone    = "test-${data.aws_region.default.name}.aws.appbricks.cloud"
+  attach_dns_zone = true
 
   # Local DNS zone. This could also be the same as the public
   # which will enable setting up a split DNS of the public zone
@@ -78,7 +79,10 @@ module "bootstrap" {
   bastion_allow_public_ssh = true
 
   bastion_host_name = "inceptor"
-  bastion_use_fqdn = true
+  bastion_use_fqdn = "${var.bastion_use_fqdn}"
+
+  bastion_image_name  = "${var.bastion_image_name}"
+  bastion_image_owner = "${var.bastion_image_owner}"
 
   # Issue certificates from letsencrypt.org
   certify_bastion = false

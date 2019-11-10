@@ -18,6 +18,10 @@ output "bastion_instance_id" {
   value = "${module.bootstrap.bastion_instance_id}"
 }
 
+output "bastion_public_ip" {
+  value = "${module.bootstrap.bastion_public_ip}"
+}
+
 output "bastion_fqdn" {
   value = "${module.bootstrap.bastion_fqdn}"
 }

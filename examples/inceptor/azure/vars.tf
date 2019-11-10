@@ -26,6 +26,14 @@ variable "notification_email" {
 }
 
 #
+# Bastion Image
+#
+
+variable "bastion_use_fqdn" {
+  type = string
+}
+
+#
 # Distinct CIDR for VPCs by region
 #
 variable "regional_vpc_cidr" {

@@ -3,7 +3,8 @@
 #
 
 data "google_dns_managed_zone" "parent" {
-  name = "${var.dns_managed_zone_name}"
+  count = "${var.attach_dns_zone ? 1 : 0}"
+  name  = "${var.dns_managed_zone_name}"
 }
 
 #
@@ -15,8 +16,10 @@ resource "google_dns_managed_zone" "vpc" {
 }
 
 resource "google_dns_record_set" "vpc" {
+  count = "${var.attach_dns_zone ? 1 : 0}"
+
   name         = "${var.vpc_dns_zone}."
-  managed_zone = "${data.google_dns_managed_zone.parent.name}"
+  managed_zone = "${data.google_dns_managed_zone.parent[0].name}"
 
   type = "NS"
   ttl  = 300

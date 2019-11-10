@@ -66,7 +66,7 @@ data "aws_ami" "bastion" {
     values = ["hvm"]
   }
 
-  owners = ["self"]
+  owners = ["${var.bastion_image_owner}"]
 }
 
 #

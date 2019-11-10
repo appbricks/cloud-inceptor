@@ -39,7 +39,7 @@ module "bootstrap" {
   dns_managed_zone_name = "gcp-appbricks-cloud"
 
   # Local file path to write SSH private key for bastion instance
-  ssh_key_file_path = "${path.module}"
+  ssh_key_file_path = "${path.module}/.${var.region}"
 
   # VPN
   # vpn_idle_action = "shutdown"
@@ -67,7 +67,7 @@ module "bootstrap" {
   bastion_allow_public_ssh = true
 
   bastion_host_name = "inceptor"
-  bastion_use_fqdn = true
+  bastion_use_fqdn = "${var.bastion_use_fqdn}"
 
   # Issue certificates from letsencrypt.org
   certify_bastion = false
