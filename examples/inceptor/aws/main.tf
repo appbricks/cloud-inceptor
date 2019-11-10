@@ -36,7 +36,7 @@ module "bootstrap" {
 
   # DNS Name for VPC will be 'test.aws.appbricks.cloud'
   vpc_dns_zone    = "test-${data.aws_region.default.name}.aws.appbricks.cloud"
-  attach_dns_zone = true
+  attach_dns_zone = "${var.bastion_use_fqdn}"
 
   # Local DNS zone. This could also be the same as the public
   # which will enable setting up a split DNS of the public zone
@@ -64,8 +64,8 @@ module "bootstrap" {
   ovpn_server_port = "2295"
   ovpn_protocol = "udp"
 
-  wireguard_port = "3399"
-  wireguard_subnet_ip = "192.168.112.${local.vpc_subnet_index}/24"
+  # wireguard_port = "3399"
+  # wireguard_subnet_ip = "192.168.112.${local.vpc_subnet_index}/24"
 
   # Tunnel for VPN to handle situations where 
   # OpenVPN is blocked or throttled by ISP

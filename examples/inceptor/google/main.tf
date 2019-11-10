@@ -27,7 +27,8 @@ module "bootstrap" {
   vpc_cidr = "${var.regional_vpc_cidr[var.region]["vpc_cidr"]}"
 
   # DNS Name for VPC will be 'test.gcp.appbricks.cloud'
-  vpc_dns_zone = "test-${var.region}.gcp.appbricks.cloud"
+  vpc_dns_zone    = "test-${var.region}.gcp.appbricks.cloud"
+  attach_dns_zone = "${var.bastion_use_fqdn}"
 
   # Local DNS zone. This could also be the same as the public
   # which will enable setting up a split DNS of the public zone
