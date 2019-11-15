@@ -8,21 +8,21 @@ locals {
 
   jumpbox_dns = "${var.deploy_jumpbox && length(local.local_dns) > 0 
     ? format("jumpbox.%s", local.local_dns) : ""}"
-  jumpbox_ip = "${cidrhost(azurerm_subnet.admin.address_prefix, 10)}"
+  jumpbox_ip = cidrhost(azurerm_subnet.admin.address_prefix, 10)
   jumpbox_dns_record = "${length(local.jumpbox_dns) > 0 
     ? format("%s:%s", local.jumpbox_dns, local.jumpbox_ip) : ""}"
 }
 
 resource "azurerm_virtual_machine" "jumpbox" {
-  count = "${length(local.jumpbox_dns) > 0 ? 1 : 0}"
+  count = length(local.jumpbox_dns) > 0 ? 1 : 0
 
   name = "${var.vpc_name}-jumpbox"
 
-  location            = "${azurerm_resource_group.bootstrap.location}"
-  resource_group_name = "${azurerm_resource_group.bootstrap.name}"
+  location            = azurerm_resource_group.bootstrap.location
+  resource_group_name = azurerm_resource_group.bootstrap.name
 
   vm_size               = "Standard_B1s"
-  network_interface_ids = ["${azurerm_network_interface.jumpbox-admin[count.index].id}"]
+  network_interface_ids = [azurerm_network_interface.jumpbox-admin[count.index].id]
 
   delete_os_disk_on_termination = true
 
@@ -61,28 +61,28 @@ USER_DATA
     disable_password_authentication = true
 
     ssh_keys { 
-      key_data = "${tls_private_key.default-ssh-key.public_key_openssh}"
+      key_data = tls_private_key.default-ssh-key.public_key_openssh
       path     = "/home/ubuntu/.ssh/authorized_keys"
     }
   }
 }
 
 resource "azurerm_network_interface" "jumpbox-admin" {
-  count = "${length(local.jumpbox_dns) > 0 ? 1 : 0}"
+  count = length(local.jumpbox_dns) > 0 ? 1 : 0
 
   name = "${var.vpc_name}-jumpbox-admin"
   
-  location            = "${azurerm_resource_group.bootstrap.location}"
-  resource_group_name = "${azurerm_resource_group.bootstrap.name}"
+  location            = azurerm_resource_group.bootstrap.location
+  resource_group_name = azurerm_resource_group.bootstrap.name
 
   ip_configuration {
     name                          = "admin"
-    subnet_id                     = "${azurerm_subnet.admin.id}"
+    subnet_id                     = azurerm_subnet.admin.id
     private_ip_address_allocation = "Static"
-    private_ip_address            = "${local.jumpbox_ip}"
+    private_ip_address            = local.jumpbox_ip
   }
 
-  network_security_group_id = "${azurerm_network_security_group.admin.id}"
+  network_security_group_id = azurerm_network_security_group.admin.id
 }
 
 #
@@ -90,7 +90,7 @@ resource "azurerm_network_interface" "jumpbox-admin" {
 #
 
 data "template_file" "mount-jumpbox-data-volume" {
-  template = "${file("${path.module}/scripts/mount-volume.sh")}"
+  template = file("${path.module}/scripts/mount-volume.sh")
 
   vars = {
     attached_device_name = "sdc"
@@ -100,23 +100,23 @@ data "template_file" "mount-jumpbox-data-volume" {
 }
 
 resource "azurerm_managed_disk" "jumpbox-data" {
-  count = "${length(local.jumpbox_dns) > 0 ? 1 : 0}"
+  count = length(local.jumpbox_dns) > 0 ? 1 : 0
 
   name = "${var.vpc_name}-jumpbox-data"
 
-  location            = "${azurerm_resource_group.bootstrap.location}"
-  resource_group_name = "${azurerm_resource_group.bootstrap.name}"
+  location            = azurerm_resource_group.bootstrap.location
+  resource_group_name = azurerm_resource_group.bootstrap.name
 
   storage_account_type = "Standard_LRS"
   create_option        = "Empty"
-  disk_size_gb         = "${var.jumpbox_data_disk_size}"
+  disk_size_gb         = var.jumpbox_data_disk_size
 }
 
 resource "azurerm_virtual_machine_data_disk_attachment" "jumpbox-data" {
-  count = "${length(local.jumpbox_dns) > 0 ? 1 : 0}"
+  count = length(local.jumpbox_dns) > 0 ? 1 : 0
 
-  managed_disk_id    = "${azurerm_managed_disk.jumpbox-data[count.index].id}"
-  virtual_machine_id = "${azurerm_virtual_machine.jumpbox[count.index].id}"
+  managed_disk_id    = azurerm_managed_disk.jumpbox-data[count.index].id
+  virtual_machine_id = azurerm_virtual_machine.jumpbox[count.index].id
 
   lun     = "10"
   caching = "ReadWrite"

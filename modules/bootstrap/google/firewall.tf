@@ -6,7 +6,7 @@
 # Allow SSH from any external source
 resource "google_compute_firewall" "dmz-allow-ext-ssh" {
   name    = "${var.vpc_name}-dmz-allow-ext-ssh"
-  network = "${google_compute_network.dmz.name}"
+  network = google_compute_network.dmz.name
 
   allow {
     protocol = "tcp"
@@ -21,7 +21,7 @@ resource "google_compute_firewall" "dmz-allow-ext-ssh" {
 # Allow SSH only from internal sources
 resource "google_compute_firewall" "dmz-allow-int-ssh" {
   name    = "${var.vpc_name}-dmz-allow-int-ssh"
-  network = "${google_compute_network.dmz.name}"
+  network = google_compute_network.dmz.name
 
   allow {
     protocol = "tcp"
@@ -29,7 +29,7 @@ resource "google_compute_firewall" "dmz-allow-int-ssh" {
   }
 
   direction     = "INGRESS"
-  source_ranges = ["${var.vpc_cidr}"]
+  source_ranges = [var.vpc_cidr]
   target_tags   = ["allow-int-ssh"]
 }
 
@@ -43,20 +43,20 @@ resource "google_compute_firewall" "dmz-allow-int-ssh" {
 # routing traffic from a private instance and NAT instances.
 resource "google_compute_firewall" "admin-allow-all" {
   name    = "${var.vpc_name}-admin-allow-all"
-  network = "${google_compute_network.admin.name}"
+  network = google_compute_network.admin.name
 
   allow {
     protocol = "all"
   }
 
   direction     = "INGRESS"
-  source_ranges = ["${google_compute_subnetwork.admin.ip_cidr_range}"]
+  source_ranges = [google_compute_subnetwork.admin.ip_cidr_range]
 }
 
 # Allow SSH from any external source
 resource "google_compute_firewall" "admin-allow-ext-ssh" {
   name    = "${var.vpc_name}-admin-allow-ext-ssh"
-  network = "${google_compute_network.admin.name}"
+  network = google_compute_network.admin.name
 
   allow {
     protocol = "tcp"
@@ -71,7 +71,7 @@ resource "google_compute_firewall" "admin-allow-ext-ssh" {
 # Allow SSH only from internal sources
 resource "google_compute_firewall" "admin-allow-int-ssh" {
   name    = "${var.vpc_name}-admin-allow-int-ssh"
-  network = "${google_compute_network.admin.name}"
+  network = google_compute_network.admin.name
 
   allow {
     protocol = "tcp"
@@ -79,6 +79,6 @@ resource "google_compute_firewall" "admin-allow-int-ssh" {
   }
 
   direction     = "INGRESS"
-  source_ranges = ["${var.vpc_cidr}"]
+  source_ranges = [var.vpc_cidr]
   target_tags   = ["allow-int-ssh"]
 }

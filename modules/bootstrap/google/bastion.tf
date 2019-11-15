@@ -3,9 +3,9 @@
 #
 
 resource "google_compute_instance" "bastion" {
-  name         = "${element(split(".", var.vpc_dns_zone), 0)}"
-  machine_type = "${var.bastion_instance_type}"
-  zone         = "${data.google_compute_zones.available.names[0]}"
+  name         = element(split(".", var.vpc_dns_zone), 0)
+  machine_type = var.bastion_instance_type
+  zone         = data.google_compute_zones.available.names[0]
 
   can_ip_forward            = true
   allow_stopping_for_update = true
@@ -21,38 +21,38 @@ resource "google_compute_instance" "bastion" {
 
   boot_disk {
     initialize_params {
-      image = "${data.google_compute_image.bastion.self_link}"
-      size  = "${var.bastion_root_disk_size}"
+      image = data.google_compute_image.bastion.self_link
+      size  = var.bastion_root_disk_size
     }
   }
 
   attached_disk {
-    source = "${google_compute_disk.bastion-data.self_link}"
+    source = google_compute_disk.bastion-data.self_link
   }
 
   network_interface {
-    subnetwork = "${google_compute_subnetwork.dmz.self_link}"
-    network_ip = "${google_compute_address.bastion-dmz.address}"
+    subnetwork = google_compute_subnetwork.dmz.self_link
+    network_ip = google_compute_address.bastion-dmz.address
 
     access_config {
-      nat_ip = "${google_compute_address.bastion-public.address}"
+      nat_ip = google_compute_address.bastion-public.address
 
-      # public_ptr_domain_name = "${google_dns_record_set.vpc-public.name}"
+      # public_ptr_domain_name = google_dns_record_set.vpc-public.name
     }
   }
 
   network_interface {
-    subnetwork = "${google_compute_subnetwork.admin.self_link}"
-    network_ip = "${google_compute_address.bastion-admin.address}"
+    subnetwork = google_compute_subnetwork.admin.self_link
+    network_ip = google_compute_address.bastion-admin.address
   }
 
   metadata = {
-    user-data          = "${module.config.bastion_cloud_init_config}"
+    user-data          = module.config.bastion_cloud_init_config
     user-data-encoding = "base64"
   }
 
   lifecycle {
-    ignore_changes = ["metadata"]
+    ignore_changes = [metadata]
   }
 }
 
@@ -64,8 +64,8 @@ resource "google_compute_instance" "bastion" {
 resource "google_compute_disk" "bastion-data" {
   name = "${var.vpc_name}-bastion-data"
   type = "pd-standard"
-  zone = "${data.google_compute_zones.available.names[0]}"
-  size = "${var.bastion_data_disk_size}"
+  zone = data.google_compute_zones.available.names[0]
+  size = var.bastion_data_disk_size
 }
 
 #
@@ -73,7 +73,7 @@ resource "google_compute_disk" "bastion-data" {
 #
 
 data "google_compute_image" "bastion" {
-  name = "${var.bastion_image_name}"
+  name = var.bastion_image_name
 }
 
 #
@@ -84,27 +84,27 @@ resource "google_compute_address" "bastion-dmz" {
   name         = "${var.vpc_name}-bastion-dmz"
   address_type = "INTERNAL"
 
-  subnetwork = "${google_compute_subnetwork.dmz.self_link}"
-  region     = "${var.region}"
+  subnetwork = google_compute_subnetwork.dmz.self_link
+  region     = var.region
 
-  address = "${cidrhost(google_compute_subnetwork.dmz.ip_cidr_range, -3)}"
+  address = cidrhost(google_compute_subnetwork.dmz.ip_cidr_range, -3)
 }
 
 resource "google_compute_address" "bastion-admin" {
   name         = "${var.vpc_name}-bastion-admin"
   address_type = "INTERNAL"
 
-  subnetwork = "${google_compute_subnetwork.admin.self_link}"
-  region     = "${var.region}"
+  subnetwork = google_compute_subnetwork.admin.self_link
+  region     = var.region
 
-  address = "${cidrhost(google_compute_subnetwork.admin.ip_cidr_range, -3)}"
+  address = cidrhost(google_compute_subnetwork.admin.ip_cidr_range, -3)
 }
 
 resource "google_compute_address" "bastion-public" {
   name         = "${var.vpc_name}-bastion"
   address_type = "EXTERNAL"
 
-  region = "${var.region}"
+  region = var.region
 }
 
 #
@@ -112,14 +112,14 @@ resource "google_compute_address" "bastion-public" {
 #
 
 resource "google_compute_firewall" "bastion-ssh" {
-  count = "${var.bastion_allow_public_ssh ? 1 : 0 }"
+  count = var.bastion_allow_public_ssh ? 1 : 0 
 
   name    = "${var.vpc_name}-bastion-ssh"
-  network = "${google_compute_network.dmz.self_link}"
+  network = google_compute_network.dmz.self_link
 
   allow {
     protocol = "tcp"
-    ports    = ["${var.bastion_admin_ssh_port}"]
+    ports    = [var.bastion_admin_ssh_port]
   }
 
   priority      = "500"
@@ -129,10 +129,10 @@ resource "google_compute_firewall" "bastion-ssh" {
 }
 
 resource "google_compute_firewall" "bastion-vpn" {
-  count = "${length(var.vpn_type) == 0 ? 0 : 1 }"
+  count = length(var.vpn_type) == 0 ? 0 : 1 
 
   name    = "${var.vpc_name}-bastion-vpn"
-  network = "${google_compute_network.dmz.self_link}"
+  network = google_compute_network.dmz.self_link
 
   allow {
     protocol = "tcp"
@@ -143,8 +143,8 @@ resource "google_compute_firewall" "bastion-vpn" {
   dynamic "allow" {
     for_each = var.vpn_type == "openvpn" && length(var.ovpn_server_port) > 0 ? [1] : []
     content {
-      protocol = "${var.ovpn_protocol}"
-      ports    = ["${var.ovpn_server_port}"]
+      protocol = var.ovpn_protocol
+      ports    = [var.ovpn_server_port]
     }
   }
   # IPSec/IKEv2
@@ -185,10 +185,10 @@ resource "google_compute_firewall" "bastion-vpn" {
 }
 
 resource "google_compute_firewall" "bastion-smtp-ext" {
-  count = "${length(var.smtp_relay_host) == 0 ? 0 : 1 }"
+  count = length(var.smtp_relay_host) == 0 ? 0 : 1 
 
   name    = "${var.vpc_name}-bastion-smtp-ext"
-  network = "${google_compute_network.dmz.self_link}"
+  network = google_compute_network.dmz.self_link
 
   allow {
     protocol = "tcp"
@@ -202,10 +202,10 @@ resource "google_compute_firewall" "bastion-smtp-ext" {
 }
 
 resource "google_compute_firewall" "bastion-smtp-int" {
-  count = "${length(var.smtp_relay_host) == 0 ? 0 : 1 }"
+  count = length(var.smtp_relay_host) == 0 ? 0 : 1 
 
   name    = "${var.vpc_name}-bastion-smtp-int"
-  network = "${google_compute_network.admin.self_link}"
+  network = google_compute_network.admin.self_link
 
   allow {
     protocol = "tcp"
@@ -214,30 +214,30 @@ resource "google_compute_firewall" "bastion-smtp-int" {
 
   priority      = "500"
   direction     = "INGRESS"
-  source_ranges = ["${var.vpn_network}", "${var.vpc_cidr}"]
+  source_ranges = [var.vpn_network, var.vpc_cidr]
   target_tags   = ["bastion-smtp-int"]
 }
 
 resource "google_compute_firewall" "bastion-proxy" {
-  count = "${length(var.squidproxy_server_port) == 0 ? 0 : 1 }"
+  count = length(var.squidproxy_server_port) == 0 ? 0 : 1 
 
   name    = "${var.vpc_name}-bastion-proxy"
-  network = "${google_compute_network.admin.self_link}"
+  network = google_compute_network.admin.self_link
 
   allow {
     protocol = "tcp"
-    ports    = ["${var.squidproxy_server_port}"]
+    ports    = [var.squidproxy_server_port]
   }
 
   priority      = "500"
   direction     = "INGRESS"
-  source_ranges = ["${var.vpn_network}", "${var.vpc_cidr}"]
+  source_ranges = [var.vpn_network, var.vpc_cidr]
   target_tags   = ["bastion-proxy"]
 }
 
 resource "google_compute_firewall" "bastion-deny-vpc" {
   name    = "${var.vpc_name}-bastion-deny-vpc"
-  network = "${google_compute_network.admin.self_link}"
+  network = google_compute_network.admin.self_link
 
   deny {
     protocol = "all"
@@ -245,13 +245,13 @@ resource "google_compute_firewall" "bastion-deny-vpc" {
 
   priority      = "599"
   direction     = "INGRESS"
-  source_ranges = ["${var.vpc_cidr}"]
+  source_ranges = [var.vpc_cidr]
   target_tags   = ["bastion-deny-vpc"]
 }
 
 resource "google_compute_firewall" "bastion-deny-dmz" {
   name    = "${var.vpc_name}-bastion-deny-dmz"
-  network = "${google_compute_network.dmz.self_link}"
+  network = google_compute_network.dmz.self_link
 
   deny {
     protocol = "all"
@@ -259,7 +259,7 @@ resource "google_compute_firewall" "bastion-deny-dmz" {
 
   priority      = "599"
   direction     = "INGRESS"
-  source_ranges = ["${google_compute_subnetwork.dmz.ip_cidr_range}"]
+  source_ranges = [google_compute_subnetwork.dmz.ip_cidr_range]
   target_tags   = ["bastion-deny-dmz"]
 }
 
@@ -271,9 +271,9 @@ resource "google_compute_route" "nat-route-admin" {
   name = "${var.vpc_name}-nat-route-admin"
 
   dest_range             = "0.0.0.0/0"
-  network                = "${google_compute_network.admin.name}"
-  next_hop_instance      = "${google_compute_instance.bastion.name}"
-  next_hop_instance_zone = "${google_compute_instance.bastion.zone}"
+  network                = google_compute_network.admin.name
+  next_hop_instance      = google_compute_instance.bastion.name
+  next_hop_instance_zone = google_compute_instance.bastion.zone
   priority               = 800
 
   tags = ["nat-${var.vpc_name}-${var.region}"]

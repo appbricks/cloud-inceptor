@@ -17,15 +17,15 @@ resource "tls_private_key" "root-ca-key" {
 
 resource "tls_self_signed_cert" "root-ca" {
   key_algorithm   = "RSA"
-  private_key_pem = "${tls_private_key.root-ca-key.private_key_pem}"
+  private_key_pem = tls_private_key.root-ca-key.private_key_pem
 
   subject {
     common_name         = "Root CA for ${var.vpc_name}"
-    organization        = "${var.company_name}"
-    organizational_unit = "${var.organization_name}"
-    locality            = "${var.locality}"
-    province            = "${var.province}"
-    country             = "${var.country}"
+    organization        = var.company_name
+    organizational_unit = var.organization_name
+    locality            = var.locality
+    province            = var.province
+    country             = var.country
   }
 
   allowed_uses = [
@@ -46,35 +46,35 @@ resource "tls_private_key" "bastion" {
 
 resource "tls_cert_request" "bastion" {
   key_algorithm   = "RSA"
-  private_key_pem = "${tls_private_key.bastion.private_key_pem}"
+  private_key_pem = tls_private_key.bastion.private_key_pem
 
   dns_names = [
-    "${var.bastion_fqdn}"
+    var.bastion_fqdn
   ]
 
   ip_addresses = [
-    "${var.bastion_public_ip}",
-    "${var.bastion_dmz_itf_ip}",
-    "${var.bastion_admin_itf_ip}",
+    var.bastion_public_ip,
+    var.bastion_dmz_itf_ip,
+    var.bastion_admin_itf_ip,
   ]
 
   subject {
-    common_name         = "${var.bastion_fqdn}"
-    organization        = "${var.company_name}"
-    organizational_unit = "${var.organization_name}"
-    locality            = "${var.locality}"
-    province            = "${var.province}"
-    country             = "${var.country}"
+    common_name         = var.bastion_fqdn
+    organization        = var.company_name
+    organizational_unit = var.organization_name
+    locality            = var.locality
+    province            = var.province
+    country             = var.country
   }
 }
 
 resource "tls_locally_signed_cert" "bastion" {
-  cert_request_pem = "${tls_cert_request.bastion.cert_request_pem}"
+  cert_request_pem = tls_cert_request.bastion.cert_request_pem
 
   ca_key_algorithm = "RSA"
 
-  ca_private_key_pem = "${local.root_ca_key}"
-  ca_cert_pem        = "${local.root_ca_cert}"
+  ca_private_key_pem = local.root_ca_key
+  ca_cert_pem        = local.root_ca_cert
 
   validity_period_hours = 87600
 

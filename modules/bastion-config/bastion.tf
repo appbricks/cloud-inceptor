@@ -8,9 +8,9 @@ resource "tls_private_key" "bastion-ssh-key" {
 }
 
 resource "local_file" "bastion-ssh-key" {
-  count = "${length(var.ssh_key_file_path) == 0 ? 0 : 1}"
+  count = length(var.ssh_key_file_path) == 0 ? 0 : 1
 
-  content  = "${tls_private_key.bastion-ssh-key.private_key_pem}"
+  content  = tls_private_key.bastion-ssh-key.private_key_pem
   filename = "${var.ssh_key_file_path}/bastion-admin-ssh-key.pem"
 
   provisioner "local-exec" {
@@ -38,8 +38,8 @@ locals {
 }
 
 data "template_cloudinit_config" "bastion-cloudinit" {
-  gzip          = "${var.compress_cloudinit}"
-  base64_encode = "${var.compress_cloudinit}"
+  gzip          = var.compress_cloudinit
+  base64_encode = var.compress_cloudinit
 
   part {
     content = <<USER_DATA
@@ -170,7 +170,7 @@ vpn:
   users: '${var.vpn_users}'
 
 concourse:
-  port: ${length(var.concourse_server_port) == 0 ? "" : "${var.concourse_server_port}"}
+  port: ${length(var.concourse_server_port) == 0 ? "" : var.concourse_server_port}
   password: ${var.concourse_admin_password}
   vpc_name: ${var.vpc_name}
   pipeline_automation_path: '${var.pipeline_automation_path}'
@@ -179,16 +179,16 @@ CONFIG
 }
 
 data "template_file" "www-static-index" {
-  template = "${file("${path.module}/www-static-home/index.html")}"
+  template = file("${path.module}/www-static-home/index.html")
 
   vars = {
-    environment = "${var.vpc_name}"
-    bastion_fqdn = "${var.bastion_fqdn}"
+    environment = var.vpc_name
+    bastion_fqdn = var.bastion_fqdn
   }
 }
 
 data "template_file" "bootstrap-pipeline-vars" {
-  template = "${var.bootstrap_pipeline_vars}"
+  template = var.bootstrap_pipeline_vars
 }
 
 resource "random_string" "bastion-admin-password" {

@@ -3,7 +3,7 @@
 #
 resource "azurerm_resource_group" "bootstrap" {
   name     = "${var.vpc_name}-${var.region}"
-  location = "${var.region}"
+  location = var.region
 }
 
 #
@@ -16,9 +16,9 @@ resource "tls_private_key" "default-ssh-key" {
 }
 
 resource "local_file" "default-ssh-key" {
-  count = "${length(var.ssh_key_file_path) == 0 ? 0 : 1}"
+  count = length(var.ssh_key_file_path) == 0 ? 0 : 1
   
-  content  = "${tls_private_key.default-ssh-key.private_key_pem}"
+  content  = tls_private_key.default-ssh-key.private_key_pem
   filename = "${var.ssh_key_file_path}/default-ssh-key.pem"
 
   provisioner "local-exec" {

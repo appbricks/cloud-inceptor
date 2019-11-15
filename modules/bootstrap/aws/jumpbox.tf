@@ -14,16 +14,16 @@ locals {
 }
 
 resource "aws_instance" "jumpbox" {
-  count = "${length(local.jumpbox_dns) > 0 ? 1 : 0}"
+  count = length(local.jumpbox_dns) > 0 ? 1 : 0
 
   instance_type = "t2.nano"
-  ami           = "${data.aws_ami.ubuntu.id}"
-  key_name      = "${aws_key_pair.default.key_name}"
+  ami           = data.aws_ami.ubuntu.id
+  key_name      = aws_key_pair.default.key_name
 
-  subnet_id         = "${aws_subnet.admin[0].id}"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  subnet_id         = aws_subnet.admin[0].id
+  availability_zone = data.aws_availability_zones.available.names[0]
 
-  vpc_security_group_ids = ["${aws_security_group.internal.id}"]
+  vpc_security_group_ids = [aws_security_group.internal.id]
 
   tags = {
     Name = "${var.vpc_name}: jumpbox"
@@ -44,10 +44,10 @@ USERDATA
 }
 
 data "template_file" "mount-volume" {
-  template = "${file("${path.module}/scripts/mount-volume.sh")}"
+  template = file("${path.module}/scripts/mount-volume.sh")
 
   vars = {
-    attached_device_name = "${local.jumpbox_data_disk_device_name}"
+    attached_device_name = local.jumpbox_data_disk_device_name
     mount_directory      = "/data"
     world_readable       = "true"
   }
@@ -62,10 +62,10 @@ locals {
 }
 
 resource "aws_ebs_volume" "jumpbox-data" {
-  count = "${length(local.jumpbox_dns) > 0 ? 1 : 0}"
+  count = length(local.jumpbox_dns) > 0 ? 1 : 0
 
-  size              = "${tonumber(var.jumpbox_data_disk_size)}"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  size              = tonumber(var.jumpbox_data_disk_size)
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = "${var.vpc_name}: jumpbox data disk"
@@ -73,11 +73,11 @@ resource "aws_ebs_volume" "jumpbox-data" {
 }
 
 resource "aws_volume_attachment" "jumpbox-data" {
-  count = "${length(local.jumpbox_dns) > 0 ? 1 : 0}"
+  count = length(local.jumpbox_dns) > 0 ? 1 : 0
 
-  device_name  = "${local.jumpbox_data_disk_device_name}"
-  volume_id    = "${aws_ebs_volume.jumpbox-data[0].id}"
-  instance_id  = "${aws_instance.jumpbox[0].id}"
+  device_name  = local.jumpbox_data_disk_device_name
+  volume_id    = aws_ebs_volume.jumpbox-data[0].id
+  instance_id  = aws_instance.jumpbox[0].id
   force_detach = true
 }
 
@@ -86,11 +86,11 @@ resource "aws_volume_attachment" "jumpbox-data" {
 #
 
 resource "aws_route53_record" "jumpbox" {
-  count = "${length(local.jumpbox_dns) > 0 ? 1 : 0}"
+  count = length(local.jumpbox_dns) > 0 ? 1 : 0
 
-  zone_id = "${aws_route53_zone.vpc-private.zone_id}"
+  zone_id = aws_route53_zone.vpc-private.zone_id
   name    = "jumpbox.${aws_route53_zone.vpc-private.name}"
   type    = "A"
   ttl     = "300"
-  records = ["${aws_instance.jumpbox[0].private_ip}"]
+  records = [aws_instance.jumpbox[0].private_ip]
 }

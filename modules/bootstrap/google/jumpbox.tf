@@ -14,11 +14,11 @@ locals {
 }
 
 resource "google_compute_instance" "jumpbox" {
-  count = "${length(local.jumpbox_dns) > 0 ? 1 : 0}"
+  count = length(local.jumpbox_dns) > 0 ? 1 : 0
 
   name         = "${var.vpc_name}-jumpbox"
   machine_type = "f1-micro"
-  zone         = "${data.google_compute_zones.available.names[0]}"
+  zone         = data.google_compute_zones.available.names[0]
 
   allow_stopping_for_update = true
 
@@ -29,18 +29,18 @@ resource "google_compute_instance" "jumpbox" {
 
   boot_disk {
     initialize_params {
-      image = "${data.google_compute_image.ubuntu.self_link}"
+      image = data.google_compute_image.ubuntu.self_link
       size  = "40"
     }
   }
 
   attached_disk {
-    source = "${google_compute_disk.jumpbox-data[0].self_link}"
+    source = google_compute_disk.jumpbox-data[0].self_link
   }
 
   network_interface {
-    subnetwork = "${google_compute_subnetwork.admin.self_link}"
-    network_ip = "${google_compute_address.jumpbox.address}"
+    subnetwork = google_compute_subnetwork.admin.self_link
+    network_ip = google_compute_address.jumpbox.address
   }
 
   metadata = {
@@ -65,8 +65,8 @@ resource "google_compute_address" "jumpbox" {
   name         = "${var.vpc_name}-jumpbox"
   address_type = "INTERNAL"
 
-  subnetwork = "${google_compute_subnetwork.admin.self_link}"
-  region     = "${var.region}"
+  subnetwork = google_compute_subnetwork.admin.self_link
+  region     = var.region
 }
 
 #
@@ -74,7 +74,7 @@ resource "google_compute_address" "jumpbox" {
 #
 
 data "template_file" "mount-jumpbox-data-volume" {
-  template = "${file("${path.module}/scripts/mount-volume.sh")}"
+  template = file("${path.module}/scripts/mount-volume.sh")
 
   vars = {
     attached_device_name = "sdb"
@@ -84,10 +84,10 @@ data "template_file" "mount-jumpbox-data-volume" {
 }
 
 resource "google_compute_disk" "jumpbox-data" {
-  count = "${length(local.jumpbox_dns) > 0 ? 1 : 0}"
+  count = length(local.jumpbox_dns) > 0 ? 1 : 0
 
   name = "${var.vpc_name}-jumpbox-data"
   type = "pd-standard"
-  zone = "${data.google_compute_zones.available.names[0]}"
-  size = "${var.jumpbox_data_disk_size}"
+  zone = data.google_compute_zones.available.names[0]
+  size = var.jumpbox_data_disk_size
 }

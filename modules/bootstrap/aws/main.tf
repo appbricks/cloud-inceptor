@@ -3,8 +3,8 @@
 #
 
 locals {
-  num_azs = "${length(data.aws_availability_zones.available.names)}"
-  num_azs_to_configure = "${min(var.max_azs, local.num_azs)}"
+  num_azs = length(data.aws_availability_zones.available.names)
+  num_azs_to_configure = min(var.max_azs, local.num_azs)
 }
 
 data "aws_availability_zones" "available" {}
@@ -14,11 +14,11 @@ data "aws_availability_zones" "available" {}
 #
 
 resource "aws_vpc" "main" {
-  cidr_block           = "${var.vpc_cidr}"
+  cidr_block           = var.vpc_cidr
   enable_dns_hostnames = true
 
   tags = {
-    Name = "${var.vpc_name}"
+    Name = var.vpc_name
   }
 }
 
@@ -50,7 +50,7 @@ data "aws_ami" "ubuntu" {
 resource "aws_security_group" "internal" {
   name        = "${var.vpc_name}: internal"
   description = "Rules for ingress and egress of network traffic within VPC."
-  vpc_id      = "${aws_vpc.main.id}"
+  vpc_id      = aws_vpc.main.id
 
   # Allow all ingress traffic from instances 
   # having same security group
@@ -141,9 +141,9 @@ resource "tls_private_key" "default-ssh-key" {
 }
 
 resource "local_file" "default-ssh-key" {
-  count = "${length(var.ssh_key_file_path) == 0 ? 0 : 1}"
+  count = length(var.ssh_key_file_path) == 0 ? 0 : 1
 
-  content  = "${tls_private_key.default-ssh-key.private_key_pem}"
+  content  = tls_private_key.default-ssh-key.private_key_pem
   filename = "${var.ssh_key_file_path}/default-ssh-key.pem"
 
   provisioner "local-exec" {
@@ -152,6 +152,6 @@ resource "local_file" "default-ssh-key" {
 }
 
 resource "aws_key_pair" "default" {
-  key_name   = "${var.vpc_name}"
-  public_key = "${tls_private_key.default-ssh-key.public_key_openssh}"
+  key_name   = var.vpc_name
+  public_key = tls_private_key.default-ssh-key.public_key_openssh
 }
