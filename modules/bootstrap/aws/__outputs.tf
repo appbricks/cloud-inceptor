@@ -52,6 +52,7 @@ output "vpc_dns_private_zone_name" {
 #
 # Bastion resource attributes
 #
+
 output "bastion_instance_id" {
   value = aws_instance.bastion.id
 }
@@ -65,8 +66,7 @@ output "bastion_fqdn" {
 }
 
 output "bastion_admin_fqdn" {
-  value = "${length(var.bastion_host_name) > 0 && !var.bastion_allow_public_ssh
-    ? join(".", list(var.bastion_host_name, var.vpc_dns_zone)) : "N/A"}"
+  value = length(var.bastion_host_name) > 0 && !var.bastion_allow_public_ssh ? join(".", list(var.bastion_host_name, var.vpc_dns_zone)) : "N/A"
 }
 
 output "bastion_admin_user" {

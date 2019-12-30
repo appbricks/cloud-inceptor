@@ -119,13 +119,6 @@ variable "root_ca_cert" {
 }
 
 #
-# Local file path to write SSH private key for bastion instance
-#
-variable "ssh_key_file_path" {
-  type = "string"
-}
-
-#
 # Bastion inception instance variables
 #
 variable "bastion_instance_memory" {

@@ -39,9 +39,6 @@ module "bootstrap" {
   # name server records of the 'vpc_dns_zone' will be added.
   dns_managed_zone_name = "gcp-appbricks-cloud"
 
-  # Local file path to write SSH private key for bastion instance
-  ssh_key_file_path = "${path.module}/.${var.region}"
-
   # VPN
   # vpn_idle_action = "shutdown"
 
@@ -102,35 +99,34 @@ PIPELINE_VARS
 }
 
 #
+# SSH Keys
+#
+
+resource "local_file" "bastion-ssh-key" {
+  content  = module.bootstrap.bastion_admin_sshkey
+  filename = "${path.module}/.${var.region}/bastion-admin-ssh-key.pem"
+
+  provisioner "local-exec" {
+    command = "chmod 0600 ${path.module}/.${var.region}/bastion-admin-ssh-key.pem"
+  }
+}
+
+resource "local_file" "default-ssh-key" {
+  content  = module.bootstrap.default_openssh_private_key
+  filename = "${path.module}/.${var.region}/default-ssh-key.pem"
+
+  provisioner "local-exec" {
+    command = "chmod 0600 ${path.module}/.${var.region}/default-ssh-key.pem"
+  }
+}
+
+#
 # Backend state
 #
 terraform {
   backend "gcs" {    
     prefix = "test/cloud-inceptor"
   }
-}
-
-#
-# Echo output of bootstrap module
-#
-output "bastion_instance_id" {
-  value = "${module.bootstrap.bastion_instance_id}"
-}
-
-output "bastion_fqdn" {
-  value = "${module.bootstrap.bastion_fqdn}"
-}
-
-output "bastion_admin_fqdn" {
-  value = "${module.bootstrap.bastion_admin_fqdn}"
-}
-
-output "bastion_admin_password" {
-  value = "${module.bootstrap.bastion_admin_password}"
-}
-
-output "concourse_admin_password" {
-  value = "Passw0rd"
 }
 
 # ==== DEBUG OUTPUT ====

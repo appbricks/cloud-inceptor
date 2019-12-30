@@ -20,8 +20,6 @@ module "config" {
   vpc_internal_dns_zones   = "${var.vpc_internal_dns_zones}"
   vpc_internal_dns_records = "${concat(var.vpc_internal_dns_records, list(local.jumpbox_dns_record))}"
 
-  ssh_key_file_path = "${var.ssh_key_file_path}"
-
   bastion_fqdn      = "${var.vpc_dns_zone}"
   bastion_use_fqdn  = "${var.bastion_use_fqdn}"
   bastion_public_ip = "${local.bastion_public_ip}"

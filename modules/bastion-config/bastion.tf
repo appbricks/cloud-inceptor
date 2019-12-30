@@ -7,17 +7,6 @@ resource "tls_private_key" "bastion-ssh-key" {
   rsa_bits  = "4096"
 }
 
-resource "local_file" "bastion-ssh-key" {
-  count = length(var.ssh_key_file_path) == 0 ? 0 : 1
-
-  content  = tls_private_key.bastion-ssh-key.private_key_pem
-  filename = "${var.ssh_key_file_path}/bastion-admin-ssh-key.pem"
-
-  provisioner "local-exec" {
-    command = "chmod 0600 ${var.ssh_key_file_path}/bastion-admin-ssh-key.pem"
-  }
-}
-
 #
 # Bastion configuration templates
 #

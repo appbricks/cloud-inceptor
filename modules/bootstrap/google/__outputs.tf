@@ -14,8 +14,13 @@ output "root_ca_cert" {
 }
 
 #
-# Network resource attributes
+# VPC and network resource attributes
 #
+
+output "vpc_name" {
+  value = var.vpc_name
+}
+
 output "dmz_network" {
   value = google_compute_network.dmz.self_link
 }
@@ -39,8 +44,13 @@ output "vpc_dns_zone_name" {
 #
 # Bastion resource attributes
 #
+
 output "bastion_instance_id" {
   value = google_compute_instance.bastion.id
+}
+
+output "bastion_public_ip" {
+  value = google_compute_address.bastion-public.address
 }
 
 output "bastion_fqdn" {
@@ -48,8 +58,7 @@ output "bastion_fqdn" {
 }
 
 output "bastion_admin_fqdn" {
-  value = "${length(var.bastion_host_name) > 0 && !var.bastion_allow_public_ssh
-    ? google_dns_record_set.vpc-admin.name : "N/A"}"
+  value = length(var.bastion_host_name) > 0 && !var.bastion_allow_public_ssh ? google_dns_record_set.vpc-admin.name : "N/A"
 }
 
 output "bastion_admin_user" {

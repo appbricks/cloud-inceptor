@@ -56,13 +56,6 @@ variable "vpc_internal_dns_records" {
 }
 
 #
-# Local file path to write SSH private key for bastion instance
-#
-variable "ssh_key_file_path" {
-  type = string
-}
-
-#
 # Bastion inception instance network configuration
 #
 variable "bastion_fqdn" {

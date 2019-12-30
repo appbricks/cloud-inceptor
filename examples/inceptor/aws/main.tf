@@ -46,9 +46,6 @@ module "bootstrap" {
   # Address space for all VPC regions
   global_internal_cidr = "10.0.0.0/8"
 
-  # Local file path to write SSH private key for bastion instance
-  ssh_key_file_path = "${path.module}/.${data.aws_region.default.name}"
-
   # VPN
   # vpn_idle_action = "shutdown"
 
@@ -113,6 +110,28 @@ module "bootstrap" {
   bootstrap_pipeline_vars = <<PIPELINE_VARS
 locale: Asia/Dubai
 PIPELINE_VARS
+}
+
+#
+# SSH Keys
+#
+
+resource "local_file" "bastion-ssh-key" {
+  content  = module.bootstrap.bastion_admin_sshkey
+  filename = "${path.module}/.${data.aws_region.default.name}/bastion-admin-ssh-key.pem"
+
+  provisioner "local-exec" {
+    command = "chmod 0600 ${path.module}/.${data.aws_region.default.name}/bastion-admin-ssh-key.pem"
+  }
+}
+
+resource "local_file" "default-ssh-key" {
+  content  = module.bootstrap.default_openssh_private_key
+  filename = "${path.module}/.${data.aws_region.default.name}/default-ssh-key.pem"
+
+  provisioner "local-exec" {
+    command = "chmod 0600 ${path.module}/.${data.aws_region.default.name}/default-ssh-key.pem"
+  }
 }
 
 #

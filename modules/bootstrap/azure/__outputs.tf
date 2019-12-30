@@ -14,15 +14,17 @@ output "root_ca_cert" {
 }
 
 #
-# VPC
+# VPC and network resource attributes
 #
-output "bootstrap_resource_group" {
+
+output "vpc_resource_group" {
   value = azurerm_resource_group.bootstrap.name
 }
 
-#
-# Network resource attributes
-#
+output "vpc_name" {
+  value = var.vpc_name
+}
+
 output "vpc_network" {
   value = azurerm_virtual_network.vpc.id
 }
@@ -46,8 +48,13 @@ output "vpc_dns_zone_name" {
 #
 # Bastion resource attributes
 #
+
 output "bastion_instance_id" {
   value = azurerm_virtual_machine.bastion.id
+}
+
+output "bastion_public_ip" {
+  value = azurerm_public_ip.bastion-public.id
 }
 
 output "bastion_fqdn" {
@@ -55,8 +62,7 @@ output "bastion_fqdn" {
 }
 
 output "bastion_admin_fqdn" {
-  value = "${length(var.bastion_host_name) > 0 && !var.bastion_allow_public_ssh
-    ? join(".", list(var.bastion_host_name, var.vpc_dns_zone)) : "N/A"}"
+  value = length(var.bastion_host_name) > 0 && !var.bastion_allow_public_ssh ? join(".", list(var.bastion_host_name, var.vpc_dns_zone)) : "N/A"
 }
 
 output "bastion_admin_user" {
