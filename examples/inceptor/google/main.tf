@@ -21,14 +21,14 @@ module "bootstrap" {
   #
   # VPC details
   #
-  region = "${var.region}"
+  region = var.region
 
   vpc_name = "inceptor-${var.region}"
-  vpc_cidr = "${var.regional_vpc_cidr[var.region]["vpc_cidr"]}"
+  vpc_cidr = var.regional_vpc_cidr[var.region]["vpc_cidr"]
 
   # DNS Name for VPC will be 'test.gcp.appbricks.cloud'
   vpc_dns_zone    = "test-${var.region}.gcp.appbricks.cloud"
-  attach_dns_zone = "${var.bastion_use_fqdn}"
+  attach_dns_zone = var.bastion_use_fqdn
 
   # Local DNS zone. This could also be the same as the public
   # which will enable setting up a split DNS of the public zone
@@ -65,7 +65,10 @@ module "bootstrap" {
   bastion_allow_public_ssh = true
 
   bastion_host_name = "inceptor"
-  bastion_use_fqdn = "${var.bastion_use_fqdn}"
+  bastion_use_fqdn = var.bastion_use_fqdn
+
+  bastion_image_name  = var.bastion_image_name
+  bastion_use_project_image = var.bastion_use_project_image
 
   # Issue certificates from letsencrypt.org
   certify_bastion = false
@@ -76,12 +79,12 @@ module "bootstrap" {
   # If the SMTP relay settings are provided then
   # and SMTP server will be setup which will send
   # notifications when builds fail
-  smtp_relay_host = "${var.smtp_relay_host}"
+  smtp_relay_host = var.smtp_relay_host
 
-  smtp_relay_port    = "${var.smtp_relay_port}"
-  smtp_relay_api_key = "${var.smtp_relay_api_key}"
+  smtp_relay_port    = var.smtp_relay_port
+  smtp_relay_api_key = var.smtp_relay_api_key
 
-  notification_email = "${var.notification_email}"
+  notification_email = var.notification_email
 
   # Whether to deploy a jumpbox in the admin network. The
   # jumpbox will be deployed only if a local DNS zone is

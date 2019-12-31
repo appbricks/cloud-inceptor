@@ -114,6 +114,10 @@ variable "bastion_image_name" {
   default = "appbricks-inceptor-bastion"
 }
 
+variable "bastion_use_project_image" {
+  default = true
+}
+
 variable "bastion_root_disk_size" {
   default = 50
 }

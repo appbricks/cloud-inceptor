@@ -21,7 +21,7 @@ resource "google_compute_instance" "bastion" {
 
   boot_disk {
     initialize_params {
-      image = data.google_compute_image.bastion.self_link
+      image = var.bastion_use_project_image ? data.google_compute_image.bastion[0].self_link : google_compute_image.bastion[0].self_link
       size  = var.bastion_root_disk_size
     }
   }
@@ -72,8 +72,40 @@ resource "google_compute_disk" "bastion-data" {
 # Image
 #
 
+locals {
+  gs_image_region = element(split("-", var.region), 0)
+  gs_image_buckets = {
+    "us": "ab-bastion-images-us",
+    "northamerica": "ab-bastion-images-asia",
+    "southamerica": "ab-bastion-images-asia",
+    "europe": "ab-bastion-images-eu",
+    "asia": "ab-bastion-images-asia",
+    "australia": "ab-bastion-images-asia",
+  }
+  bastion_image_url = "https://storage.cloud.google.com/${local.gs_image_buckets[local.gs_image_region]}/${var.bastion_image_name}.tar.gz?authuser=1"
+}
+
+# Lookup image in current project's image repository
 data "google_compute_image" "bastion" {
+  count = var.bastion_use_project_image ? 1 : 0
+
   name = var.bastion_image_name
+}
+
+# Create image using the given url
+resource "google_compute_image" "bastion" {
+  count = var.bastion_use_project_image ? 0 : 1
+  name = "${var.vpc_name}-bastion-img${random_string.bastion-image-key.result}"
+
+  raw_disk {
+    source = local.bastion_image_url
+  }
+}
+
+resource "random_string" "bastion-image-key" {
+  length = 7
+  upper = false
+  special = false
 }
 
 #

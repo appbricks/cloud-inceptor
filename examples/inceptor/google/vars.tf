@@ -33,6 +33,14 @@ variable "bastion_use_fqdn" {
   type = string
 }
 
+variable "bastion_image_name" {
+  type = string
+}
+
+variable "bastion_use_project_image" {
+  type = bool
+}
+
 #
 # Distinct CIDR for VPCs by region
 #
