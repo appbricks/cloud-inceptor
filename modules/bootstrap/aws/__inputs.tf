@@ -113,7 +113,7 @@ variable "bastion_instance_type" {
 }
 
 variable "bastion_image_name" {
-  default = "appbricks-inceptor-bastion"
+  default = "appbricks-bastion-inceptor"
 }
 
 variable "bastion_image_owner" {

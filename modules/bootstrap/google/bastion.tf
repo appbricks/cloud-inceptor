@@ -72,19 +72,6 @@ resource "google_compute_disk" "bastion-data" {
 # Image
 #
 
-locals {
-  gs_image_region = element(split("-", var.region), 0)
-  gs_image_buckets = {
-    "us": "ab-bastion-images-us",
-    "northamerica": "ab-bastion-images-asia",
-    "southamerica": "ab-bastion-images-asia",
-    "europe": "ab-bastion-images-eu",
-    "asia": "ab-bastion-images-asia",
-    "australia": "ab-bastion-images-asia",
-  }
-  bastion_image_url = "https://storage.cloud.google.com/${local.gs_image_buckets[local.gs_image_region]}/${var.bastion_image_name}.tar.gz?authuser=1"
-}
-
 # Lookup image in current project's image repository
 data "google_compute_image" "bastion" {
   count = var.bastion_use_project_image ? 1 : 0
@@ -95,16 +82,19 @@ data "google_compute_image" "bastion" {
 # Create image using the given url
 resource "google_compute_image" "bastion" {
   count = var.bastion_use_project_image ? 0 : 1
-  name = "${var.vpc_name}-bastion-img${random_string.bastion-image-key.result}"
+
+  name = "${var.vpc_name}-bastion-img${random_string.bastion-image-key[0].result}"
 
   raw_disk {
-    source = local.bastion_image_url
+    source = "https://storage.googleapis.com/${var.bastion_image_bucket_prefix}_${var.region}/appbricks-bastion/${var.bastion_image_name}.tar.gz"
   }
 }
 
 resource "random_string" "bastion-image-key" {
-  length = 7
-  upper = false
+  count = var.bastion_use_project_image ? 0 : 1
+
+  length  = 7
+  upper   = false
   special = false
 }
 

@@ -33,6 +33,18 @@ variable "bastion_use_fqdn" {
   type = string
 }
 
+variable "bastion_use_managed_image" {
+  type = bool
+}
+
+variable "bastion_image_name" {
+  type = string
+}
+
+variable "bastion_image_storage_account_prefix" {
+  default = "abi"
+}
+
 #
 # Distinct CIDR for VPCs by region
 #

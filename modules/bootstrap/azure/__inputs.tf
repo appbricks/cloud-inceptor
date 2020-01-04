@@ -114,8 +114,20 @@ variable "bastion_instance_type" {
   default = "Standard_DS2_v2"
 }
 
+variable "bastion_use_managed_image" {
+  default = true
+}
+
 variable "bastion_image_name" {
-  default = "appbricks-inceptor-bastion"
+  default = "appbricks-bastion-inceptor"
+}
+
+variable "bastion_image_storage_account_prefix" {
+  default = "abi"
+}
+
+variable "bastion_image_container" {
+  default = "release"
 }
 
 variable "bastion_root_disk_size" {

@@ -110,12 +110,16 @@ variable "bastion_instance_type" {
   default = "n1-standard-1"
 }
 
-variable "bastion_image_name" {
-  default = "appbricks-inceptor-bastion"
-}
-
 variable "bastion_use_project_image" {
   default = true
+}
+
+variable "bastion_image_name" {
+  default = "appbricks-bastion-inceptor"
+}
+
+variable "bastion_image_bucket_prefix" {
+  default = "abimages"
 }
 
 variable "bastion_root_disk_size" {

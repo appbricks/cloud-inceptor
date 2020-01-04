@@ -63,6 +63,10 @@ module "bootstrap" {
   bastion_host_name = "inceptor"
   bastion_use_fqdn = "${var.bastion_use_fqdn}"
 
+  bastion_use_managed_image = var.bastion_use_managed_image
+  bastion_image_name  = var.bastion_image_name
+  bastion_image_storage_account_prefix  = var.bastion_image_storage_account_prefix
+
   # Issue certificates from letsencrypt.org
   certify_bastion = false
 
@@ -114,6 +118,14 @@ resource "local_file" "default-ssh-key" {
   provisioner "local-exec" {
     command = "chmod 0600 ${path.module}/.${var.region}/default-ssh-key.pem"
   }
+}
+
+#
+# Limit version of Azure provider to avoid image copy issue
+# https://github.com/terraform-providers/terraform-provider-azurerm/issues/4361
+#
+provider "azurerm" {
+  version = "< 1.34.0"
 }
 
 #

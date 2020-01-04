@@ -22,7 +22,7 @@ resource "azurerm_virtual_machine" "jumpbox" {
   resource_group_name = azurerm_resource_group.bootstrap.name
 
   vm_size               = "Standard_B1s"
-  network_interface_ids = [azurerm_network_interface.jumpbox-admin[count.index].id]
+  network_interface_ids = [azurerm_network_interface.jumpbox-admin[0].id]
 
   delete_os_disk_on_termination = true
 
@@ -115,8 +115,8 @@ resource "azurerm_managed_disk" "jumpbox-data" {
 resource "azurerm_virtual_machine_data_disk_attachment" "jumpbox-data" {
   count = length(local.jumpbox_dns) > 0 ? 1 : 0
 
-  managed_disk_id    = azurerm_managed_disk.jumpbox-data[count.index].id
-  virtual_machine_id = azurerm_virtual_machine.jumpbox[count.index].id
+  managed_disk_id    = azurerm_managed_disk.jumpbox-data[0].id
+  virtual_machine_id = azurerm_virtual_machine.jumpbox[0].id
 
   lun     = "10"
   caching = "ReadWrite"

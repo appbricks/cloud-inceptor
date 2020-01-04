@@ -67,8 +67,9 @@ module "bootstrap" {
   bastion_host_name = "inceptor"
   bastion_use_fqdn = var.bastion_use_fqdn
 
-  bastion_image_name  = var.bastion_image_name
   bastion_use_project_image = var.bastion_use_project_image
+  bastion_image_name  = var.bastion_image_name
+  bastion_image_bucket_prefix  = var.bastion_image_bucket_prefix
 
   # Issue certificates from letsencrypt.org
   certify_bastion = false

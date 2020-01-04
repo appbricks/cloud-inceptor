@@ -19,7 +19,7 @@ resource "azurerm_virtual_machine" "bastion" {
   delete_os_disk_on_termination = true
 
   storage_image_reference {
-    id = data.azurerm_image.bastion.id
+    id = var.bastion_use_managed_image ? data.azurerm_image.bastion[0].id : azurerm_image.bastion[0].id
   }
   storage_os_disk {
     name              = "${var.vpc_name}-bastion-root"
@@ -73,9 +73,49 @@ resource "azurerm_virtual_machine_data_disk_attachment" "bastion-data" {
 # Image
 #
 
+# Lookup managed image in source resource group
 data "azurerm_image" "bastion" {
-  name                = var.bastion_image_name
+  count = var.bastion_use_managed_image ? 1 : 0
+
+  name                = "${var.bastion_image_name}_${var.region}"
   resource_group_name = var.source_resource_group
+}
+
+# Create image from given unmanaged disk image blob uri
+resource "azurerm_image" "bastion" {
+  count = var.bastion_use_managed_image ? 0 : 1
+
+  name                = "${var.bastion_image_name}_${var.region}"
+  location            = azurerm_resource_group.bootstrap.location
+  resource_group_name = azurerm_resource_group.bootstrap.name
+
+  os_disk {
+    os_type  = "Linux"
+    os_state = "Generalized"
+    blob_uri = azurerm_storage_blob.bastion-image-vhd[0].url
+  }
+}
+
+resource "azurerm_storage_blob" "bastion-image-vhd" {
+  count = var.bastion_use_managed_image ? 0 : 1
+
+  name = "${var.bastion_image_name}.vhd"
+
+  resource_group_name    = azurerm_resource_group.bootstrap.name
+  storage_account_name   = azurerm_storage_account.bootstrap-storage-account.name
+  storage_container_name = azurerm_storage_container.bastion-image-storage-container[0].name
+
+  type       = "Block"
+  source_uri = "https://${var.bastion_image_storage_account_prefix}${local.storage_region}.blob.core.windows.net/${var.bastion_image_container}/${var.bastion_image_name}.vhd"
+}
+
+resource "azurerm_storage_container" "bastion-image-storage-container" {
+  count = var.bastion_use_managed_image ? 0 : 1
+
+  name = "images"
+
+  storage_account_name  = azurerm_storage_account.bootstrap-storage-account.name
+  container_access_type = "private"
 }
 
 #
