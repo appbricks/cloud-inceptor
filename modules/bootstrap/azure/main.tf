@@ -65,7 +65,7 @@ resource "azurerm_resource_group" "bootstrap" {
 # The VPC's Storage Account
 #
 resource "azurerm_storage_account" "bootstrap-storage-account" {
-  name = "${var.vpc_name}${random_string.bootstrap-storage-account-key.result}"
+  name = "stacct${random_string.bootstrap-storage-account-key.result}"
 
   location            = azurerm_resource_group.bootstrap.location
   resource_group_name = azurerm_resource_group.bootstrap.name
@@ -75,7 +75,7 @@ resource "azurerm_storage_account" "bootstrap-storage-account" {
 }
 
 resource "random_string" "bootstrap-storage-account-key" {
-  length = 10
+  length = 18
   upper = false
   special = false
 }
