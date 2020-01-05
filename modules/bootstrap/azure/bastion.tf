@@ -101,6 +101,9 @@ resource "azurerm_storage_blob" "bastion-image-vhd" {
 
   name = "${var.bastion_image_name}.vhd"
 
+  # Deprecated: must be removed when moving to azurerm provider >= 2.x
+  resource_group_name = azurerm_resource_group.bootstrap.name
+
   storage_account_name   = azurerm_storage_account.bootstrap-storage-account.name
   storage_container_name = azurerm_storage_container.bastion-image-storage-container[0].name
 
