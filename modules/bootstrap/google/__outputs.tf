@@ -61,6 +61,10 @@ output "bastion_admin_fqdn" {
   value = length(var.bastion_host_name) > 0 && !var.bastion_allow_public_ssh ? google_dns_record_set.vpc-admin.name : "N/A"
 }
 
+output "bastion_admin_ssh_port" {
+  value = var.bastion_admin_ssh_port
+}
+
 output "bastion_admin_user" {
   value = var.bastion_admin_user
 }
