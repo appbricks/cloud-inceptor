@@ -46,7 +46,7 @@ output "vpc_dns_zone_name" {
 #
 
 output "bastion_instance_id" {
-  value = google_compute_instance.bastion.id
+  value = google_compute_instance.bastion.instance_id
 }
 
 output "bastion_public_ip" {
