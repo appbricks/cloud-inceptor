@@ -3,7 +3,7 @@
 #
 
 resource "azurerm_virtual_machine" "bastion" {
-  name = "${var.vpc_name}-bastion-${element(split(".", var.vpc_dns_zone), 0)}"
+  name = element(split(".", var.vpc_dns_zone), 0)
 
   location            = azurerm_resource_group.bootstrap.location
   resource_group_name = azurerm_resource_group.bootstrap.name

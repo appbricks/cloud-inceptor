@@ -57,7 +57,7 @@ locals {
 # The VPC's Bootstrap resource group
 #
 resource "azurerm_resource_group" "bootstrap" {
-  name     = "${var.vpc_name}-${var.region}"
+  name     = var.vpc_name
   location = local.storage_region
 }
 
