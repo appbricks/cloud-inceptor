@@ -54,7 +54,7 @@ output "bastion_instance_id" {
 }
 
 output "bastion_public_ip" {
-  value = azurerm_public_ip.bastion-public.id
+  value = azurerm_public_ip.bastion-public.ip_address
 }
 
 output "bastion_fqdn" {
