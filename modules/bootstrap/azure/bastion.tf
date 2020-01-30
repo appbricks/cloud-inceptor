@@ -94,6 +94,10 @@ resource "azurerm_image" "bastion" {
     os_state = "Generalized"
     blob_uri = azurerm_storage_blob.bastion-image-vhd[0].url
   }
+
+  lifecycle {
+    ignore_changes = [os_disk]
+  }  
 }
 
 resource "azurerm_storage_blob" "bastion-image-vhd" {
@@ -109,6 +113,10 @@ resource "azurerm_storage_blob" "bastion-image-vhd" {
 
   type       = "Block"
   source_uri = "https://${var.bastion_image_storage_account_prefix}${local.storage_region}.blob.core.windows.net/${var.bastion_image_container}/${var.bastion_image_name}.vhd"
+
+  lifecycle {
+    ignore_changes = [type]
+  }
 }
 
 resource "azurerm_storage_container" "bastion-image-storage-container" {
