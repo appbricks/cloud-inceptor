@@ -8,6 +8,8 @@ This project provide templates for building a secured inception environment for 
 
 The cloud inceptor image can configure one or more of the services shown below. These services provide a framework for bootstrapping a deployment with automation pipelines for both day-1 and day-2 operations. 
 
+test
+
 ![alt text](docs/images/cloud-inceptor-services.png "Cloud Inceptor Services")
 
 ## Cloud Inceptor Redundancy
