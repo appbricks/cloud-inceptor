@@ -3,20 +3,15 @@
 #
 
 locals {
-  local_dns = "${length(var.vpc_internal_dns_zones) > 0 
-    ? element(var.vpc_internal_dns_zones, 0) : ""}"
-
-  jumpbox_dns = "${var.deploy_jumpbox && length(local.local_dns) > 0 
-    ? format("jumpbox.%s", local.local_dns) : ""}"
-
-  jumpbox_dns_record = "${length(local.jumpbox_dns) > 0 
-    ? format("%s:%s", local.jumpbox_dns, aws_instance.jumpbox[0].private_ip) : ""}"
+  local_dns          = length(var.vpc_internal_dns_zones) > 0 ? element(var.vpc_internal_dns_zones, 0) : ""
+  jumpbox_dns        = var.deploy_jumpbox && length(local.local_dns) > 0 ? format("jumpbox.%s", local.local_dns) : ""
+  jumpbox_dns_record = length(local.jumpbox_dns) > 0 ? format("%s:%s", local.jumpbox_dns, aws_instance.jumpbox[0].private_ip) : ""
 }
 
 resource "aws_instance" "jumpbox" {
   count = length(local.jumpbox_dns) > 0 ? 1 : 0
 
-  instance_type = "t2.nano"
+  instance_type = "t3a.nano"
   ami           = data.aws_ami.ubuntu.id
   key_name      = aws_key_pair.default.key_name
 
@@ -65,6 +60,7 @@ resource "aws_ebs_volume" "jumpbox-data" {
   count = length(local.jumpbox_dns) > 0 ? 1 : 0
 
   size              = tonumber(var.jumpbox_data_disk_size)
+  type              = "standard"
   availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {

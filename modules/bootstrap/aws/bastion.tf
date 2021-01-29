@@ -10,6 +10,7 @@ resource "aws_instance" "bastion" {
 
   root_block_device {
     volume_size = tonumber(var.bastion_root_disk_size)
+    volume_type = var.bastion_root_disk_type
   }
 
   network_interface {
@@ -33,20 +34,21 @@ resource "aws_instance" "bastion" {
 # large enough for any installation packages concourse downloads.
 #
 
-locals {
-  bastion_data_disk_device_name = "xvdf"
-}
-
 resource "aws_ebs_volume" "bastion-data" {
   size              = tonumber(var.bastion_data_disk_size)
+  type              = var.bastion_data_disk_type
   availability_zone = data.aws_availability_zones.available.names[0]
 }
 
 resource "aws_volume_attachment" "bastion-data" {
-  device_name  = "/dev/${local.bastion_data_disk_device_name}"
   volume_id    = aws_ebs_volume.bastion-data.id
   instance_id  = aws_instance.bastion.id
   force_detach = true
+
+  # This name seems to be ignored by 
+  # AWS but is required by the resource
+  # so it is hard coded here
+  device_name  = "/dev/xvdf"
 }
 
 #
@@ -155,6 +157,15 @@ resource "aws_security_group" "bastion-public" {
   }
 
   # VPN
+  dynamic "ingress" {
+    for_each = var.vpn_type == "wireguard" && length(var.wireguard_port) > 0 ? [1] : []
+    content {
+      from_port   = tonumber(var.wireguard_port)
+      to_port     = tonumber(var.wireguard_port)
+      protocol    = var.ovpn_protocol
+      cidr_blocks = ["0.0.0.0/0"]
+    }
+  }
   dynamic "ingress" {
     for_each = var.vpn_type == "openvpn" && length(var.ovpn_server_port) > 0 ? [1] : []
     content {

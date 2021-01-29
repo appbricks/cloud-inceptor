@@ -3,8 +3,8 @@ data "aws_region" "default" {
 }
 
 locals {
-  vpc_cidr = "${var.regional_vpc_cidr[data.aws_region.default.name]["vpc_cidr"]}"
-  vpc_subnet_index = "${element(regex("\\d{1,3}\\.(\\d{1,3})\\.\\d{1,3}\\.\\d{1,3}\\/\\d+", local.vpc_cidr), 0)}"
+  vpc_cidr = var.regional_vpc_cidr[data.aws_region.default.name]["vpc_cidr"]
+  vpc_subnet_index = element(regex("\\d{1,3}\\.(\\d{1,3})\\.\\d{1,3}\\.\\d{1,3}\\/\\d+", local.vpc_cidr), 0)
 }
 
 #
@@ -34,8 +34,8 @@ module "bootstrap" {
   vpc_name = "inceptor-${data.aws_region.default.name}"
   vpc_cidr = local.vpc_cidr
 
-  # DNS Name for VPC will be 'test.aws.appbricks.cloud'
-  vpc_dns_zone    = "test-${data.aws_region.default.name}.aws.appbricks.cloud"
+  # DNS Name for VPC will be 'test-<region>.aws.appbricks.io'
+  vpc_dns_zone    = "test-${data.aws_region.default.name}.aws.appbricks.io"
   attach_dns_zone = var.bastion_use_fqdn
 
   # Local DNS zone. This could also be the same as the public
@@ -54,15 +54,17 @@ module "bootstrap" {
     "user2|P@ssw0rd2"
   ]
 
+  vpn_type = "wireguard"
+  # vpn_type = "openvpn"
   # vpn_type = "ipsec"
-  vpn_type = "openvpn"
+
   vpn_tunnel_all_traffic = "yes"
 
   ovpn_server_port = "2295"
   ovpn_protocol = "udp"
 
-  # wireguard_port = "3399"
-  # wireguard_subnet_ip = "192.168.112.${local.vpc_subnet_index}/24"
+  wireguard_port = "3399"
+  wireguard_subnet_ip = "192.168.112.${local.vpc_subnet_index}/24"
 
   # Tunnel for VPN to handle situations where 
   # OpenVPN is blocked or throttled by ISP
@@ -70,7 +72,7 @@ module "bootstrap" {
   # tunnel_vpn_port_end   = "3396"
 
   # Concourse Port
-  concourse_server_port = "8080"
+  # concourse_server_port = "8080"
 
   # Whether to allow SSH access to bastion server
   bastion_allow_public_ssh = true
@@ -100,7 +102,7 @@ module "bootstrap" {
   # Whether to deploy a jumpbox in the admin network. The
   # jumpbox will be deployed only if a local DNS zone is
   # provided and the DNS will be jumpbox.[first local zone].
-  deploy_jumpbox = true
+  deploy_jumpbox = false
 
   #
   # Bootstrap pipeline

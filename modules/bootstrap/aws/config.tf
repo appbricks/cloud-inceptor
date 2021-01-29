@@ -39,24 +39,24 @@ module "config" {
   bastion_admin_itf_ip = local.bastion_admin_itf_ip
 
   bastion_nic_config = [
-    "${join("|", 
+    join("|", 
       list(
         "", // AWS will assign static IP via DHCP
         aws_subnet.dmz[0].cidr_block,
         "0.0.0.0/0"
       ),
-    )}",
-    "${join("|", 
+    ),
+    join("|", 
       list(
         local.bastion_admin_itf_ip, 
         aws_subnet.admin[0].cidr_block,
         length(var.global_internal_cidr) == 0 ? var.vpc_cidr : var.global_internal_cidr,
         cidrhost(aws_subnet.admin[0].cidr_block, 1)
       )
-    )}",
+    ),
   ]
 
-  data_volume_name = local.bastion_data_disk_device_name
+  data_volume_name = var.bastion_data_disk_device_name
 
   bastion_admin_ssh_port = var.bastion_admin_ssh_port
   bastion_admin_user     = var.bastion_admin_user

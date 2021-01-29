@@ -3,11 +3,8 @@
 #
 
 locals {
-  root_ca_key = "${length(var.root_ca_key) > 0 && length(var.root_ca_cert) > 0 
-    ? var.root_ca_key : tls_private_key.root-ca-key.private_key_pem}"
-
-  root_ca_cert = "${length(var.root_ca_key) > 0 && length(var.root_ca_cert) > 0 
-    ? var.root_ca_cert : tls_self_signed_cert.root-ca.cert_pem}"
+  root_ca_key  = length(var.root_ca_key) > 0 && length(var.root_ca_cert) > 0 ? var.root_ca_key : tls_private_key.root-ca-key.private_key_pem
+  root_ca_cert = length(var.root_ca_key) > 0 && length(var.root_ca_cert) > 0 ? var.root_ca_cert : tls_self_signed_cert.root-ca.cert_pem
 }
 
 resource "tls_private_key" "root-ca-key" {

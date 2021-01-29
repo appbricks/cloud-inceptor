@@ -12,18 +12,14 @@ resource "tls_private_key" "bastion-ssh-key" {
 #
 
 locals {
-  bastion_internal_ip = "${length(var.bastion_admin_itf_ip) > 0 
-    ? var.bastion_admin_itf_ip 
-    : var.bastion_dmz_itf_ip}"
+  bastion_internal_ip = length(var.bastion_admin_itf_ip) > 0 ? var.bastion_admin_itf_ip : var.bastion_dmz_itf_ip
 
   admin_email = "${var.bastion_admin_user}@${var.vpc_dns_zone}"
 
   # Create shorter email key if it is too long when 
   # vpc dns is included, as vpn cert creation limits 
   # length of string accepted.
-  vpn_email_key = "${length(local.admin_email) > 40 
-    ? join("@", list(var.bastion_admin_user, var.vpc_name))
-    : local.admin_email}"
+  vpn_email_key = length(local.admin_email) > 40 ? join("@", list(var.bastion_admin_user, var.vpc_name)) : local.admin_email
 }
 
 data "template_cloudinit_config" "bastion-cloudinit" {

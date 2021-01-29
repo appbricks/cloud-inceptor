@@ -109,7 +109,7 @@ variable "global_internal_cidr" {
 # Bastion inception instance variables
 #
 variable "bastion_instance_type" {
-  default = "t2.small"
+  default = "t4g.nano"
 }
 
 variable "bastion_image_name" {
@@ -120,12 +120,30 @@ variable "bastion_image_owner" {
   default = "self"
 }
 
+variable "bastion_root_disk_type" {
+  default = "standard"
+}
+
 variable "bastion_root_disk_size" {
-  default = 50
+  default = 8
+}
+
+variable "bastion_data_disk_type" {
+  default = "standard"
 }
 
 variable "bastion_data_disk_size" {
-  default = 250
+  default = 5
+}
+
+variable "bastion_data_disk_device_name" {
+  # The device name specified in the
+  # aws_volume_attachment does not appear
+  # to take effect. This variable explicitly
+  # names the device name AWS assigns to
+  # the attached disk so the mount_volume
+  # script can find it.
+  default = "nvme1n1"
 }
 
 variable "bastion_host_name" {
