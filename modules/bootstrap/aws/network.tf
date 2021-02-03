@@ -10,7 +10,11 @@ resource "aws_subnet" "dmz" {
 
   # If DMZ CIDR is not provided then the a DMZ network will
   # be created for each AZ starting from ${var.vpc_subnet_start}
-  cidr_block = length(var.dmz_cidr) != 0 ? var.dmz_cidr[count.index] : cidrsubnet(var.vpc_cidr, var.vpc_subnet_bits, var.vpc_subnet_start+count.index)
+  cidr_block = (
+    length(var.dmz_cidr) != 0 
+      ? var.dmz_cidr[count.index] 
+      : cidrsubnet(var.vpc_cidr, var.vpc_subnet_bits, var.vpc_subnet_start+count.index)
+  )
 
   tags = {
     Name = "${var.vpc_name}: dmz subnet ${count.index}"
@@ -27,7 +31,13 @@ resource "aws_subnet" "admin" {
   # they are laid out in sequence. i.e. DMZ AZ1 CIDR 1, 
   # DMZ AZ2 CIDR 2, ADMIN AZ CIDR 4, ADMIN AZ CIDR 5 assuming 
   # the region has 3 AZs but only 2 are being configured.
-  cidr_block = length(var.admin_cidr) != 0 ? var.admin_cidr[count.index] : (length(var.dmz_cidr) != 0 ? cidrsubnet(var.vpc_cidr, var.vpc_subnet_bits, var.vpc_subnet_start + count.index) : cidrsubnet(var.vpc_cidr, var.vpc_subnet_bits, var.vpc_subnet_start+local.num_azs+count.index))
+  cidr_block = (
+    length(var.admin_cidr) != 0 
+      ? var.admin_cidr[count.index] 
+      : (length(var.dmz_cidr) != 0 
+        ? cidrsubnet(var.vpc_cidr, var.vpc_subnet_bits, var.vpc_subnet_start + count.index) 
+        : cidrsubnet(var.vpc_cidr, var.vpc_subnet_bits, var.vpc_subnet_start+local.num_azs+count.index))
+  )
 
   tags = {
     Name = "${var.vpc_name}: admin subnet ${count.index}"

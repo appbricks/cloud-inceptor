@@ -21,7 +21,11 @@ resource "google_compute_instance" "bastion" {
 
   boot_disk {
     initialize_params {
-      image = var.bastion_use_project_image ? data.google_compute_image.bastion[0].self_link : google_compute_image.bastion[0].self_link
+      image = (
+        var.bastion_use_project_image 
+          ? data.google_compute_image.bastion[0].self_link 
+          : google_compute_image.bastion[0].self_link
+      )
       size  = var.bastion_root_disk_size
     }
   }
@@ -163,10 +167,10 @@ resource "google_compute_firewall" "bastion-vpn" {
 
   # OpenVPN
   dynamic "allow" {
-    for_each = var.vpn_type == "openvpn" && length(var.ovpn_server_port) > 0 ? [1] : []
+    for_each = var.vpn_type == "openvpn" && length(var.ovpn_service_port) > 0 ? [1] : []
     content {
       protocol = var.ovpn_protocol
-      ports    = [var.ovpn_server_port]
+      ports    = [var.ovpn_service_port]
     }
   }
   # IPSec/IKEv2

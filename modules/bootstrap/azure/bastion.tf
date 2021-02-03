@@ -229,7 +229,7 @@ resource "azurerm_network_security_rule" "bastion-ssh" {
 }
 
 resource "azurerm_network_security_rule" "bastion-openvpn" {
-  count = var.vpn_type == "openvpn" && length(var.ovpn_server_port) > 0 ? 1 : 0 
+  count = var.vpn_type == "openvpn" && length(var.ovpn_service_port) > 0 ? 1 : 0 
 
   name = "${var.vpc_name}-bastion-openvpn"
 
@@ -244,7 +244,7 @@ resource "azurerm_network_security_rule" "bastion-openvpn" {
   source_port_range     = "*"
   source_address_prefix = "0.0.0.0/0"
 
-  destination_port_range     = var.ovpn_server_port
+  destination_port_range     = var.ovpn_service_port
   destination_address_prefix = azurerm_network_interface.bastion-dmz.ip_configuration[0].private_ip_address
 }
 

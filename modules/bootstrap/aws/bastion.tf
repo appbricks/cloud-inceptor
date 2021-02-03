@@ -110,7 +110,11 @@ resource "aws_network_interface" "bastion-admin" {
 
 resource "aws_network_interface_sg_attachment" "bastion-admin" {
   network_interface_id = aws_network_interface.bastion-admin.id
-  security_group_id    = var.bastion_as_nat ? aws_security_group.internal.id : aws_security_group.bastion-private.id
+  security_group_id    = (
+    var.bastion_as_nat 
+      ? aws_security_group.internal.id 
+      : aws_security_group.bastion-private.id
+  )
 }
 
 resource "aws_eip" "bastion-public" {
@@ -158,19 +162,19 @@ resource "aws_security_group" "bastion-public" {
 
   # VPN
   dynamic "ingress" {
-    for_each = var.vpn_type == "wireguard" && length(var.wireguard_port) > 0 ? [1] : []
+    for_each = var.vpn_type == "wireguard" && length(var.wireguard_service_port) > 0 ? [1] : []
     content {
-      from_port   = tonumber(var.wireguard_port)
-      to_port     = tonumber(var.wireguard_port)
+      from_port   = tonumber(var.wireguard_service_port)
+      to_port     = tonumber(var.wireguard_service_port)
       protocol    = var.ovpn_protocol
       cidr_blocks = ["0.0.0.0/0"]
     }
   }
   dynamic "ingress" {
-    for_each = var.vpn_type == "openvpn" && length(var.ovpn_server_port) > 0 ? [1] : []
+    for_each = var.vpn_type == "openvpn" && length(var.ovpn_service_port) > 0 ? [1] : []
     content {
-      from_port   = tonumber(var.ovpn_server_port)
-      to_port     = tonumber(var.ovpn_server_port)
+      from_port   = tonumber(var.ovpn_service_port)
+      to_port     = tonumber(var.ovpn_service_port)
       protocol    = var.ovpn_protocol
       cidr_blocks = ["0.0.0.0/0"]
     }

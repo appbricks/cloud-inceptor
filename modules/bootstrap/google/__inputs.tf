@@ -175,7 +175,7 @@ variable "bastion_allow_public_ssh" {
 # VPN configuration
 #
 variable "vpn_type" {
-  # one of "openvpn" or "ipsec"
+  # one of "wireguard", "openvpn" or "ipsec"
   default = ""
 }
 
@@ -196,9 +196,20 @@ variable "vpn_users" {
 }
 
 #
+# Wireguard configuration
+#
+variable "wireguard_service_port" {
+  default = ""
+}
+
+variable "wireguard_subnet_ip" {
+  default = "192.168.112.1/24"
+}
+
+#
 # OpenVPN configuration
 #
-variable "ovpn_server_port" {
+variable "ovpn_service_port" {
   default = ""
 }
 
@@ -217,17 +228,6 @@ variable "tunnel_vpn_port_start" {
 
 variable "tunnel_vpn_port_end" {
   default = ""
-}
-
-#
-# Wireguard configuration
-#
-variable "wireguard_port" {
-  default = ""
-}
-
-variable "wireguard_subnet_ip" {
-  default = "192.168.112.1/24"
 }
 
 #

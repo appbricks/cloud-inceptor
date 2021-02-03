@@ -49,7 +49,7 @@ module "bootstrap" {
   vpn_type = "ipsec"
   # vpn_type = "openvpn"
 
-  ovpn_server_port = "2295"
+  ovpn_service_port = "2295"
 
   # Default for IPSec
   vpn_tunnel_all_traffic = "yes"

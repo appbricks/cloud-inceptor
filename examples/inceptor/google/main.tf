@@ -47,11 +47,17 @@ module "bootstrap" {
     "user2|P@ssw0rd2"
   ]
 
+  vpn_type = "wireguard"
+  # vpn_type = "openvpn"
   # vpn_type = "ipsec"
-  vpn_type = "openvpn"
+
   vpn_tunnel_all_traffic = "yes"
-  ovpn_server_port = "2295"
-  ovpn_protocol = "udp"
+
+  ovpn_service_port = "2295"
+  ovpn_protocol     = "udp"
+
+  wireguard_service_port = "3399"
+  wireguard_subnet_ip    = "192.168.112.${local.vpc_subnet_index}/24"
 
   # Tunnel for VPN to handle situations where 
   # OpenVPN is blocked or throttled by ISP

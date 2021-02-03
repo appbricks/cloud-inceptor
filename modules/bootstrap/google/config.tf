@@ -33,7 +33,11 @@ module "config" {
   bastion_use_fqdn  = var.bastion_use_fqdn
   bastion_public_ip = google_compute_address.bastion-public.address
 
-  bastion_dns = length(var.bastion_dns) == 0 ? google_compute_subnetwork.admin.gateway_address: var.bastion_dns
+  bastion_dns = (
+    length(var.bastion_dns) == 0 
+      ? google_compute_subnetwork.admin.gateway_address
+      : var.bastion_dns
+  )
 
   bastion_dmz_itf_ip   = google_compute_address.bastion-dmz.address
   bastion_admin_itf_ip = google_compute_address.bastion-admin.address
@@ -68,14 +72,14 @@ module "config" {
   vpn_idle_action        = var.vpn_idle_action
   vpn_users              = join(",", var.vpn_users)
 
-  ovpn_server_port = var.ovpn_server_port
-  ovpn_protocol    = var.ovpn_protocol
+  ovpn_service_port = var.ovpn_service_port
+  ovpn_protocol     = var.ovpn_protocol
 
   tunnel_vpn_port_start = var.tunnel_vpn_port_start
   tunnel_vpn_port_end   = var.tunnel_vpn_port_end
   
-  wireguard_port      = var.wireguard_port
-  wireguard_subnet_ip = var.wireguard_subnet_ip
+  wireguard_service_port = var.wireguard_service_port
+  wireguard_subnet_ip    = var.wireguard_subnet_ip
 
   smtp_relay_host    = var.smtp_relay_host
   smtp_relay_port    = var.smtp_relay_port

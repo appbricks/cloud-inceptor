@@ -134,14 +134,14 @@ vpn:
   tunnel_client_traffic: ${var.vpn_tunnel_all_traffic}
   idle_action: ${var.vpn_idle_action}
   openvpn:
-    port: ${var.ovpn_server_port}
+    port: ${var.ovpn_service_port}
     protocol: ${var.ovpn_protocol}
   tunnel_vpn:
     port_start: ${var.tunnel_vpn_port_start}
     port_end: ${var.tunnel_vpn_port_end}
   wireguard:
     host_ip: ${local.bastion_internal_ip}
-    listen_port: ${var.wireguard_port}
+    listen_port: ${var.wireguard_service_port}
     subnet_ip: ${var.wireguard_subnet_ip}
   vpn_cert:
     name: ${var.vpc_name}_VPN

@@ -3,14 +3,23 @@
 #
 
 locals {
-  local_dns = "${length(var.vpc_internal_dns_zones) > 0 
-    ? element(var.vpc_internal_dns_zones, 0) : ""}"
+  local_dns = (
+    length(var.vpc_internal_dns_zones) > 0 
+      ? element(var.vpc_internal_dns_zones, 0) 
+      : ""
+  )
 
-  jumpbox_dns = "${var.deploy_jumpbox && length(local.local_dns) > 0 
-    ? format("jumpbox.%s", local.local_dns) : ""}"
+  jumpbox_dns = (
+    var.deploy_jumpbox && length(local.local_dns) > 0 
+      ? format("jumpbox.%s", local.local_dns) 
+      : ""
+  )
 
-  jumpbox_dns_record = "${length(local.jumpbox_dns) > 0 
-    ? format("%s:%s", local.jumpbox_dns, google_compute_address.jumpbox.address) : ""}"
+  jumpbox_dns_record = (
+    length(local.jumpbox_dns) > 0 
+      ? format("%s:%s", local.jumpbox_dns, google_compute_address.jumpbox.address) 
+      : ""
+  )
 }
 
 resource "google_compute_instance" "jumpbox" {

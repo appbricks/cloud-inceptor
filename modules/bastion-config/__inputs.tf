@@ -172,7 +172,7 @@ variable "vpn_users" {
 #
 # OpenVPN configuration
 #
-variable "ovpn_server_port" {
+variable "ovpn_service_port" {
   type = string
 }
 
@@ -183,7 +183,7 @@ variable "ovpn_protocol" {
 #
 # Wireguard configuration
 #
-variable "wireguard_port" {
+variable "wireguard_service_port" {
   type = string
 }
 

@@ -198,7 +198,7 @@ variable "bastion_allow_public_ssh" {
 #
 # Open VPN configuration
 #
-variable "ovpn_server_port" {
+variable "ovpn_service_port" {
   default = ""
 }
 

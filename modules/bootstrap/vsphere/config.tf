@@ -52,8 +52,8 @@ module "config" {
   vpn_idle_action        = "${var.vpn_idle_action}"
   vpn_users              = "${join(",", var.vpn_users)}"
 
-  ovpn_server_port = "${var.ovpn_server_port}"
-  ovpn_protocol    = "${var.ovpn_protocol}"
+  ovpn_service_port = "${var.ovpn_service_port}"
+  ovpn_protocol     = "${var.ovpn_protocol}"
 
   tunnel_vpn_port_start = "${var.tunnel_vpn_port_start}"
   tunnel_vpn_port_end   = "${var.tunnel_vpn_port_end}"
