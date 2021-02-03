@@ -166,7 +166,7 @@ resource "aws_security_group" "bastion-public" {
     content {
       from_port   = tonumber(var.wireguard_service_port)
       to_port     = tonumber(var.wireguard_service_port)
-      protocol    = var.ovpn_protocol
+      protocol    = "udp"
       cidr_blocks = ["0.0.0.0/0"]
     }
   }
