@@ -94,10 +94,10 @@ resource "aws_volume_attachment" "jumpbox-data" {
 #
 
 resource "aws_route53_record" "jumpbox" {
-  count = length(local.jumpbox_dns) > 0 ? 1 : 0
+  count = var.attach_dns_zone && length(local.jumpbox_dns) > 0 ? 1 : 0
 
-  zone_id = aws_route53_zone.vpc-private.zone_id
-  name    = "jumpbox.${aws_route53_zone.vpc-private.name}"
+  zone_id = aws_route53_zone.vpc-private[0].zone_id
+  name    = "jumpbox.${aws_route53_zone.vpc-private[0].name}"
   type    = "A"
   ttl     = "300"
   records = [aws_instance.jumpbox[0].private_ip]
