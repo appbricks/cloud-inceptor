@@ -23,7 +23,7 @@ locals {
 resource "aws_instance" "jumpbox" {
   count = length(local.jumpbox_dns) > 0 ? 1 : 0
 
-  instance_type = "t3a.nano"
+  instance_type = "t4g.nano"
   ami           = data.aws_ami.ubuntu.id
   key_name      = aws_key_pair.default.key_name
 
