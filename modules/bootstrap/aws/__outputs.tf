@@ -30,7 +30,11 @@ output "dmz_subnetworks" {
 }
 
 output "admin_subnetworks" {
-  value =  aws_subnet.admin.*.id
+  value = aws_subnet.admin.*.id
+}
+
+output "admin_security_group" {
+  value = aws_security_group.internal.id
 }
 
 output "vpc_dns_public_zone_id" {
@@ -109,6 +113,10 @@ output "default_openssh_private_key" {
 
 output "default_openssh_public_key" {
   value = tls_private_key.default-ssh-key.public_key_openssh
+}
+
+output "default_ssh_key_pair" {
+  value = aws_key_pair.default.key_name
 }
 
 # ==== DEBUG OUTPUT ====
