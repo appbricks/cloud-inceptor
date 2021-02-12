@@ -121,6 +121,6 @@ locals {
   wireguard_subnet_ip = (
     var.vpn_type == "wireguard" 
       ? "${cidrhost(var.vpn_network, 1)}/${split("/", var.vpn_network)[1]}"
-      : "${cidrhost(var.wireguard_mesh_network, 1)}/${split("/", var.wireguard_mesh_network)[1]}"
+      : "${cidrhost(var.wireguard_mesh_network, var.wireguard_mesh_node)}/${split("/", var.wireguard_mesh_network)[1]}"
   )
 }

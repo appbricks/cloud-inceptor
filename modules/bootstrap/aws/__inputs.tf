@@ -237,8 +237,8 @@ variable "wireguard_mesh_network" {
   default = "192.168.112.0/24"
 }
 
-variable "wireguard_mesh_index" {
-  default = 0
+variable "wireguard_mesh_node" {
+  default = 1
 }
 
 #
