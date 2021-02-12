@@ -118,6 +118,13 @@ locals {
   # peered VPC if VPN type to connected client is different.
   # For such cases wireguard must have network range that
   # is separate from the vpn range.
+  #
+  # TBD - this does not allow a wireguard client VPN to be 
+  # setup alongside the mesh. To allow a mesh configuration
+  # the mesh setup needs to be separate from the vpn config
+  #
+  # https://github.com/appbricks/cloud-inceptor/issues/1
+  #
   wireguard_subnet_ip = (
     var.vpn_type == "wireguard" 
       ? "${cidrhost(var.vpn_network, 1)}/${split("/", var.vpn_network)[1]}"
