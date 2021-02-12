@@ -101,8 +101,15 @@ output "bastion_openssh_public_key" {
   value = module.config.bastion_openssh_public_key
 }
 
-# The api-key required to adminster the 
-# internal zone managed by powerdns
+#
+# The url and api-key required to adminster
+# the internal zone managed by powerdns
+#
+
+output "powerdns_url" {
+  value = "http://${local.bastion_admin_itf_ip}:8888"
+}
+
 output "powerdns_api_key" {
   value = module.config.powerdns_api_key
 }
