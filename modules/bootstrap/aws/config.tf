@@ -112,7 +112,7 @@ locals {
           var.vpn_protected_sub_range, 
           pow(2, var.vpn_protected_sub_range)-1
         )
-      :  var.vpn_network
+      : var.vpn_network
   )
   # Wireguard will be configured for use as a mesh between
   # peered VPC if VPN type to connected client is different.
