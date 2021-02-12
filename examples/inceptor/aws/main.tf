@@ -64,7 +64,7 @@ module "bootstrap" {
   ovpn_protocol     = "udp"
 
   wireguard_service_port = "3399"
-  wireguard_subnet_ip    = "192.168.112.${local.vpc_subnet_index}/24"
+  wireguard_mesh_index   = local.vpc_subnet_index
 
   # Tunnel for VPN to handle situations where 
   # OpenVPN is blocked or throttled by ISP

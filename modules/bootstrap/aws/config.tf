@@ -13,6 +13,8 @@
 module "config" {
   source = "../../../modules/bastion-config"
 
+  time_zone = var.time_zone
+
   company_name      = var.company_name
   organization_name = var.organization_name
   locality          = var.locality
@@ -64,6 +66,7 @@ module "config" {
 
   vpn_type               = var.vpn_type
   vpn_network            = var.vpn_network
+  vpn_protected_network  = local.vpn_protected_network
   vpn_tunnel_all_traffic = var.vpn_tunnel_all_traffic
   vpn_idle_action        = var.vpn_idle_action
   vpn_users              = join(",", var.vpn_users)
@@ -75,7 +78,7 @@ module "config" {
   tunnel_vpn_port_end   = var.tunnel_vpn_port_end
 
   wireguard_service_port = var.wireguard_service_port
-  wireguard_subnet_ip    = var.wireguard_subnet_ip
+  wireguard_subnet_ip    = local.wireguard_subnet_ip
 
   smtp_relay_host    = var.smtp_relay_host
   smtp_relay_port    = var.smtp_relay_port
@@ -96,4 +99,28 @@ ${var.bootstrap_pipeline_vars}
 environment: ${var.vpc_name}
 region: ${var.region}
 PIPELINE_VARS
+}
+
+locals {
+  # Partitioning the vpn range into a range of ips that 
+  # are protected by the DNS sink hole vs ips that are 
+  # in open can only be done for the wireguard vpn type.
+  vpn_protected_network = (
+    var.vpn_type == "wireguard" 
+      ? cidrsubnet(
+          var.vpn_network, 
+          var.vpn_protected_sub_range, 
+          pow(2, var.vpn_protected_sub_range)-1
+        )
+      :  var.vpn_network
+  )
+  # Wireguard will be configured for use as a mesh between
+  # peered VPC if VPN type to connected client is different.
+  # For such cases wireguard must have network range that
+  # is separate from the vpn range.
+  wireguard_subnet_ip = (
+    var.vpn_type == "wireguard" 
+      ? "${cidrhost(var.vpn_network, 1)}/${split("/", var.vpn_network)[1]}"
+      : "${cidrhost(var.wireguard_mesh_network, 1)}/${split("/", var.wireguard_mesh_network)[1]}"
+  )
 }

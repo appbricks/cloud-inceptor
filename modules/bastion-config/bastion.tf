@@ -91,6 +91,7 @@ data "template_file" "bastion-config" {
   template = <<CONFIG
 ---
 server:
+  time_zone: ${var.time_zone}
   host: ${var.bastion_public_ip}
   fqdn: ${var.bastion_fqdn}
   use_fqdn: ${var.bastion_use_fqdn}
@@ -129,6 +130,7 @@ vpn:
   type: ${var.vpn_type}
   subnet: ${var.vpn_network}
   netmask: ${cidrnetmask(var.vpn_network)}
+  protected_subnet: ${var.vpn_protected_network}
   server_domain: ${var.vpc_dns_zone}
   server_description: ${var.vpc_name}-vpn
   tunnel_client_traffic: ${var.vpn_tunnel_all_traffic}

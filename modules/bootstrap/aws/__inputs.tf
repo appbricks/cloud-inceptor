@@ -1,8 +1,12 @@
 #
-# Google compute region
+# AWS compute region
 #
 variable "region" {
   type = string
+}
+
+variable "time_zone" {
+  default = "America/New_York"
 }
 
 #
@@ -206,6 +210,10 @@ variable "vpn_network" {
   default = "192.168.111.0/24"
 }
 
+variable "vpn_protected_sub_range" {
+  default = 2
+}
+
 variable "vpn_tunnel_all_traffic" {
   default = "no"
 }
@@ -225,8 +233,12 @@ variable "wireguard_service_port" {
   default = ""
 }
 
-variable "wireguard_subnet_ip" {
-  default = "192.168.112.1/24"
+variable "wireguard_mesh_network" {
+  default = "192.168.112.0/24"
+}
+
+variable "wireguard_mesh_index" {
+  default = 0
 }
 
 #

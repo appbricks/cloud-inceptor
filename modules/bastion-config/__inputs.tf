@@ -1,4 +1,12 @@
 #
+# Locale
+#
+
+variable "time_zone" {
+  type = string
+}
+
+#
 # Certificate Subject data for certificate creation
 #
 variable "company_name" {
@@ -154,6 +162,10 @@ variable "vpn_type" {
 }
 
 variable "vpn_network" {
+  type = string
+}
+
+variable "vpn_protected_network" {
   type = string
 }
 
