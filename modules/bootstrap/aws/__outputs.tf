@@ -65,6 +65,10 @@ output "bastion_public_ip" {
   value = aws_eip.bastion-public.public_ip
 }
 
+output "bastion_admin_ip" {
+  value = local.bastion_admin_itf_ip
+}
+
 output "bastion_fqdn" {
   value = var.attach_dns_zone ? aws_route53_record.vpc-external[0].name : ""
 }
