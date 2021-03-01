@@ -132,7 +132,7 @@ vpn:
   netmask: ${cidrnetmask(var.vpn_network)}
   protected_subnet: ${var.vpn_protected_network}
   server_domain: ${var.vpc_dns_zone}
-  server_description: ${var.vpc_name}-vpn
+  server_description: ${var.vpc_name}
   tunnel_client_traffic: ${var.vpn_tunnel_all_traffic}
   idle_action: ${var.vpn_idle_action}
   openvpn:
