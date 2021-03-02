@@ -81,6 +81,10 @@ output "bastion_admin_fqdn" {
   )
 }
 
+output "bastion_admin_api_port" {
+  value = var.bastion_admin_api_port
+}
+
 output "bastion_admin_ssh_port" {
   value = var.bastion_admin_ssh_port
 }

@@ -145,6 +145,10 @@ variable "data_volume_name" {
 #
 # Bastion access configuration
 #
+variable "bastion_admin_api_port" {
+  type = string
+}
+
 variable "bastion_admin_ssh_port" {
   type = string
 }

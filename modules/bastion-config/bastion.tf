@@ -126,6 +126,9 @@ smtp:
   internal_smtp_port: 2525
   networks: 172.16.0.0/12 ${var.vpc_cidr} ${var.bastion_public_ip}
 
+webserver:
+  https_port: ${var.bastion_admin_api_port}
+
 vpn:
   type: ${var.vpn_type}
   subnet: ${var.vpn_network}

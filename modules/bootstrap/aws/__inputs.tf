@@ -186,6 +186,10 @@ variable "bastion_dns" {
 #
 # Bastion access configuration
 #
+variable "bastion_admin_api_port" {
+  default = "443"
+}
+
 variable "bastion_admin_ssh_port" {
   default = "22"
 }

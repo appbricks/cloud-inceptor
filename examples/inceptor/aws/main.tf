@@ -80,6 +80,8 @@ module "bootstrap" {
   bastion_host_name = "inceptor"
   bastion_use_fqdn = var.bastion_use_fqdn
 
+  bastion_instance_type = "t4g.micro"
+
   bastion_image_name  = var.bastion_image_name
   bastion_image_owner = var.bastion_image_owner
 
