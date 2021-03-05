@@ -183,10 +183,10 @@ data "template_file" "bootstrap-pipeline-vars" {
 
 resource "random_string" "bastion-admin-password" {
   length  = 32
-  special = false
+  special = true
 }
 
 resource "random_string" "powerdns-api-key" {
   length  = 32
-  special = false
+  special = true
 }
