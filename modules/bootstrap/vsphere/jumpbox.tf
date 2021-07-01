@@ -66,7 +66,7 @@ resource "vsphere_virtual_machine" "jumpbox" {
     template_uuid = "${data.vsphere_virtual_machine.jumpbox-template.id}"
   }
 
-  extra_config {
+  extra_config = {
     guestinfo.userdata          = "${data.template_cloudinit_config.jumpbox-cloudinit.rendered}"
     guestinfo.userdata.encoding = "gzip+base64"
   }

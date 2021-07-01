@@ -71,7 +71,7 @@ resource "vsphere_virtual_machine" "bastion-1nic" {
     template_uuid = "${data.vsphere_virtual_machine.bastion-template.id}"
   }
 
-  extra_config {
+  extra_config = {
     guestinfo.userdata          = "${module.config.bastion_cloud_init_config}"
     guestinfo.userdata.encoding = "gzip+base64"
   }
@@ -130,7 +130,7 @@ resource "vsphere_virtual_machine" "bastion-2nic" {
     template_uuid = "${data.vsphere_virtual_machine.bastion-template.id}"
   }
 
-  extra_config {
+  extra_config = {
     guestinfo.userdata          = "${module.config.bastion_cloud_init_config}"
     guestinfo.userdata.encoding = "gzip+base64"
   }
@@ -193,7 +193,7 @@ resource "vsphere_virtual_machine" "bastion-3nic" {
     template_uuid = "${data.vsphere_virtual_machine.bastion-template.id}"
   }
 
-  extra_config {
+  extra_config = {
     guestinfo.userdata          = "${module.config.bastion_cloud_init_config}"
     guestinfo.userdata.encoding = "gzip+base64"
   }
@@ -260,7 +260,7 @@ resource "vsphere_virtual_machine" "bastion-4nic" {
     template_uuid = "${data.vsphere_virtual_machine.bastion-template.id}"
   }
 
-  extra_config {
+  extra_config = {
     guestinfo.userdata          = "${module.config.bastion_cloud_init_config}"
     guestinfo.userdata.encoding = "gzip+base64"
   }
@@ -331,7 +331,7 @@ resource "vsphere_virtual_machine" "bastion-5nic" {
     template_uuid = "${data.vsphere_virtual_machine.bastion-template.id}"
   }
 
-  extra_config {
+  extra_config = {
     guestinfo.userdata          = "${module.config.bastion_cloud_init_config}"
     guestinfo.userdata.encoding = "gzip+base64"
   }
