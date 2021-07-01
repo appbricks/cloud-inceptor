@@ -13,7 +13,7 @@ data "vsphere_datacenter" "dc" {
 }
 
 data "vsphere_resource_pool" "rp" {
-  name          = "${join("/", list(local.cluster_name, "Resources", local.cluster_resource_pool))}"
+  name          = "${join("/", tolist([local.cluster_name, "Resources", local.cluster_resource_pool]))}"
   datacenter_id = "${data.vsphere_datacenter.dc.id}"
 }
 

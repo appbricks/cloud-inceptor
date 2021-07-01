@@ -18,7 +18,7 @@ module "config" {
   vpc_cidr                 = "${var.vpc_cidr}"
   vpc_dns_zone             = "${var.vpc_dns_zone}"
   vpc_internal_dns_zones   = "${var.vpc_internal_dns_zones}"
-  vpc_internal_dns_records = "${concat(var.vpc_internal_dns_records, list(local.jumpbox_dns_record))}"
+  vpc_internal_dns_records = "${concat(var.vpc_internal_dns_records, tolist([local.jumpbox_dns_record]))}"
 
   bastion_fqdn      = "${var.vpc_dns_zone}"
   bastion_use_fqdn  = "${var.bastion_use_fqdn}"

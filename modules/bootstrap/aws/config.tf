@@ -28,7 +28,7 @@ module "config" {
   vpc_cidr                 = var.vpc_cidr
   vpc_dns_zone             = var.vpc_dns_zone
   vpc_internal_dns_zones   = var.vpc_internal_dns_zones
-  vpc_internal_dns_records = concat(var.vpc_internal_dns_records, list(local.jumpbox_dns_record))
+  vpc_internal_dns_records = concat(var.vpc_internal_dns_records, tolist([local.jumpbox_dns_record]))
 
   certify_bastion   = var.certify_bastion
   bastion_fqdn      = var.vpc_dns_zone
@@ -42,19 +42,19 @@ module "config" {
 
   bastion_nic_config = [
     join("|", 
-      list(
+      tolist([
         "", // AWS will assign static IP via DHCP
         aws_subnet.dmz[0].cidr_block,
         "0.0.0.0/0"
-      ),
+      ]),
     ),
     join("|", 
-      list(
+      tolist([
         local.bastion_admin_itf_ip, 
         aws_subnet.admin[0].cidr_block,
         length(var.global_internal_cidr) == 0 ? var.vpc_cidr : var.global_internal_cidr,
         cidrhost(aws_subnet.admin[0].cidr_block, 1)
-      )
+      ])
     ),
   ]
 

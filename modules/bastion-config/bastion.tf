@@ -19,7 +19,7 @@ locals {
   # Create shorter email key if it is too long when 
   # vpc dns is included, as vpn cert creation limits 
   # length of string accepted.
-  vpn_email_key = length(local.admin_email) > 40 ? join("@", list(var.bastion_admin_user, var.vpc_name)) : local.admin_email
+  vpn_email_key = length(local.admin_email) > 40 ? join("@", tolist([var.bastion_admin_user, var.vpc_name])) : local.admin_email
 }
 
 data "template_cloudinit_config" "bastion-cloudinit" {

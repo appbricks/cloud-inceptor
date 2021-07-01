@@ -8,7 +8,7 @@ locals {
   local_networks = "${matchkeys(
     data.null_data_source.local_networks.*.outputs, 
     data.null_data_source.local_networks.*.outputs.create, 
-    list("true"))}"
+    tolist(["true"]))}"
 }
 
 data "null_data_source" "local_networks" {
@@ -93,7 +93,7 @@ data "external" "bastion-nic-config" {
 {
   "config": "${
     join("|", 
-      list(
+      tolist([
         length(lookup(var.local_networks[count.index], "bastion_ip", "")) > 0
           ? lookup(var.local_networks[count.index], "bastion_ip", "")
           : cidrhost(lookup(var.local_networks[count.index], "cidr"), var.bastion_nic_hostnum)
@@ -106,7 +106,7 @@ data "external" "bastion-nic-config" {
         lookup(var.local_networks[count.index], "gateway", ""),
         cidrhost(lookup(var.local_networks[count.index], "cidr", ""), -2 - var.dhcpd_lease_range),
         cidrhost(lookup(var.local_networks[count.index], "cidr", ""), -2),
-      )
+      ])
     )
   }"
 }

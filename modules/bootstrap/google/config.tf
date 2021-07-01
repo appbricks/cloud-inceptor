@@ -26,7 +26,7 @@ module "config" {
   vpc_cidr                 = var.vpc_cidr
   vpc_dns_zone             = var.vpc_dns_zone
   vpc_internal_dns_zones   = var.vpc_internal_dns_zones
-  vpc_internal_dns_records = concat(var.vpc_internal_dns_records, list(local.jumpbox_dns_record))
+  vpc_internal_dns_records = concat(var.vpc_internal_dns_records, tolist([local.jumpbox_dns_record]))
 
   certify_bastion   = var.certify_bastion
   bastion_fqdn      = var.vpc_dns_zone
@@ -44,19 +44,19 @@ module "config" {
 
   bastion_nic_config = [
     "${join("|", 
-      list(
+      tolist([
         "", // GCP will assign static IP via DHCP
         google_compute_subnetwork.dmz.ip_cidr_range,
         "0.0.0.0/0"
-      ),
+      ]),
     )}",
     "${join("|", 
-      list(
+      tolist([
         google_compute_address.bastion-admin.address, 
         google_compute_subnetwork.admin.ip_cidr_range,
         length(var.global_internal_cidr) == 0 ? var.vpc_cidr : var.global_internal_cidr,
         google_compute_subnetwork.admin.gateway_address
-      )
+      ])
     )}",
   ]
 

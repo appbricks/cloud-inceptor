@@ -26,7 +26,7 @@ module "config" {
   vpc_cidr                 = var.vpc_cidr
   vpc_dns_zone             = var.vpc_dns_zone
   vpc_internal_dns_zones   = var.vpc_internal_dns_zones
-  vpc_internal_dns_records = concat(var.vpc_internal_dns_records, list(local.jumpbox_dns_record))
+  vpc_internal_dns_records = concat(var.vpc_internal_dns_records, tolist([local.jumpbox_dns_record]))
 
   certify_bastion   = var.certify_bastion
   bastion_fqdn      = var.vpc_dns_zone
@@ -40,19 +40,19 @@ module "config" {
 
   bastion_nic_config = [
     "${join("|", 
-      list(
+      tolist([
         "", // Azure will assign static IP via DHCP
         azurerm_subnet.dmz.address_prefix,
         "0.0.0.0/0"
-      ),
+      ]),
     )}",
     "${join("|", 
-      list(
+      tolist([
         azurerm_network_interface.bastion-admin.ip_configuration[0].private_ip_address,
         azurerm_subnet.admin.address_prefix,
         length(var.global_internal_cidr) == 0 ? var.vpc_cidr : var.global_internal_cidr,
         cidrhost(azurerm_subnet.admin.address_prefix, 1)
-      )
+      ])
     )}",
   ]
 
