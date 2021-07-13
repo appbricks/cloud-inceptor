@@ -128,6 +128,8 @@ smtp:
 
 webserver:
   https_port: ${var.bastion_admin_api_port}
+  static_content_port: 8080
+  api_service_port: 9080
 
 vpn:
   type: ${var.vpn_type}
