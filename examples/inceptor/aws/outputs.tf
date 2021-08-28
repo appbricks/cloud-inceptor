@@ -14,6 +14,10 @@ output "vpc_name" {
   value = module.bootstrap.vpc_name
 }
 
+output "ca_root" {
+  value = module.bootstrap.root_ca_cert
+}
+
 output "bastion_instance_id" {
   value = module.bootstrap.bastion_instance_id
 }

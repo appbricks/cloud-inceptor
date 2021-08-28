@@ -60,6 +60,11 @@ write_files:
   content: ${base64gzip(tls_private_key.bastion.private_key_pem)}
   path: /etc/ssl/private/bastion_key.pem
   permissions: '0644'
+- encoding: gzip+base64
+  content: ${base64gzip(var.mycs_node_private_key)}
+  path: /etc/mycs/node-private-key.pem
+  owner: mycs:root
+  permissions: '0600'
 
 # Web Server home page
 - encoding: gzip+base64
@@ -90,6 +95,13 @@ USER_DATA
 data "template_file" "bastion-config" {
   template = <<CONFIG
 ---
+mycs:
+  node_id_key: ${var.mycs_node_id_key}
+  key_timeout: 300000
+  auth_retry_timer: 500
+  auth_timeout: 10000
+  db_refresh_timer: 30000
+
 server:
   time_zone: ${var.time_zone}
   host: ${var.bastion_public_ip}

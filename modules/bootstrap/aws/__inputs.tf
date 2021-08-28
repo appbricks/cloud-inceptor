@@ -10,6 +10,17 @@ variable "time_zone" {
 }
 
 #
+# MyCloudSpace node service keys
+#
+variable "mycs_node_private_key" {
+  default = ""
+}
+
+variable "mycs_node_id_key" {
+  default = ""
+}
+
+#
 # Certificate Subject data for certificate creation
 #
 variable "company_name" {

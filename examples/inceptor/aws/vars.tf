@@ -1,4 +1,15 @@
 #
+# MyCS Node IdKey
+#
+variable "mycs_node_private_key" {
+  default = ""
+}
+
+variable "mycs_node_id_key" {
+  default = ""
+}
+
+#
 # SMTP settings for notifications
 #
 

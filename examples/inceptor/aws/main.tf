@@ -13,6 +13,9 @@ locals {
 module "bootstrap" {
   source = "../../../modules/bootstrap/aws"
 
+  mycs_node_private_key = var.mycs_node_private_key
+  mycs_node_id_key = var.mycs_node_id_key
+
   #
   # Company information used in certificate creation
   #

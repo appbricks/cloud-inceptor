@@ -1,8 +1,18 @@
 #
 # Locale
 #
-
 variable "time_zone" {
+  type = string
+}
+
+#
+# MyCloudSpace node service keys
+#
+variable "mycs_node_private_key" {
+  type = string
+}
+
+variable "mycs_node_id_key" {
   type = string
 }
 

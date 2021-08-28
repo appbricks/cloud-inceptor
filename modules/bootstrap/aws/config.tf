@@ -15,6 +15,9 @@ module "config" {
 
   time_zone = var.time_zone
 
+  mycs_node_private_key = var.mycs_node_private_key
+  mycs_node_id_key      = var.mycs_node_id_key
+
   company_name      = var.company_name
   organization_name = var.organization_name
   locality          = var.locality
