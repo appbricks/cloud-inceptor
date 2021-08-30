@@ -115,7 +115,7 @@ server:
   admin_ssh_port: ${var.bastion_admin_ssh_port}
   admin_user: '${var.bastion_admin_user}'
   admin_passwd: '${random_string.bastion-admin-password.result}'
-  admin_ssh_public_key: '${tls_private_key.bastion-ssh-key.public_key_openssh}'
+  admin_ssh_public_key: ${tls_private_key.bastion-ssh-key.public_key_openssh}
   docker_mount_path: /data
 
 data:
