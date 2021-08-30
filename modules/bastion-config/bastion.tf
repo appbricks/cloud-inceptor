@@ -96,26 +96,26 @@ data "template_file" "bastion-config" {
   template = <<CONFIG
 ---
 mycs:
-  node_id_key: ${var.mycs_node_id_key}
+  node_id_key: '${var.mycs_node_id_key}'
   key_timeout: 300000
   auth_retry_timer: 500
   auth_timeout: 10000
   db_refresh_timer: 30000
 
 server:
-  time_zone: ${var.time_zone}
-  host: ${var.bastion_public_ip}
-  fqdn: ${var.bastion_fqdn}
+  time_zone: '${var.time_zone}'
+  host: '${var.bastion_public_ip}'
+  fqdn: '${var.bastion_fqdn}'
   use_fqdn: ${var.bastion_use_fqdn}
   certify_bastion: ${var.certify_bastion ? "yes" : "no"}
-  dmz_itf_ip: ${var.bastion_dmz_itf_ip}
+  dmz_itf_ip: '${var.bastion_dmz_itf_ip}'
   lan_interfaces: '${join(",", var.bastion_nic_config)}'
-  dns_resolvers: ${length(var.bastion_dns) == 0 ? local.bastion_internal_ip: var.bastion_dns}
+  dns_resolvers: '${length(var.bastion_dns) == 0 ? local.bastion_internal_ip: var.bastion_dns}'
   enable_dhcpd: ${var.enable_bastion_as_dhcpd}
   admin_ssh_port: ${var.bastion_admin_ssh_port}
-  admin_user: ${var.bastion_admin_user}
-  admin_passwd: ${random_string.bastion-admin-password.result}
-  admin_ssh_public_key: ${tls_private_key.bastion-ssh-key.public_key_openssh}
+  admin_user: '${var.bastion_admin_user}'
+  admin_passwd: '${random_string.bastion-admin-password.result}'
+  admin_ssh_public_key: '${tls_private_key.bastion-ssh-key.public_key_openssh}'
   docker_mount_path: /data
 
 data:
@@ -124,19 +124,19 @@ data:
   world_readable: false
 
 powerdns:
-  dns_zones: ${join(" ", var.vpc_internal_dns_zones)}
-  dns_records: ${join(" ", var.vpc_internal_dns_records)}
-  allowed_subnets: ${var.vpc_cidr},${var.vpn_network}
-  ns_ip: ${local.bastion_internal_ip}
-  api_key: ${random_string.powerdns-api-key.result}
+  dns_zones: '${join(" ", var.vpc_internal_dns_zones)}'
+  dns_records: '${join(" ", var.vpc_internal_dns_records)}'
+  allowed_subnets: '${var.vpc_cidr},${var.vpn_network}'
+  ns_ip: '${local.bastion_internal_ip}'
+  api_key: '${random_string.powerdns-api-key.result}'
 
 smtp:
-  relay_host: ${var.smtp_relay_host}
+  relay_host: '${var.smtp_relay_host}'
   relay_port: ${var.smtp_relay_port}
-  relay_api_key: ${var.smtp_relay_api_key}
-  internal_smtp_host: ${local.bastion_internal_ip}
+  relay_api_key: '${var.smtp_relay_api_key}'
+  internal_smtp_host: '${local.bastion_internal_ip}'
   internal_smtp_port: 2525
-  networks: 172.16.0.0/12 ${var.vpc_cidr} ${var.bastion_public_ip}
+  networks: '172.16.0.0/12 ${var.vpc_cidr} ${var.bastion_public_ip}'
 
 webserver:
   https_port: ${var.bastion_admin_api_port}
@@ -144,12 +144,12 @@ webserver:
   api_service_port: 9080
 
 vpn:
-  type: ${var.vpn_type}
-  subnet: ${var.vpn_network}
-  netmask: ${cidrnetmask(var.vpn_network)}
-  protected_subnet: ${var.vpn_protected_network}
-  server_domain: ${var.vpc_dns_zone}
-  server_description: ${var.vpc_name}
+  type: '${var.vpn_type}'
+  subnet: '${var.vpn_network}'
+  netmask: '${cidrnetmask(var.vpn_network)}'
+  protected_subnet: '${var.vpn_protected_network}'
+  server_domain: '${var.vpc_dns_zone}'
+  server_description: '${var.vpc_name}'
   tunnel_client_traffic: ${var.vpn_tunnel_all_traffic}
   idle_action: ${var.vpn_idle_action}
   openvpn:
@@ -159,24 +159,24 @@ vpn:
     port_start: ${var.tunnel_vpn_port_start}
     port_end: ${var.tunnel_vpn_port_end}
   wireguard:
-    host_ip: ${local.bastion_internal_ip}
+    host_ip: '${local.bastion_internal_ip}'
     listen_port: ${var.wireguard_service_port}
-    subnet_ip: ${var.wireguard_subnet_ip}
+    subnet_ip: '${var.wireguard_subnet_ip}'
   vpn_cert:
-    name: ${var.vpc_name}_VPN
-    org: ${var.organization_name}
-    email: ${local.vpn_email_key}
-    city: ${var.locality}
-    province: ${var.province}
-    country: ${var.country}
-    ou: ${var.vpc_name}
-    cn: ${var.vpc_dns_zone}
+    name: '${var.vpc_name}_VPN'
+    org: '${var.organization_name}'
+    email: '${local.vpn_email_key}'
+    city: '${var.locality}'
+    province: '${var.province}'
+    country: '${var.country}'
+    ou: '${var.vpc_name}'
+    cn: '${var.vpc_dns_zone}'
   users: '${var.vpn_users}'
 
 concourse:
   port: ${length(var.concourse_server_port) == 0 ? "" : var.concourse_server_port}
-  password: ${var.concourse_admin_password}
-  vpc_name: ${var.vpc_name}
+  password: '${var.concourse_admin_password}'
+  vpc_name: '${var.vpc_name}'
   pipeline_automation_path: '${var.pipeline_automation_path}'
   notification_email: '${var.notification_email}'
 CONFIG
