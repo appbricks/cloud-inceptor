@@ -45,11 +45,11 @@ write_files:
 
 # Web Server SSL certificates
 - encoding: gzip+base64
-  content: ${base64gzip(tls_self_signed_cert.root-ca.cert_pem)}
+  content: ${base64gzip(local.root_ca_cert)}
   path: /etc/ssl/certs/bastion_ca.pem
   permissions: '0644'
 - encoding: gzip+base64
-  content: ${base64gzip(tls_private_key.root-ca-key.private_key_pem)}
+  content: ${base64gzip(local.root_ca_key)}
   path: /etc/ssl/certs/bastion_ca_key.pem
   permissions: '0644'
 - encoding: gzip+base64
