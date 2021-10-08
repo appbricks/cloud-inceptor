@@ -47,7 +47,7 @@ module "bootstrap" {
   vpc_internal_dns_zones = ["appbricks.local"]
 
   # Address space for all VPC regions
-  global_internal_cidr = "10.0.0.0/8"
+  global_internal_cidr = "172.16.0.0/12"
 
   # VPN
   # vpn_idle_action = "shutdown"

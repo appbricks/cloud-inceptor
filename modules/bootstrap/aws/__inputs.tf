@@ -77,19 +77,19 @@ variable "attach_dns_zone" {
 }
 
 variable "vpc_cidr" {
-  default = "10.0.0.0/16"
+  default = "172.16.0.0/16"
 }
 
 variable "vpc_subnet_bits" {
   // Used to calculate subnet CIDR 
   // if not explicitly provided
-  default = 8
+  default = 4
 }
 
 variable "vpc_subnet_start" {
   // Used to calculate subnet CIDR 
   // if not explicitly provided
-  default = 10
+  default = 1
 }
 
 variable "vpc_internal_dns_zones" {
