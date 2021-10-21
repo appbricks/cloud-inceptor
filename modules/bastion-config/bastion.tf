@@ -159,6 +159,7 @@ vpn:
     port_start: ${var.tunnel_vpn_port_start}
     port_end: ${var.tunnel_vpn_port_end}
   wireguard:
+    itf_name: 'wg0'
     host_ip: '${local.bastion_internal_ip}'
     listen_port: ${var.wireguard_service_port}
     subnet_ip: '${var.wireguard_subnet_ip}'
