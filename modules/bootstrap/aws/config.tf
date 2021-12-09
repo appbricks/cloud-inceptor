@@ -73,6 +73,7 @@ module "config" {
   vpn_protected_network  = local.vpn_protected_network
   vpn_tunnel_all_traffic = var.vpn_tunnel_all_traffic
   vpn_idle_action        = var.vpn_idle_action
+  vpn_idle_shutdown_time = var.vpn_idle_shutdown_time
   vpn_users              = join(",", var.vpn_users)
 
   ovpn_service_port = var.ovpn_service_port

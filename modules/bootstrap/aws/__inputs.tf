@@ -237,6 +237,10 @@ variable "vpn_idle_action" {
   default = "none"
 }
 
+variable "vpn_idle_shutdown_time" {
+  default = 10
+}
+
 variable "vpn_users" {
   default = []
 }

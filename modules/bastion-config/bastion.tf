@@ -101,6 +101,7 @@ mycs:
   auth_retry_timer: 500
   auth_timeout: 10000
   db_refresh_timer: 30000
+  idle_shutdown_time: ${var.vpn_idle_shutdown_time}
 
 server:
   time_zone: '${var.time_zone}'

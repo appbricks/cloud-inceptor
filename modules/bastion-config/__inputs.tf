@@ -191,6 +191,10 @@ variable "vpn_idle_action" {
   type = string
 }
 
+variable "vpn_idle_shutdown_time" {
+  default = 10
+}
+
 variable "vpn_users" {
   type = string
 }
