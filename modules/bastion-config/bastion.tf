@@ -102,6 +102,9 @@ mycs:
   auth_timeout: 10000
   db_refresh_timer: 30000
   idle_shutdown_time: ${var.vpn_idle_shutdown_time}
+  event_buffer_size: 1000
+  num_event_workers: 20
+  event_publish_timeout: 5000
 
 server:
   time_zone: '${var.time_zone}'
