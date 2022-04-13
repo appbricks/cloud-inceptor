@@ -70,8 +70,6 @@ resource "tls_cert_request" "bastion" {
 resource "tls_locally_signed_cert" "bastion" {
   cert_request_pem = tls_cert_request.bastion.cert_request_pem
 
-  ca_key_algorithm = "RSA"
-
   ca_private_key_pem = local.root_ca_key
   ca_cert_pem        = local.root_ca_cert
 
