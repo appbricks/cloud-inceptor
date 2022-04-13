@@ -12,8 +12,6 @@ resource "tls_private_key" "bastion-ssh-key" {
 #
 
 locals {
-  bastion_internal_ip = length(var.bastion_admin_itf_ip) > 0 ? var.bastion_admin_itf_ip : var.bastion_dmz_itf_ip
-
   admin_email = "${var.bastion_admin_user}@${var.vpc_dns_zone}"
 
   # Create shorter email key if it is too long when 
@@ -114,7 +112,7 @@ server:
   certify_bastion: ${var.certify_bastion ? "yes" : "no"}
   dmz_itf_ip: '${var.bastion_dmz_itf_ip}'
   lan_interfaces: '${join(",", var.bastion_nic_config)}'
-  dns_resolvers: '${length(var.bastion_dns) == 0 ? local.bastion_internal_ip: var.bastion_dns}'
+  dns_resolvers: '${length(var.bastion_dns) == 0 ? var.bastion_admin_itf_ip : var.bastion_dns}'
   enable_dhcpd: ${var.enable_bastion_as_dhcpd}
   admin_ssh_port: ${var.bastion_admin_ssh_port}
   admin_user: '${var.bastion_admin_user}'
@@ -131,14 +129,14 @@ powerdns:
   dns_zones: '${join(" ", var.vpc_internal_dns_zones)}'
   dns_records: '${join(" ", var.vpc_internal_dns_records)}'
   allowed_subnets: '${var.vpc_cidr},${var.vpn_network}'
-  ns_ip: '${local.bastion_internal_ip}'
+  ns_ip: '${var.bastion_admin_itf_ip}'
   api_key: '${random_string.powerdns-api-key.result}'
 
 smtp:
   relay_host: '${var.smtp_relay_host}'
   relay_port: ${var.smtp_relay_port}
   relay_api_key: '${var.smtp_relay_api_key}'
-  internal_smtp_host: '${local.bastion_internal_ip}'
+  internal_smtp_host: '${var.bastion_admin_itf_ip}'
   internal_smtp_port: 2525
   networks: '172.16.0.0/12 ${var.vpc_cidr} ${var.bastion_public_ip}'
 
@@ -164,7 +162,7 @@ vpn:
     port_end: ${var.tunnel_vpn_port_end}
   wireguard:
     itf_name: 'wg0'
-    host_ip: '${local.bastion_internal_ip}'
+    host_ip: '${var.bastion_admin_itf_ip}'
     listen_port: ${var.wireguard_service_port}
     subnet_ip: '${var.wireguard_subnet_ip}'
   vpn_cert:

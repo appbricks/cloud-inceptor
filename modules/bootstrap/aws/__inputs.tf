@@ -181,6 +181,13 @@ variable "bastion_as_nat" {
 }
 
 #
+# Configure admin network segment.
+#
+variable "configure_admin_network" {
+  default = false
+}
+
+#
 # Certify bastion host using letsencrypt certificates
 #
 variable "certify_bastion" {

@@ -66,7 +66,7 @@ resource "aws_route53_record" "vpc-external" {
   type = "A"
   ttl  = "300"
   
-  records = [aws_eip.bastion-public.public_ip]
+  records = [aws_instance.bastion.public_ip]
 }
 
 resource "aws_route53_record" "vpc-internal" {

@@ -27,7 +27,11 @@ resource "aws_instance" "jumpbox" {
   ami           = data.aws_ami.ubuntu.id
   key_name      = aws_key_pair.default.key_name
 
-  subnet_id         = aws_subnet.admin[0].id
+  subnet_id         = (
+    var.configure_admin_network
+      ? aws_subnet.admin[0].id
+      : aws_subnet.dmz[0].id
+  )
   availability_zone = data.aws_availability_zones.available.names[0]
 
   vpc_security_group_ids = [aws_security_group.internal.id]

@@ -46,6 +46,18 @@ variable "bastion_image_owner" {
 }
 
 #
+# Networking
+#
+
+variable "attach_dns_zone" {
+  type = string
+}
+
+variable "configure_admin_network" {
+  type = string
+}
+
+#
 # Distinct CIDR for VPCs by region
 #
 variable "regional_vpc_cidr" {

@@ -8,6 +8,8 @@ resource "aws_subnet" "dmz" {
   vpc_id            = aws_vpc.main.id
   availability_zone = data.aws_availability_zones.available.names[count.index]
 
+  map_public_ip_on_launch = !var.configure_admin_network
+
   # If DMZ CIDR is not provided then the a DMZ network will
   # be created for each AZ starting from ${var.vpc_subnet_start}
   cidr_block = (
@@ -22,7 +24,7 @@ resource "aws_subnet" "dmz" {
 }
 
 resource "aws_subnet" "admin" {
-  count = local.num_azs_to_configure
+  count = var.configure_admin_network ? local.num_azs_to_configure : 0
 
   vpc_id            = aws_vpc.main.id
   availability_zone = data.aws_availability_zones.available.names[count.index]
@@ -96,7 +98,7 @@ resource "aws_nat_gateway" "nat" {
 }
 
 resource "aws_route_table" "admin" {
-  count = local.num_azs_to_configure
+  count = var.configure_admin_network ? local.num_azs_to_configure : 0
 
   vpc_id = aws_vpc.main.id
 
@@ -107,17 +109,17 @@ resource "aws_route_table" "admin" {
 
 # Use Bastion as NAT
 resource "aws_route" "nat-bastion" {
-  count = var.bastion_as_nat ? local.num_azs_to_configure : 0
+  count = var.configure_admin_network && var.bastion_as_nat ? local.num_azs_to_configure : 0
   
   route_table_id = aws_route_table.admin[count.index].id
 
   destination_cidr_block = "0.0.0.0/0"
-  network_interface_id   = aws_network_interface.bastion-admin.id
+  network_interface_id   = aws_network_interface.bastion-admin[0].id
 }
 
 # Use NAT instance
 resource "aws_route" "nat-gateway" {
-  count = !var.bastion_as_nat ? local.num_azs_to_configure : 0
+  count = var.configure_admin_network && !var.bastion_as_nat ? local.num_azs_to_configure : 0
   
   route_table_id = aws_route_table.admin[count.index].id
 
@@ -137,7 +139,7 @@ resource "aws_route_table_association" "dmz" {
 }
 
 resource "aws_route_table_association" "admin" {
-  count = local.num_azs_to_configure
+  count = var.configure_admin_network ? local.num_azs_to_configure : 0
 
   subnet_id      = element(aws_subnet.admin.*.id, count.index)
   route_table_id = element(aws_route_table.admin.*.id, count.index)

@@ -37,9 +37,11 @@ module "bootstrap" {
   vpc_name = "inceptor-${data.aws_region.default.name}"
   vpc_cidr = local.vpc_cidr
 
+  configure_admin_network = var.configure_admin_network
+
   # DNS Name for VPC will be 'test-<region>.aws.appbricks.io'
   vpc_dns_zone    = "test-${data.aws_region.default.name}.aws.appbricks.io"
-  attach_dns_zone = var.bastion_use_fqdn
+  attach_dns_zone = var.attach_dns_zone
 
   # Local DNS zone. This could also be the same as the public
   # which will enable setting up a split DNS of the public zone

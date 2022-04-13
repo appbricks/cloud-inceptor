@@ -34,32 +34,44 @@ module "config" {
   vpc_internal_dns_records = concat(var.vpc_internal_dns_records, tolist([local.jumpbox_dns_record]))
 
   certify_bastion   = var.certify_bastion
-  bastion_fqdn      = var.vpc_dns_zone
+  bastion_fqdn      = local.bastion_fqdn
   bastion_use_fqdn  = var.bastion_use_fqdn
-  bastion_public_ip = aws_eip.bastion-public.public_ip
+  bastion_public_ip = local.bastion_public_ip
 
   bastion_dns = length(var.bastion_dns) == 0 ? cidrhost(var.vpc_cidr, 2): var.bastion_dns
 
   bastion_dmz_itf_ip   = local.bastion_dmz_itf_ip
   bastion_admin_itf_ip = local.bastion_admin_itf_ip
 
-  bastion_nic_config = [
-    join("|", 
-      tolist([
-        "", // AWS will assign static IP via DHCP
-        aws_subnet.dmz[0].cidr_block,
-        "0.0.0.0/0"
-      ]),
-    ),
-    join("|", 
-      tolist([
-        local.bastion_admin_itf_ip, 
-        aws_subnet.admin[0].cidr_block,
-        length(var.global_internal_cidr) == 0 ? var.vpc_cidr : var.global_internal_cidr,
-        cidrhost(aws_subnet.admin[0].cidr_block, 1)
-      ])
-    ),
-  ]
+  bastion_nic_config = (
+    var.configure_admin_network
+      ? [ 
+          join("|", 
+            tolist([
+              "", // AWS will assign static IP via DHCP
+              aws_subnet.dmz[0].cidr_block,
+              "0.0.0.0/0"
+            ]),
+          ),
+          join("|", 
+            tolist([
+              local.bastion_admin_itf_ip, 
+              aws_subnet.admin[0].cidr_block,
+              length(var.global_internal_cidr) == 0 ? var.vpc_cidr : var.global_internal_cidr,
+              cidrhost(aws_subnet.admin[0].cidr_block, 1)
+            ])
+          ) 
+        ]
+      : [ 
+          join("|", 
+            tolist([
+              "", // AWS will assign static IP via DHCP
+              aws_subnet.dmz[0].cidr_block,
+              "0.0.0.0/0"
+            ]),
+          ) 
+        ]
+  )
 
   data_volume_name = var.bastion_data_disk_device_name
 
@@ -134,5 +146,19 @@ locals {
     var.vpn_type == "wireguard" 
       ? "${cidrhost(var.vpn_network, 1)}/${split("/", var.vpn_network)[1]}"
       : "${cidrhost(var.wireguard_mesh_network, var.wireguard_mesh_node)}/${split("/", var.wireguard_mesh_network)[1]}"
+  )
+  # If the bastion has been allocated an elastic IP then 
+  # return that. Otherwise pass an indicator in the field
+  # so the bastion startup script can attempt to introspect
+  # its externally facing Ip.
+  bastion_public_ip = (
+    var.configure_admin_network
+      ? aws_eip.bastion-public[0].public_ip
+      : "aws"      
+  )
+  bastion_fqdn = (
+    var.attach_dns_zone
+      ? var.vpc_dns_zone
+      : "aws"
   )
 }

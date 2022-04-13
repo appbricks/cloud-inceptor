@@ -17,9 +17,12 @@ resource "aws_instance" "bastion" {
     network_interface_id = aws_network_interface.bastion-dmz.id
     device_index         = 0
   }
-  network_interface {
-    network_interface_id = aws_network_interface.bastion-admin.id
-    device_index         = 1
+  dynamic "network_interface" {
+    for_each = var.configure_admin_network ? [1] : []
+    content {
+      network_interface_id = aws_network_interface.bastion-admin[0].id
+      device_index         = 1
+    }
   }
 
   tags = {
@@ -77,7 +80,11 @@ data "aws_ami" "bastion" {
 
 locals {
   bastion_dmz_itf_ip   = cidrhost(aws_subnet.dmz[0].cidr_block, -3)
-  bastion_admin_itf_ip = cidrhost(aws_subnet.admin[0].cidr_block, -3)
+  bastion_admin_itf_ip = (
+    var.configure_admin_network
+      ? cidrhost(aws_subnet.admin[0].cidr_block, -3)
+      : local.bastion_dmz_itf_ip
+  )
 }
 
 resource "aws_network_interface" "bastion-dmz" {
@@ -90,14 +97,11 @@ resource "aws_network_interface" "bastion-dmz" {
   }
 }
 
-resource "aws_eip_association" "bastion" {
-  network_interface_id = aws_network_interface.bastion-dmz.id
-  allocation_id        = aws_eip.bastion-public.id
-}
-
 resource "aws_network_interface" "bastion-admin" {
-  subnet_id       = aws_subnet.admin[0].id
-  private_ips     = [local.bastion_admin_itf_ip]
+  count = var.configure_admin_network ? 1 : 0
+
+  subnet_id   = aws_subnet.admin[0].id
+  private_ips = [local.bastion_admin_itf_ip]
 
   # Enable traffic not destined 
   # for bastion to pass through
@@ -109,7 +113,12 @@ resource "aws_network_interface" "bastion-admin" {
 }
 
 resource "aws_network_interface_sg_attachment" "bastion-admin" {
-  network_interface_id = aws_network_interface.bastion-admin.id
+
+  network_interface_id = (
+    var.configure_admin_network 
+      ? aws_network_interface.bastion-admin[0].id
+      : aws_network_interface.bastion-dmz.id
+  )
   security_group_id    = (
     var.bastion_as_nat 
       ? aws_security_group.internal.id 
@@ -117,7 +126,20 @@ resource "aws_network_interface_sg_attachment" "bastion-admin" {
   )
 }
 
+#
+# Static external IP - created when admin network segment is configured
+#
+
+resource "aws_eip_association" "bastion" {
+  count = var.configure_admin_network ? 1 : 0
+
+  network_interface_id = aws_network_interface.bastion-dmz.id
+  allocation_id        = aws_eip.bastion-public[0].id
+}
+
 resource "aws_eip" "bastion-public" {
+  count = var.configure_admin_network ? 1 : 0
+
   vpc = true
 
   tags = {

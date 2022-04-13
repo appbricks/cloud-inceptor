@@ -62,7 +62,7 @@ output "bastion_instance_id" {
 }
 
 output "bastion_public_ip" {
-  value = aws_eip.bastion-public.public_ip
+  value = aws_instance.bastion.public_ip
 }
 
 output "bastion_admin_ip" {
@@ -70,7 +70,11 @@ output "bastion_admin_ip" {
 }
 
 output "bastion_fqdn" {
-  value = var.attach_dns_zone ? aws_route53_record.vpc-external[0].name : ""
+  value = (
+    var.attach_dns_zone 
+      ? aws_route53_record.vpc-external[0].name 
+      : aws_instance.bastion.public_dns
+  )
 }
 
 output "bastion_admin_fqdn" {

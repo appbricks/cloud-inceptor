@@ -49,11 +49,15 @@ resource "tls_cert_request" "bastion" {
     var.bastion_fqdn
   ]
 
-  ip_addresses = [
-    var.bastion_public_ip,
-    var.bastion_dmz_itf_ip,
-    var.bastion_admin_itf_ip,
-  ]
+  ip_addresses = concat(
+    [
+      var.bastion_dmz_itf_ip,
+      var.bastion_admin_itf_ip,
+    ],
+    length(regexall("^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$", var.bastion_public_ip)) > 0
+      ? [ var.bastion_public_ip ]
+      : []
+  )
 
   subject {
     common_name         = var.bastion_fqdn
