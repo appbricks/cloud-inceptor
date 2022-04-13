@@ -13,7 +13,6 @@ resource "tls_private_key" "root-ca-key" {
 }
 
 resource "tls_self_signed_cert" "root-ca" {
-  key_algorithm   = "RSA"
   private_key_pem = local.root_ca_key
 
   subject {
