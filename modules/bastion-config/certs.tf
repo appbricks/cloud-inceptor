@@ -41,7 +41,6 @@ resource "tls_private_key" "bastion" {
 }
 
 resource "tls_cert_request" "bastion" {
-  key_algorithm   = "RSA"
   private_key_pem = tls_private_key.bastion.private_key_pem
 
   dns_names = [
