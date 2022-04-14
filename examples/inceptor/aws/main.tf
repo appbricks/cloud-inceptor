@@ -8,7 +8,7 @@ locals {
 }
 
 #
-# Bootstrap an base environment named "inceptor"
+# Bootstrap a base environment named "inceptor"
 #
 module "bootstrap" {
   source = "../../../modules/bootstrap/aws"
