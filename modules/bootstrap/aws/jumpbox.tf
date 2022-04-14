@@ -34,7 +34,8 @@ resource "aws_instance" "jumpbox" {
   )
   availability_zone = data.aws_availability_zones.available.names[0]
 
-  vpc_security_group_ids = [aws_security_group.internal.id]
+  associate_public_ip_address = !var.configure_admin_network
+  vpc_security_group_ids      = [aws_security_group.internal.id]
 
   tags = {
     Name = "${var.vpc_name}: jumpbox"
