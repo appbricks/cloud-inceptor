@@ -51,6 +51,13 @@ variable "root_ca_cert" {
 }
 
 #
+# List of DNS names to associate bastion cert with
+#
+variable "cert_domain_names" {
+  type = list
+}
+
+#
 # VPC and network variables
 #
 variable "vpc_name" {

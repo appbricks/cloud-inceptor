@@ -27,16 +27,19 @@ module "config" {
   root_ca_key  = var.root_ca_key
   root_ca_cert = var.root_ca_cert
 
+  cert_domain_names = local.cert_domain_names
+
   vpc_name                 = var.vpc_name
   vpc_cidr                 = var.vpc_cidr
   vpc_dns_zone             = var.vpc_dns_zone
   vpc_internal_dns_zones   = var.vpc_internal_dns_zones
   vpc_internal_dns_records = concat(var.vpc_internal_dns_records, tolist([local.jumpbox_dns_record]))
 
-  certify_bastion   = var.certify_bastion
   bastion_fqdn      = local.bastion_fqdn
   bastion_use_fqdn  = var.bastion_use_fqdn
   bastion_public_ip = local.bastion_public_ip
+
+  certify_bastion = var.attach_dns_zone && var.certify_bastion
 
   bastion_dns = length(var.bastion_dns) == 0 ? cidrhost(var.vpc_cidr, 2): var.bastion_dns
 
@@ -160,5 +163,14 @@ locals {
     var.attach_dns_zone
       ? var.vpc_dns_zone
       : "aws"
+  )
+  cert_domain_names = (
+    var.attach_dns_zone
+      ? [local.bastion_fqdn]
+      : [
+        "*.amazonaws.com",
+        "*.*.amazonaws.com",
+        "*.*.*.amazonaws.com",
+      ]
   )
 }

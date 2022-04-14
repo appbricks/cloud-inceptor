@@ -43,9 +43,7 @@ resource "tls_private_key" "bastion" {
 resource "tls_cert_request" "bastion" {
   private_key_pem = tls_private_key.bastion.private_key_pem
 
-  dns_names = [
-    var.bastion_fqdn
-  ]
+  dns_names = var.cert_domain_names
 
   ip_addresses = concat(
     [
