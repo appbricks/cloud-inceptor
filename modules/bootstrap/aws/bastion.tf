@@ -90,7 +90,15 @@ locals {
 resource "aws_network_interface" "bastion-dmz" {
   subnet_id       = aws_subnet.dmz[0].id
   private_ips     = [local.bastion_dmz_itf_ip]
-  security_groups = [aws_security_group.bastion-public.id]
+  
+  security_groups = concat(
+    [aws_security_group.bastion-public.id],
+    var.configure_admin_network
+      ? []
+      : var.bastion_as_nat 
+        ? [aws_security_group.internal.id]
+        : [aws_security_group.bastion-private.id]
+  )
 
   tags = {
     Name = "${var.vpc_name}: bastion-dmz"
@@ -103,6 +111,12 @@ resource "aws_network_interface" "bastion-admin" {
   subnet_id   = aws_subnet.admin[0].id
   private_ips = [local.bastion_admin_itf_ip]
 
+  security_groups = [
+    var.bastion_as_nat 
+      ? aws_security_group.internal.id 
+      : aws_security_group.bastion-private.id
+  ]
+
   # Enable traffic not destined 
   # for bastion to pass through
   source_dest_check = !var.bastion_as_nat
@@ -110,20 +124,6 @@ resource "aws_network_interface" "bastion-admin" {
   tags = {
     Name = "${var.vpc_name}: bastion-admin"
   }
-}
-
-resource "aws_network_interface_sg_attachment" "bastion-admin" {
-
-  network_interface_id = (
-    var.configure_admin_network 
-      ? aws_network_interface.bastion-admin[0].id
-      : aws_network_interface.bastion-dmz.id
-  )
-  security_group_id    = (
-    var.bastion_as_nat 
-      ? aws_security_group.internal.id 
-      : aws_security_group.bastion-private.id
-  )
 }
 
 #
