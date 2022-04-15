@@ -168,9 +168,8 @@ locals {
     var.attach_dns_zone
       ? [local.bastion_fqdn]
       : [
-        "*.amazonaws.com",
-        "*.*.amazonaws.com",
-        "*.*.*.amazonaws.com",
+        "*.compute-1.amazonaws.com",
+        "*.${var.region}.compute.amazonaws.com"
       ]
   )
 }
