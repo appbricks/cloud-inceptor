@@ -150,7 +150,7 @@ vpn:
   subnet: '${var.vpn_network}'
   netmask: '${cidrnetmask(var.vpn_network)}'
   protected_subnet: '${var.vpn_protected_network}'
-  server_domain: '${var.vpc_dns_zone}'
+  server_domain: '${element(var.vpc_internal_dns_zones, 0)}'
   server_description: '${var.vpc_name}'
   tunnel_client_traffic: ${var.vpn_tunnel_all_traffic}
   idle_action: ${var.vpn_idle_action}

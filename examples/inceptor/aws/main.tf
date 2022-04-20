@@ -46,7 +46,7 @@ module "bootstrap" {
   # Local DNS zone. This could also be the same as the public
   # which will enable setting up a split DNS of the public zone
   # for names to map to external and internal addresses.
-  vpc_internal_dns_zones = ["appbricks.local"]
+  vpc_internal_dns_zones = ["test-${data.aws_region.default.name}.local"]
 
   # Address space for all VPC regions
   global_internal_cidr = "172.16.0.0/12"
