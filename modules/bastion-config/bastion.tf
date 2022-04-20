@@ -130,6 +130,7 @@ powerdns:
   dns_records: '${join(" ", var.vpc_internal_dns_records)}'
   allowed_subnets: '${var.vpc_cidr},${var.vpn_network}'
   ns_ip: '${var.bastion_admin_itf_ip}'
+  api_port: 8888
   api_key: '${random_string.powerdns-api-key.result}'
 
 smtp:
