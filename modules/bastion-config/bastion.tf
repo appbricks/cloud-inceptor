@@ -208,5 +208,5 @@ resource "random_string" "bastion-admin-password" {
 resource "random_string" "powerdns-api-key" {
   length           = 32
   special          = true
-  override_special = "@#%&*()-_=+[]{}<>:?"
+  override_special = "@#%-_=<>:"
 }
