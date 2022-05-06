@@ -85,7 +85,7 @@ module "config" {
 
   vpn_type               = var.vpn_type
   vpn_network            = var.vpn_network
-  vpn_protected_network  = local.vpn_protected_network
+  vpn_restricted_network  = local.vpn_restricted_network
   vpn_tunnel_all_traffic = var.vpn_tunnel_all_traffic
   vpn_idle_action        = var.vpn_idle_action
   vpn_idle_shutdown_time = var.vpn_idle_shutdown_time
@@ -125,7 +125,7 @@ locals {
   # Partitioning the vpn range into a range of ips that 
   # are protected by the DNS sink hole vs ips that are 
   # in open can only be done for the wireguard vpn type.
-  vpn_protected_network = (
+  vpn_restricted_network = (
     var.vpn_type == "wireguard" 
       ? cidrsubnet(
           var.vpn_network, 

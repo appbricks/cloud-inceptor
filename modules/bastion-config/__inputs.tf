@@ -186,7 +186,7 @@ variable "vpn_network" {
   type = string
 }
 
-variable "vpn_protected_network" {
+variable "vpn_restricted_network" {
   type = string
 }
 
