@@ -84,7 +84,7 @@ resource "aws_ebs_volume" "jumpbox-data" {
 resource "aws_volume_attachment" "jumpbox-data" {
   count = length(local.jumpbox_dns) > 0 ? 1 : 0
 
-  device_name  = var.jumpbox_data_disk_device_name
+  device_name  = "/dev/${var.jumpbox_data_disk_device_name}"
   volume_id    = aws_ebs_volume.jumpbox-data[0].id
   instance_id  = aws_instance.jumpbox[0].id
   force_detach = true
