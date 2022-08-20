@@ -359,3 +359,13 @@ variable "deploy_jumpbox" {
 variable "jumpbox_data_disk_size" {
   default = "160"
 }
+
+variable "jumpbox_data_disk_device_name" {
+  # The device name specified in the
+  # aws_volume_attachment does not appear
+  # to take effect. This variable explicitly
+  # names the device name AWS assigns to
+  # the attached disk so the mount_volume
+  # script can find it.
+  default = "nvme1n1"
+}

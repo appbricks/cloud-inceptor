@@ -59,7 +59,7 @@ data "template_file" "mount-volume" {
   template = file("${path.module}/scripts/mount-volume.sh")
 
   vars = {
-    attached_device_name = local.jumpbox_data_disk_device_name
+    attached_device_name = var.jumpbox_data_disk_device_name
     mount_directory      = "/data"
     world_readable       = "true"
   }
@@ -68,10 +68,6 @@ data "template_file" "mount-volume" {
 #
 # Persistant disk for data storage
 #
-
-locals {
-  jumpbox_data_disk_device_name = "xvdf"
-}
 
 resource "aws_ebs_volume" "jumpbox-data" {
   count = length(local.jumpbox_dns) > 0 ? 1 : 0
@@ -88,7 +84,7 @@ resource "aws_ebs_volume" "jumpbox-data" {
 resource "aws_volume_attachment" "jumpbox-data" {
   count = length(local.jumpbox_dns) > 0 ? 1 : 0
 
-  device_name  = local.jumpbox_data_disk_device_name
+  device_name  = var.jumpbox_data_disk_device_name
   volume_id    = aws_ebs_volume.jumpbox-data[0].id
   instance_id  = aws_instance.jumpbox[0].id
   force_detach = true
