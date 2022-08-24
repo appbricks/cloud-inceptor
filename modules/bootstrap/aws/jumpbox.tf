@@ -37,7 +37,7 @@ resource "aws_instance" "jumpbox" {
   associate_public_ip_address = !var.configure_admin_network
   vpc_security_group_ids      = [aws_security_group.internal.id]
 
-  root_block_device = {
+  root_block_device {
     volume_type = "standard"
   }
 
