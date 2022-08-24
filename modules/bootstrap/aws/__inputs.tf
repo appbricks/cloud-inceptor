@@ -356,6 +356,14 @@ variable "deploy_jumpbox" {
   default = true
 }
 
+variable "jumpbox_ami_name" {
+  default = "ubuntu/images/hvm-ssd/ubuntu-focal-20.04-arm64-server-*"
+}
+
+variable "jumpbox_ami_owner" {
+  default = "099720109477" # Canonical
+}
+
 variable "jumpbox_data_disk_size" {
   default = "160"
 }

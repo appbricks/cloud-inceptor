@@ -37,6 +37,10 @@ resource "aws_instance" "jumpbox" {
   associate_public_ip_address = !var.configure_admin_network
   vpc_security_group_ids      = [aws_security_group.internal.id]
 
+  root_block_device = {
+    volume_type = "standard"
+  }
+
   tags = {
     Name = "${var.vpc_name}: jumpbox"
   }
@@ -80,6 +84,31 @@ data "template_file" "mount-volume" {
     mount_directory      = "/data"
     world_readable       = "true"
   }
+}
+
+#
+# Jumpbox AMI
+#
+
+data "aws_ami" "ubuntu" {
+  most_recent = true
+
+  filter {
+    name   = "name"
+    values = [var.jumpbox_ami_name]
+  }
+
+  filter {
+    name   = "architecture"
+    values = ["arm64"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  owners = [var.jumpbox_ami_owner]
 }
 
 #
