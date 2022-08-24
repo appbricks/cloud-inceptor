@@ -23,7 +23,7 @@ locals {
 resource "aws_instance" "jumpbox" {
   count = length(local.jumpbox_dns) > 0 ? 1 : 0
 
-  instance_type = "t4g.micro"
+  instance_type = var.jumpbox_instance_type
   ami           = data.aws_ami.ubuntu.id
   key_name      = aws_key_pair.default.key_name
 
@@ -100,7 +100,7 @@ data "aws_ami" "ubuntu" {
 
   filter {
     name   = "architecture"
-    values = ["arm64"]
+    values = [var.jumpbox_ami_arch]
   }
 
   filter {
