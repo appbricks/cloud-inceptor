@@ -59,7 +59,7 @@ runcmd:
 # Install Docker
 - |
   apt-get update
-  apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release git-core
+  apt-get install -y apt-transport-https ca-certificates gnupg lsb-release parted dosfstools curl git
   
   mkdir -p /etc/apt/keyrings
   curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
