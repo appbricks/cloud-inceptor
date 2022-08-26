@@ -58,11 +58,17 @@ runcmd:
 
 # Install Docker
 - |
+  rm -rf /var/lib/apt/lists/*
+  echo "waiting 180 seconds for cloud-init to update /etc/apt/sources.list"
+  timeout 180 /bin/bash -c \
+    'until stat /var/lib/cloud/instance/boot-finished 2>/dev/null; do echo waiting ...; sleep 1; done'
+
   apt-get update
-  apt-get install -y \
-    apt-transport-https ca-certificates gnupg lsb-release \
-    parted dosfstools efibootmgr \
-    curl git
+  apt-get -o Acquire::ForceIPv4=true install -y \
+    pkg-config apt-transport-https ca-certificates gnupg lsb-release \
+    cmake build-essential openssl libcurl4-openssl-dev libssl-dev libffi-dev libxml2 libxml2-dev \
+    parted dosfstools squashfs-tools efibootmgr net-tools ipcalc \
+    expect curl zip git python3.9 python3-dev python3-pip python-is-python3
   
   distro=$(lsb_release -is | tr '[:upper:]' '[:lower:]')
 
@@ -75,6 +81,11 @@ runcmd:
   
   apt-get update
   apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+
+  curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o "awscliv2.zip"
+  unzip awscliv2.zip
+  sudo ./aws/install
+  rm -fr awscliv2.zip aws
 
 # Mount data volume
 - /root/mount-volume.sh
