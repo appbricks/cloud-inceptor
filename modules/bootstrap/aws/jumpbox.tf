@@ -59,9 +59,9 @@ runcmd:
 # Install Docker
 - |
   rm -rf /var/lib/apt/lists/*
-  echo "waiting 180 seconds for cloud-init to update /etc/apt/sources.list"
+  echo "waiting 180 seconds for network to become available"
   timeout 180 /bin/bash -c \
-    'until stat /var/lib/cloud/instance/boot-finished 2>/dev/null; do echo waiting ...; sleep 1; done'
+    "until curl -s --fail $(cat /etc/apt/sources.list | head -1 | cut -d ' ' -f2) 2>&1 >/dev/null; do echo waiting ...; sleep 1; done"
 
   apt-get update
   apt-get -o Acquire::ForceIPv4=true install -y \
