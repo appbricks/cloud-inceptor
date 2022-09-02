@@ -68,7 +68,7 @@ runcmd:
     pkg-config apt-transport-https ca-certificates gnupg lsb-release \
     cmake build-essential openssl libcurl4-openssl-dev libssl-dev libffi-dev libxml2 libxml2-dev \
     parted dosfstools squashfs-tools efibootmgr net-tools ipcalc \
-    expect curl jq zip git python3.9 python3-dev python3-pip python-is-python3
+    expect rsync curl jq zip git python3.9 python3-dev python3-pip python-is-python3
   
   distro=$(lsb_release -is | tr '[:upper:]' '[:lower:]')
 
