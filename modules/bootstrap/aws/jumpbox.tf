@@ -63,6 +63,8 @@ runcmd:
   timeout 180 /bin/bash -c \
     "until curl -s --fail $(cat /etc/apt/sources.list | head -1 | cut -d ' ' -f2) 2>&1 >/dev/null; do echo waiting ...; sleep 1; done"
 
+  export DEBIAN_FRONTEND=noninteractive
+  
   apt-get update
   apt-get -o Acquire::ForceIPv4=true install -y \
     pkg-config apt-transport-https ca-certificates gnupg lsb-release \
