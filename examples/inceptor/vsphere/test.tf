@@ -37,9 +37,9 @@ resource "vsphere_virtual_machine" "test" {
     template_uuid = "${data.vsphere_virtual_machine.test-template.id}"
   }
 
-  extra_config {
-    guestinfo.userdata          = "${data.template_cloudinit_config.test-cloudinit.*.rendered[count.index]}"
-    guestinfo.userdata.encoding = "gzip+base64"
+  extra_config = {
+    "guestinfo.userdata"          = "${data.template_cloudinit_config.test-cloudinit.*.rendered[count.index]}"
+    "guestinfo.userdata.encoding" = "gzip+base64"
   }
 }
 
