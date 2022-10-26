@@ -240,6 +240,17 @@ resource "aws_security_group" "bastion-public" {
     }
   }
 
+  # STUN
+  dynamic "ingress" {
+    for_each = length(var.derp_stun_port) > 0 ? [1] : []
+    content {
+      from_port   = tonumber(var.derp_stun_port)
+      to_port     = tonumber(var.derp_stun_port)
+      protocol    = "udp"
+      cidr_blocks = ["0.0.0.0/0"]
+    }
+  }
+
   # SMTP
   dynamic "ingress" {
     for_each = length(var.smtp_relay_host) > 0 ? [1] : []

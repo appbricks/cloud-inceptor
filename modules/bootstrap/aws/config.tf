@@ -100,6 +100,8 @@ module "config" {
   wireguard_service_port = var.wireguard_service_port
   wireguard_subnet_ip    = local.wireguard_subnet_ip
 
+  derp_stun_port = var.derp_stun_port
+
   smtp_relay_host    = var.smtp_relay_host
   smtp_relay_port    = var.smtp_relay_port
   smtp_relay_api_key = var.smtp_relay_api_key

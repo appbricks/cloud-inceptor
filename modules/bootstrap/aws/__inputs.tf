@@ -268,6 +268,13 @@ variable "wireguard_mesh_node" {
 }
 
 #
+# UDP port of mycs-node DERP STUN service
+#
+variable "derp_stun_port" {
+  default = ""
+}
+
+#
 # OpenVPN configuration
 #
 variable "ovpn_service_port" {

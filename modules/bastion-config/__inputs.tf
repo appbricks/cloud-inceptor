@@ -229,6 +229,13 @@ variable "wireguard_subnet_ip" {
 }
 
 #
+# UDP port of mycs-node DERP STUN service
+#
+variable "derp_stun_port" {
+  type = string
+}
+
+#
 # Enable tunnelling of VPN within another tunnel 
 # when firewalls and telco's block OpenVPN via
 # deep-packet-inspection.
