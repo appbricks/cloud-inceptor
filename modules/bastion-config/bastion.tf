@@ -125,6 +125,15 @@ data:
   mount_directory: /data
   world_readable: false
 
+services:
+  node_api_port: 9080
+  ts_control:
+    service_port: 9081
+
+webserver:
+  https_port: ${var.bastion_admin_api_port}
+  static_content_port: 8080
+
 powerdns:
   dns_zones: '${join(" ", var.vpc_internal_dns_zones)}'
   dns_records: '${join(" ", var.vpc_internal_dns_records)}'
@@ -140,11 +149,6 @@ smtp:
   internal_smtp_host: '${var.bastion_admin_itf_ip}'
   internal_smtp_port: 2525
   networks: '172.16.0.0/12 ${var.vpc_cidr} ${var.bastion_public_ip}'
-
-webserver:
-  https_port: ${var.bastion_admin_api_port}
-  static_content_port: 8080
-  api_service_port: 9080
 
 vpn:
   type: '${var.vpn_type}'
