@@ -41,7 +41,11 @@ module "config" {
 
   certify_bastion = var.attach_dns_zone && var.certify_bastion
 
-  bastion_dns = length(var.bastion_dns) == 0 ? cidrhost(var.vpc_cidr, 2): var.bastion_dns
+  bastion_dns = (
+    length(var.bastion_dns) == 0 
+      ? cidrhost(var.vpc_cidr, 2)
+      : var.bastion_dns
+  )
 
   bastion_dmz_itf_ip   = local.bastion_dmz_itf_ip
   bastion_admin_itf_ip = local.bastion_admin_itf_ip
