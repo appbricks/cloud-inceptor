@@ -102,7 +102,8 @@ output "bastion_admin_password" {
 }
 
 output "bastion_admin_sshkey" {
-  value = module.config.bastion_admin_sshkey
+  value     = module.config.bastion_admin_sshkey
+  sensitive = true
 }
 
 output "bastion_openssh_public_key" {

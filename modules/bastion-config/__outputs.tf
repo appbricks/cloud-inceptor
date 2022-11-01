@@ -25,7 +25,8 @@ output "bastion_admin_password" {
 }
 
 output "bastion_admin_sshkey" {
-  value = tls_private_key.bastion-ssh-key.private_key_pem
+  value     = tls_private_key.bastion-ssh-key.private_key_pem
+  sensitive = true
 }
 
 output "bastion_openssh_public_key" {
