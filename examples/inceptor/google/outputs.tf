@@ -27,7 +27,8 @@ output "bastion_admin_fqdn" {
 }
 
 output "bastion_admin_sshkey" {
-  value = "${module.bootstrap.bastion_admin_sshkey}"
+  value     = "${module.bootstrap.bastion_admin_sshkey}"
+  sensitive = true
 }
 
 output "bastion_admin_user" {

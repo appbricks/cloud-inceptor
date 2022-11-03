@@ -11,7 +11,7 @@ data "google_compute_zones" "available" {
 #
 
 data "google_compute_image" "ubuntu" {
-  family  = "ubuntu-1604-lts"
+  family  = "ubuntu-2204-lts"
   project = "ubuntu-os-cloud"
 }
 

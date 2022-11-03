@@ -30,15 +30,21 @@ output "dmz_subnetwork" {
 }
 
 output "admin_network" {
-  value = google_compute_network.admin.self_link
+  value = local.admin_network_self_link
 }
 
 output "admin_subnetwork" {
-  value = google_compute_subnetwork.admin.self_link
+  value = (var.configure_admin_network
+    ? google_compute_subnetwork.admin[0].self_link
+    : google_compute_subnetwork.dmz.self_link
+  )
 }
 
 output "vpc_dns_zone_name" {
-  value = google_dns_managed_zone.vpc.name
+  value = (var.attach_dns_zone
+    ? google_dns_managed_zone.vpc[0].name
+    : ""
+  )
 }
 
 #
@@ -50,17 +56,20 @@ output "bastion_instance_id" {
 }
 
 output "bastion_public_ip" {
-  value = google_compute_address.bastion-public.address
+  value = google_compute_instance.bastion.network_interface.0.access_config.0.nat_ip
 }
 
 output "bastion_fqdn" {
-  value = google_dns_record_set.vpc-public.name
+  value = (var.attach_dns_zone
+    ? google_dns_record_set.vpc-public[0].name
+    : ""
+  )
 }
 
 output "bastion_admin_fqdn" {
   value = (
     length(var.bastion_host_name) > 0 && !var.bastion_allow_public_ssh 
-      ? google_dns_record_set.vpc-admin.name 
+      ? google_dns_record_set.vpc-admin[0].name 
       : "N/A"
   )
 }
@@ -78,7 +87,8 @@ output "bastion_admin_password" {
 }
 
 output "bastion_admin_sshkey" {
-  value = module.config.bastion_admin_sshkey
+  value     = module.config.bastion_admin_sshkey
+  sensitive = true
 }
 
 output "bastion_openssh_public_key" {

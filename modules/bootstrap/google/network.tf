@@ -2,6 +2,25 @@
 # Virtual Networks
 #
 
+locals {
+  admin_network_name = (var.configure_admin_network
+    ? google_compute_network.admin[0].name
+    : google_compute_network.dmz.name
+  )
+  admin_network_self_link = (var.configure_admin_network
+    ? google_compute_network.admin[0].self_link
+    : google_compute_network.dmz.self_link
+  )
+  admin_network_cidr_range = (var.configure_admin_network
+    ? google_compute_subnetwork.admin[0].ip_cidr_range
+    : google_compute_subnetwork.dmz.ip_cidr_range
+  )
+  admin_network_gateway_address = (var.configure_admin_network
+    ? google_compute_subnetwork.admin[0].gateway_address
+    : google_compute_subnetwork.dmz.gateway_address
+  )
+}
+
 resource "google_compute_network" "dmz" {
   name                    = "${var.vpc_name}-dmz-network"
   auto_create_subnetworks = false
@@ -21,11 +40,15 @@ resource "google_compute_subnetwork" "dmz" {
 }
 
 resource "google_compute_network" "admin" {
+  count = var.configure_admin_network ? 1 : 0
+
   name                    = "${var.vpc_name}-admin-network"
   auto_create_subnetworks = false
 }
 
 resource "google_compute_subnetwork" "admin" {
+  count = var.configure_admin_network ? 1 : 0
+
   name = "${var.vpc_name}-admin-subnet"
 
   ip_cidr_range = (
@@ -36,6 +59,6 @@ resource "google_compute_subnetwork" "admin" {
         : cidrsubnet(var.vpc_cidr, var.vpc_subnet_bits, var.vpc_subnet_start+1))
   )
 
-  network = google_compute_network.admin.self_link
+  network = google_compute_network.admin[0].self_link
   region  = var.region
 }

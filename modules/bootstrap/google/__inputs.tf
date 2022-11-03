@@ -5,6 +5,10 @@ variable "region" {
   type = string
 }
 
+variable "time_zone" {
+  default = "America/New_York"
+}
+
 #
 # MyCloudSpace node service keys
 #
@@ -57,13 +61,13 @@ variable "vpc_name" {
   type = string
 }
 
-# VPC DNS zone
-variable "dns_managed_zone_name" {
+variable "vpc_dns_zone" {
   type = string
 }
 
-variable "vpc_dns_zone" {
-  type = string
+# External DNS zone
+variable "dns_managed_zone_name" {
+  default = ""
 }
 
 # Attach DNS to parent zone. This 
@@ -134,11 +138,11 @@ variable "bastion_image_bucket_prefix" {
 }
 
 variable "bastion_root_disk_size" {
-  default = 50
+  default = 10
 }
 
 variable "bastion_data_disk_size" {
-  default = 250
+  default = 5
 }
 
 variable "bastion_host_name" {
@@ -150,6 +154,13 @@ variable "bastion_use_fqdn" {
 }
 
 variable "allow_bastion_icmp" {
+  default = false
+}
+
+#
+# Configure admin network segment.
+#
+variable "configure_admin_network" {
   default = false
 }
 
@@ -170,6 +181,10 @@ variable "bastion_dns" {
 #
 # Bastion access configuration
 #
+variable "bastion_admin_api_port" {
+  default = "443"
+}
+
 variable "bastion_admin_ssh_port" {
   default = "22"
 }
@@ -194,12 +209,20 @@ variable "vpn_network" {
   default = "192.168.111.0/24"
 }
 
+variable "vpn_protected_sub_range" {
+  default = 2
+}
+
 variable "vpn_tunnel_all_traffic" {
   default = "no"
 }
 
 variable "vpn_idle_action" {
   default = "none"
+}
+
+variable "vpn_idle_shutdown_time" {
+  default = 10
 }
 
 variable "vpn_users" {
@@ -213,8 +236,11 @@ variable "wireguard_service_port" {
   default = ""
 }
 
-variable "wireguard_subnet_ip" {
-  default = "192.168.112.1/24"
+#
+# UDP port of mycs-node DERP STUN service
+#
+variable "derp_stun_port" {
+  default = ""
 }
 
 #
