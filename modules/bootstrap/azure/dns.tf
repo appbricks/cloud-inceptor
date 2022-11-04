@@ -23,7 +23,7 @@ resource "azurerm_dns_ns_record" "vpc" {
   count = var.attach_dns_zone ? 1 : 0
 
   name         = local.vpc_dns_hostname
-  zone_name    = data.azurerm_dns_zone.parent[0].name
+  zone_name    = data.azurerm_dns_zone.parent.0.name
 
   resource_group_name = var.source_resource_group
 
@@ -53,7 +53,7 @@ resource "azurerm_dns_a_record" "vpc-public" {
   count = var.attach_dns_zone ? 1 : 0
 
   name      = local.vpc_dns_hostname
-  zone_name = data.azurerm_dns_zone.parent[0].name
+  zone_name = data.azurerm_dns_zone.parent.0.name
 
   resource_group_name = var.source_resource_group
 
@@ -70,7 +70,7 @@ resource "azurerm_dns_a_record" "vpc-admin" {
   resource_group_name = azurerm_resource_group.bootstrap.name
 
   ttl     = "300"
-  records = [azurerm_network_interface.bastion-admin.ip_configuration[0].private_ip_address]
+  records = [azurerm_network_interface.bastion-admin.ip_configuration.0.private_ip_address]
 }
 
 resource "azurerm_dns_a_record" "vpc-mail" {
@@ -82,7 +82,7 @@ resource "azurerm_dns_a_record" "vpc-mail" {
   resource_group_name = azurerm_resource_group.bootstrap.name
 
   ttl     = "300"
-  records = [azurerm_network_interface.bastion-admin.ip_configuration[0].private_ip_address]
+  records = [azurerm_network_interface.bastion-admin.ip_configuration.0.private_ip_address]
 }
 
 resource "azurerm_dns_mx_record" "vpc-mx" {

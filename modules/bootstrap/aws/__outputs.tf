@@ -38,19 +38,19 @@ output "admin_security_group" {
 }
 
 output "vpc_dns_public_zone_id" {
-  value = var.attach_dns_zone ? aws_route53_zone.vpc-public[0].zone_id : ""
+  value = var.attach_dns_zone ? aws_route53_zone.vpc-public.0.zone_id : ""
 }
 
 output "vpc_dns_public_zone_name" {
-  value = var.attach_dns_zone ? aws_route53_zone.vpc-public[0].name : ""
+  value = var.attach_dns_zone ? aws_route53_zone.vpc-public.0.name : ""
 }
 
 output "vpc_dns_private_zone_id" {
-  value = var.attach_dns_zone ? aws_route53_zone.vpc-private[0].zone_id : ""
+  value = var.attach_dns_zone ? aws_route53_zone.vpc-private.0.zone_id : ""
 }
 
 output "vpc_dns_private_zone_name" {
-  value = var.attach_dns_zone ? aws_route53_zone.vpc-private[0].name : ""
+  value = var.attach_dns_zone ? aws_route53_zone.vpc-private.0.name : ""
 }
 
 #
@@ -72,7 +72,7 @@ output "bastion_admin_ip" {
 output "bastion_fqdn" {
   value = (
     var.attach_dns_zone 
-      ? aws_route53_record.vpc-external[0].name 
+      ? aws_route53_record.vpc-external.0.name 
       : aws_instance.bastion.public_dns
   )
 }

@@ -33,10 +33,6 @@ variable "notification_email" {
 # Bastion Image
 #
 
-variable "bastion_use_fqdn" {
-  type = string
-}
-
 variable "bastion_image_name" {
   type = string
 }

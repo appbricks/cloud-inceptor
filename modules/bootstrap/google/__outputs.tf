@@ -35,14 +35,14 @@ output "admin_network" {
 
 output "admin_subnetwork" {
   value = (var.configure_admin_network
-    ? google_compute_subnetwork.admin[0].self_link
+    ? google_compute_subnetwork.admin.0.self_link
     : google_compute_subnetwork.dmz.self_link
   )
 }
 
 output "vpc_dns_zone_name" {
   value = (var.attach_dns_zone
-    ? google_dns_managed_zone.vpc[0].name
+    ? google_dns_managed_zone.vpc.0.name
     : ""
   )
 }
@@ -61,7 +61,7 @@ output "bastion_public_ip" {
 
 output "bastion_fqdn" {
   value = (var.attach_dns_zone
-    ? google_dns_record_set.vpc-public[0].name
+    ? google_dns_record_set.vpc-public.0.name
     : ""
   )
 }
@@ -69,7 +69,7 @@ output "bastion_fqdn" {
 output "bastion_admin_fqdn" {
   value = (
     length(var.bastion_host_name) > 0 && !var.bastion_allow_public_ssh 
-      ? google_dns_record_set.vpc-admin[0].name 
+      ? google_dns_record_set.vpc-admin.0.name 
       : "N/A"
   )
 }

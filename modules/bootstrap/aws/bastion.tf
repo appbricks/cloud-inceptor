@@ -20,7 +20,7 @@ resource "aws_instance" "bastion" {
   dynamic "network_interface" {
     for_each = var.configure_admin_network ? [1] : []
     content {
-      network_interface_id = aws_network_interface.bastion-admin[0].id
+      network_interface_id = aws_network_interface.bastion-admin.0.id
       device_index         = 1
     }
   }
@@ -79,16 +79,16 @@ data "aws_ami" "bastion" {
 #
 
 locals {
-  bastion_dmz_itf_ip   = cidrhost(aws_subnet.dmz[0].cidr_block, -3)
+  bastion_dmz_itf_ip   = cidrhost(aws_subnet.dmz.0.cidr_block, -3)
   bastion_admin_itf_ip = (
     var.configure_admin_network
-      ? cidrhost(aws_subnet.admin[0].cidr_block, -3)
+      ? cidrhost(aws_subnet.admin.0.cidr_block, -3)
       : local.bastion_dmz_itf_ip
   )
 }
 
 resource "aws_network_interface" "bastion-dmz" {
-  subnet_id       = aws_subnet.dmz[0].id
+  subnet_id       = aws_subnet.dmz.0.id
   private_ips     = [local.bastion_dmz_itf_ip]
   
   security_groups = concat(
@@ -108,7 +108,7 @@ resource "aws_network_interface" "bastion-dmz" {
 resource "aws_network_interface" "bastion-admin" {
   count = var.configure_admin_network ? 1 : 0
 
-  subnet_id   = aws_subnet.admin[0].id
+  subnet_id   = aws_subnet.admin.0.id
   private_ips = [local.bastion_admin_itf_ip]
 
   security_groups = [
@@ -134,7 +134,7 @@ resource "aws_eip_association" "bastion" {
   count = var.configure_admin_network ? 1 : 0
 
   network_interface_id = aws_network_interface.bastion-dmz.id
-  allocation_id        = aws_eip.bastion-public[0].id
+  allocation_id        = aws_eip.bastion-public.0.id
 }
 
 resource "aws_eip" "bastion-public" {

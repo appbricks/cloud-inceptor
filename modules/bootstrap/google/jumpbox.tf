@@ -17,7 +17,7 @@ locals {
 
   jumpbox_dns_record = (
     length(local.jumpbox_dns) > 0 
-      ? format("%s:%s", local.jumpbox_dns, google_compute_address.jumpbox[0].address) 
+      ? format("%s:%s", local.jumpbox_dns, google_compute_address.jumpbox.0.address) 
       : ""
   )
 }
@@ -44,15 +44,15 @@ resource "google_compute_instance" "jumpbox" {
   }
 
   attached_disk {
-    source = google_compute_disk.jumpbox-data[0].self_link
+    source = google_compute_disk.jumpbox-data.0.self_link
   }
 
   network_interface {
     subnetwork = (var.configure_admin_network
-      ? google_compute_subnetwork.admin[0].self_link
+      ? google_compute_subnetwork.admin.0.self_link
       : google_compute_subnetwork.dmz.self_link
     )
-    network_ip = google_compute_address.jumpbox[0].address
+    network_ip = google_compute_address.jumpbox.0.address
   }
 
   metadata = {
@@ -116,7 +116,7 @@ resource "google_compute_address" "jumpbox" {
   address_type = "INTERNAL"
 
   subnetwork = (var.configure_admin_network
-    ? google_compute_subnetwork.admin[0].self_link
+    ? google_compute_subnetwork.admin.0.self_link
     : google_compute_subnetwork.dmz.self_link
   )
   region     = var.region

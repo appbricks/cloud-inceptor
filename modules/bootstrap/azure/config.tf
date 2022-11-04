@@ -35,8 +35,8 @@ module "config" {
 
   bastion_dns = var.bastion_dns
 
-  bastion_dmz_itf_ip   = azurerm_network_interface.bastion-dmz.ip_configuration[0].private_ip_address
-  bastion_admin_itf_ip = azurerm_network_interface.bastion-admin.ip_configuration[0].private_ip_address
+  bastion_dmz_itf_ip   = azurerm_network_interface.bastion-dmz.ip_configuration.0.private_ip_address
+  bastion_admin_itf_ip = azurerm_network_interface.bastion-admin.ip_configuration.0.private_ip_address
 
   bastion_nic_config = [
     "${join("|", 
@@ -48,7 +48,7 @@ module "config" {
     )}",
     "${join("|", 
       tolist([
-        azurerm_network_interface.bastion-admin.ip_configuration[0].private_ip_address,
+        azurerm_network_interface.bastion-admin.ip_configuration.0.private_ip_address,
         azurerm_subnet.admin.address_prefix,
         length(var.global_internal_cidr) == 0 ? var.vpc_cidr : var.global_internal_cidr,
         cidrhost(azurerm_subnet.admin.address_prefix, 1)

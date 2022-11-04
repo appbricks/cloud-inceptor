@@ -23,8 +23,8 @@ resource "google_compute_instance" "bastion" {
     initialize_params {
       image = (
         var.bastion_use_project_image 
-          ? data.google_compute_image.bastion[0].self_link 
-          : google_compute_image.bastion[0].self_link
+          ? data.google_compute_image.bastion.0.self_link 
+          : google_compute_image.bastion.0.self_link
       )
       size  = var.bastion_root_disk_size
     }
@@ -40,7 +40,7 @@ resource "google_compute_instance" "bastion" {
 
     access_config {
       nat_ip = (var.configure_admin_network
-        ? google_compute_address.bastion-public[0].address
+        ? google_compute_address.bastion-public.0.address
         : "" // will be auto generated
       )
 
@@ -51,7 +51,7 @@ resource "google_compute_instance" "bastion" {
   dynamic "network_interface" {
     for_each = var.configure_admin_network ? [1] : []
     content {
-      subnetwork = google_compute_subnetwork.admin[0].self_link
+      subnetwork = google_compute_subnetwork.admin.0.self_link
       network_ip = local.bastion_admin_itf_ip
     }
   }
@@ -93,7 +93,7 @@ data "google_compute_image" "bastion" {
 resource "google_compute_image" "bastion" {
   count = var.bastion_use_project_image ? 0 : 1
 
-  name = "${var.vpc_name}-bastion-img${random_string.bastion-image-key[0].result}"
+  name = "${var.vpc_name}-bastion-img${random_string.bastion-image-key.0.result}"
 
   raw_disk {
     source = "https://storage.googleapis.com/${var.bastion_image_bucket_prefix}_${var.region}/appbricks-bastion/${var.bastion_image_name}.tar.gz"
@@ -137,7 +137,7 @@ resource "google_compute_address" "bastion-admin" {
   name         = "${var.vpc_name}-bastion-admin"
   address_type = "INTERNAL"
 
-  subnetwork = google_compute_subnetwork.admin[0].self_link
+  subnetwork = google_compute_subnetwork.admin.0.self_link
   region     = var.region
 
   address = local.bastion_admin_itf_ip
@@ -334,7 +334,7 @@ resource "google_compute_route" "nat-route-admin" {
   dest_range = "0.0.0.0/0"
 
   network = (var.configure_admin_network
-    ? google_compute_network.admin[0].name
+    ? google_compute_network.admin.0.name
     : google_compute_network.dmz.name
   )
   

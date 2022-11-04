@@ -38,7 +38,7 @@ module "bootstrap" {
   # Local DNS zone. This could also be the same as the public
   # which will enable setting up a split DNS of the public zone
   # for names to map to external and internal addresses.
-  vpc_internal_dns_zones = ["appbricks.local"]
+  vpc_internal_dns_zones = ["test-${var.region}.appbricks.local"]
 
   # Name of parent zone 'gcp.appbricks.cloud' to which the 
   # name server records of the 'vpc_dns_zone' will be added.
@@ -61,7 +61,7 @@ module "bootstrap" {
   # ovpn_service_port = "2295"
   # ovpn_protocol     = "udp"
 
-  # vpn_type = "wireguard"
+  # vpn_type               = "wireguard"
   # wireguard_service_port = "3399"
 
   # Tunnel for VPN to handle situations where 
@@ -72,7 +72,7 @@ module "bootstrap" {
   vpn_tunnel_all_traffic = "yes"
 
   # Concourse Port
-  concourse_server_port = "8080"
+  # concourse_server_port = "8080"
 
   # Whether to allow SSH access to bastion server
   bastion_allow_public_ssh = true

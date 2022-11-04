@@ -114,7 +114,7 @@ resource "aws_route" "nat-bastion" {
   route_table_id = aws_route_table.admin[count.index].id
 
   destination_cidr_block = "0.0.0.0/0"
-  network_interface_id   = aws_network_interface.bastion-admin[0].id
+  network_interface_id   = aws_network_interface.bastion-admin.0.id
 }
 
 # Use NAT instance

@@ -59,22 +59,24 @@ module "bootstrap" {
     "user2|P@ssw0rd2"
   ]
 
-  vpn_type = "wireguard"
-  # vpn_type = "openvpn"
-  # vpn_type = "ipsec"
+  vpn_type = "ipsec"
 
-  vpn_tunnel_all_traffic = "yes"
+  # vpn_type          = "openvpn"
+  # ovpn_service_port = "2295"
+  # ovpn_protocol     = "udp"
 
-  ovpn_service_port = "2295"
-  ovpn_protocol     = "udp"
+  # vpn_type               = "wireguard"
+  # wireguard_service_port = "3399"
 
-  wireguard_service_port = "3399"
-  wireguard_mesh_node    = local.vpc_subnet_index
+  # wireguard mesh of cloud space peers
+  wireguard_mesh_node = local.vpc_subnet_index
 
   # Tunnel for VPN to handle situations where 
   # OpenVPN is blocked or throttled by ISP
   # tunnel_vpn_port_start = "2296"
   # tunnel_vpn_port_end   = "3396"
+
+  vpn_tunnel_all_traffic = "yes"
 
   # Concourse Port
   # concourse_server_port = "8080"
@@ -83,7 +85,7 @@ module "bootstrap" {
   bastion_allow_public_ssh = true
 
   bastion_host_name = "inceptor"
-  bastion_use_fqdn = var.bastion_use_fqdn
+  bastion_use_fqdn = var.attach_dns_zone
 
   bastion_instance_type = "t4g.micro"
 
@@ -109,7 +111,7 @@ module "bootstrap" {
   # Whether to deploy a jumpbox in the admin network. The
   # jumpbox will be deployed only if a local DNS zone is
   # provided and the DNS will be jumpbox.[first local zone].
-  deploy_jumpbox = false
+  deploy_jumpbox = true
 
   #
   # Bootstrap pipeline
