@@ -27,7 +27,7 @@ module "config" {
   root_ca_key  = var.root_ca_key
   root_ca_cert = var.root_ca_cert
 
-  cert_domain_names = local.cert_domain_names
+  cert_domain_names = [var.vpc_dns_zone]
   
   vpc_name                 = var.vpc_name
   vpc_cidr                 = var.vpc_cidr
@@ -147,11 +147,5 @@ locals {
     var.configure_admin_network
       ? google_compute_address.bastion-public.0.address
       : "google"
-  )
-
-  cert_domain_names = (
-    var.attach_dns_zone
-      ? [var.vpc_dns_zone]
-      : []
   )
 }

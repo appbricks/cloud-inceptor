@@ -56,16 +56,16 @@ module "config" {
           join("|", 
             tolist([
               "", // AWS will assign static IP via DHCP
-              aws_subnet.dmz[0].cidr_block,
+              aws_subnet.dmz.0.cidr_block,
               "0.0.0.0/0"
             ]),
           ),
           join("|", 
             tolist([
               local.bastion_admin_itf_ip, 
-              aws_subnet.admin[0].cidr_block,
+              aws_subnet.admin.0.cidr_block,
               length(var.global_internal_cidr) == 0 ? var.vpc_cidr : var.global_internal_cidr,
-              cidrhost(aws_subnet.admin[0].cidr_block, 1)
+              cidrhost(aws_subnet.admin.0.cidr_block, 1)
             ])
           ) 
         ]
@@ -73,7 +73,7 @@ module "config" {
           join("|", 
             tolist([
               "", // AWS will assign static IP via DHCP
-              aws_subnet.dmz[0].cidr_block,
+              aws_subnet.dmz.0.cidr_block,
               "0.0.0.0/0"
             ]),
           ) 
@@ -162,7 +162,7 @@ locals {
   # its externally facing Ip.
   bastion_public_ip = (
     var.configure_admin_network
-      ? aws_eip.bastion-public[0].public_ip
+      ? aws_eip.bastion-public.0.public_ip
       : "aws"      
   )
   bastion_fqdn = (
@@ -175,7 +175,8 @@ locals {
       ? [local.bastion_fqdn]
       : [
         "*.compute-1.amazonaws.com",
-        "*.${var.region}.compute.amazonaws.com"
+        "*.${var.region}.compute.amazonaws.com",
+        var.vpc_dns_zone
       ]
   )
 }
