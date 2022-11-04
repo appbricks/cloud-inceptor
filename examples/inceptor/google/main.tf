@@ -48,7 +48,7 @@ module "bootstrap" {
   global_internal_cidr = "172.16.0.0/12"
 
   # VPN
-  # vpn_idle_action = "shutdown"
+  vpn_idle_action = "shutdown"
 
   vpn_users = [
     "user1|P@ssw0rd1",
