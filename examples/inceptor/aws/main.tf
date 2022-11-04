@@ -52,7 +52,7 @@ module "bootstrap" {
   global_internal_cidr = "172.16.0.0/12"
 
   # VPN
-  # vpn_idle_action = "shutdown"
+  vpn_idle_action = "shutdown"
 
   vpn_users = [
     "user1|P@ssw0rd1",
@@ -143,6 +143,15 @@ resource "local_file" "default-ssh-key" {
   provisioner "local-exec" {
     command = "chmod 0600 ${path.module}/.${data.aws_region.default.name}/default-ssh-key.pem"
   }
+}
+
+#
+# Root CA
+#
+
+resource "local_file" "root-ca-cert" {
+  content  = module.bootstrap.root_ca_cert
+  filename = "${path.module}/.${var.region}/root-ca.pem"
 }
 
 #
