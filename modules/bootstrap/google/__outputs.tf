@@ -98,7 +98,8 @@ output "bastion_openssh_public_key" {
 # The api-key required to adminster the 
 # internal zone managed by powerdns
 output "powerdns_api_key" {
-  value = module.config.powerdns_api_key
+  value     = module.config.powerdns_api_key
+  sensitive = true
 }
 
 #

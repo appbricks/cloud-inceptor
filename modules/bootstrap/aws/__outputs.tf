@@ -120,7 +120,8 @@ output "powerdns_url" {
 }
 
 output "powerdns_api_key" {
-  value = module.config.powerdns_api_key
+  value     = module.config.powerdns_api_key
+  sensitive = true
 }
 
 #
