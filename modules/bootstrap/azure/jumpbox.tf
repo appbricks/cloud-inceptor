@@ -6,45 +6,59 @@ locals {
   local_dns = "${length(var.vpc_internal_dns_zones) > 0 
     ? element(var.vpc_internal_dns_zones, 0) : ""}"
 
-  jumpbox_dns = "${var.deploy_jumpbox && length(local.local_dns) > 0 
-    ? format("jumpbox.%s", local.local_dns) : ""}"
-  jumpbox_ip = cidrhost(azurerm_subnet.admin.address_prefix, 10)
-  jumpbox_dns_record = "${length(local.jumpbox_dns) > 0 
-    ? format("%s:%s", local.jumpbox_dns, local.jumpbox_ip) : ""}"
+  jumpbox_ip = cidrhost(local.admin_network_cidr_range, 10)
+  jumpbox_dns = (
+    var.deploy_jumpbox && length(local.local_dns) > 0 
+      ? format("jumpbox.%s", local.local_dns) 
+      : ""
+  )
+  jumpbox_dns_record = (
+    length(local.jumpbox_dns) > 0 
+      ? format("%s:%s", local.jumpbox_dns, local.jumpbox_ip) 
+      : ""
+  )
 }
 
-resource "azurerm_virtual_machine" "jumpbox" {
-  count = length(local.jumpbox_dns) > 0 ? 1 : 0
+resource "azurerm_linux_virtual_machine" "jumpbox" {
+  count = var.deploy_jumpbox ? 1 : 0
 
-  name = "${var.vpc_name}-jumpbox"
+  name          = "${var.vpc_name}-jumpbox"
+  computer_name = "jumpbox"
 
   location            = azurerm_resource_group.bootstrap.location
   resource_group_name = azurerm_resource_group.bootstrap.name
 
-  vm_size               = "Standard_B1s"
+  size                  = "Standard_B1s"
   network_interface_ids = [azurerm_network_interface.jumpbox-admin.0.id]
 
-  delete_os_disk_on_termination = true
-
-  storage_image_reference {
+  source_image_reference {
     publisher = "Canonical"
-    offer     = "UbuntuServer"
-    sku       = "18.04-LTS"
+    offer     = "0001-com-ubuntu-server-jammy"
+    sku       = "22_04-lts-gen2"
     version   = "latest"
   }
-  storage_os_disk {
-    name              = "${var.vpc_name}-jumpbox-root"
-    caching           = "ReadWrite"
-    create_option     = "FromImage"
-    managed_disk_type = "Standard_LRS"
-    disk_size_gb      = "40"
+  os_disk {
+    name                 = "${var.vpc_name}-jumpbox-root"
+    caching              = "ReadWrite"
+    storage_account_type = "Standard_LRS"
+    disk_size_gb         = "40"
+  }
+
+  admin_username = "ubuntu"
+  admin_ssh_key {
+    username   = "ubuntu"
+    public_key = tls_private_key.default-ssh-key.public_key_openssh
   }
   
-  os_profile {
-    computer_name  = "jumpbox"
-    admin_username = "ubuntu"
+  custom_data = data.template_cloudinit_config.jumpbox-cloudinit.rendered
+}
 
-    custom_data = <<USER_DATA
+data "template_cloudinit_config" "jumpbox-cloudinit" {
+  gzip          = true
+  base64_encode = true
+
+  part {
+    content = <<USER_DATA
 #cloud-config
 
 write_files:
@@ -54,21 +68,49 @@ write_files:
   permissions: '0744'
 
 runcmd: 
-- sudo /root/mount-volume.sh
-USER_DATA
-  }
-  os_profile_linux_config {
-    disable_password_authentication = true
 
-    ssh_keys { 
-      key_data = tls_private_key.default-ssh-key.public_key_openssh
-      path     = "/home/ubuntu/.ssh/authorized_keys"
-    }
+# Install Docker
+- |
+  rm -rf /var/lib/apt/lists/*
+  echo "waiting 180 seconds for network to become available"
+  timeout 180 /bin/bash -c \
+    "until curl -s --fail $(cat /etc/apt/sources.list | head -1 | cut -d ' ' -f2) 2>&1 >/dev/null; do echo waiting ...; sleep 1; done"
+
+  export DEBIAN_FRONTEND=noninteractive
+  
+  apt-get update
+  apt-get -o Acquire::ForceIPv4=true install -y \
+    pkg-config apt-transport-https ca-certificates gnupg lsb-release \
+    cmake build-essential openssl libcurl4-openssl-dev libssl-dev libffi-dev libxml2 libxml2-dev \
+    parted dosfstools squashfs-tools efibootmgr net-tools ipcalc \
+    expect rsync curl jq zip git python3.9 python3-dev python3-pip python-is-python3
+  
+  distro=$(lsb_release -is | tr '[:upper:]' '[:lower:]')
+
+  mkdir -p /etc/apt/keyrings
+  curl -fsSL https://download.docker.com/linux/$distro/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+  echo \
+    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+    https://download.docker.com/linux/$distro \
+    $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+  
+  apt-get update
+  apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+
+  curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o "awscliv2.zip"
+  unzip awscliv2.zip
+  sudo ./aws/install
+  rm -fr awscliv2.zip aws
+
+# Mount data volume
+- /root/mount-volume.sh
+
+USER_DATA
   }
 }
 
 resource "azurerm_network_interface" "jumpbox-admin" {
-  count = length(local.jumpbox_dns) > 0 ? 1 : 0
+  count = var.deploy_jumpbox ? 1 : 0
 
   name = "${var.vpc_name}-jumpbox-admin"
   
@@ -77,11 +119,16 @@ resource "azurerm_network_interface" "jumpbox-admin" {
 
   ip_configuration {
     name                          = "admin"
-    subnet_id                     = azurerm_subnet.admin.id
+    subnet_id                     = local.admin_network_id
     private_ip_address_allocation = "Static"
     private_ip_address            = local.jumpbox_ip
   }
+}
 
+resource "azurerm_network_interface_security_group_association" "jumpbox-admin" {
+  count = var.configure_admin_network ? 1 : 0
+
+  network_interface_id      = azurerm_network_interface.jumpbox-admin.0.id
   network_security_group_id = azurerm_network_security_group.admin.id
 }
 
@@ -100,7 +147,7 @@ data "template_file" "mount-jumpbox-data-volume" {
 }
 
 resource "azurerm_managed_disk" "jumpbox-data" {
-  count = length(local.jumpbox_dns) > 0 ? 1 : 0
+  count = var.deploy_jumpbox ? 1 : 0
 
   name = "${var.vpc_name}-jumpbox-data"
 
@@ -113,10 +160,10 @@ resource "azurerm_managed_disk" "jumpbox-data" {
 }
 
 resource "azurerm_virtual_machine_data_disk_attachment" "jumpbox-data" {
-  count = length(local.jumpbox_dns) > 0 ? 1 : 0
+  count = var.deploy_jumpbox ? 1 : 0
 
   managed_disk_id    = azurerm_managed_disk.jumpbox-data.0.id
-  virtual_machine_id = azurerm_virtual_machine.jumpbox.0.id
+  virtual_machine_id = azurerm_linux_virtual_machine.jumpbox.0.id
 
   lun     = "10"
   caching = "ReadWrite"

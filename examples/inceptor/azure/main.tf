@@ -5,6 +5,9 @@
 module "bootstrap" {
   source = "../../../modules/bootstrap/azure"
 
+  mycs_node_private_key = var.mycs_node_private_key
+  mycs_node_id_key = var.mycs_node_id_key
+
   #
   # Company information used in certificate creation
   #
@@ -23,51 +26,57 @@ module "bootstrap" {
   #
   region = "${var.region}"
 
+  source_resource_group = "cloud-builder-development"
+
   vpc_name = "inceptor-${var.region}"
   vpc_cidr = "${var.regional_vpc_cidr[var.region]["vpc_cidr"]}"
 
+  configure_admin_network = var.configure_admin_network
+
   # DNS Name for VPC will be 'test.azure.appbricks.io'
   vpc_dns_zone    = "test-${var.region}.azure.appbricks.io"
-  attach_dns_zone = "${var.bastion_use_fqdn}"
+  attach_dns_zone = var.attach_dns_zone
 
   # Local DNS zone. This could also be the same as the public
   # which will enable setting up a split DNS of the public zone
   # for names to map to external and internal addresses.
-  vpc_internal_dns_zones = ["appbricks.local"]
+  vpc_internal_dns_zones = ["test-${var.region}.azure.appbricks.local"]
+
+  # Address space for all VPC regions
+  global_internal_cidr = "172.16.0.0/12"
 
   # VPN
-  # vpn_idle_action = "shutdown"
+  vpn_idle_action = "shutdown"
 
   vpn_users = [
     "user1|P@ssw0rd1",
     "user2|P@ssw0rd2"
   ]
 
-  vpn_type = "wireguard"
-  # vpn_type = "openvpn"
-  # vpn_type = "ipsec"
+  vpn_type = "ipsec"
 
-  vpn_tunnel_all_traffic = "yes"
+  # vpn_type          = "openvpn"
+  # ovpn_service_port = "2295"
+  # ovpn_protocol     = "udp"
 
-  ovpn_service_port = "2295"
-  ovpn_protocol     = "udp"
-
-  wireguard_service_port = "3399"
-  wireguard_subnet_ip    = "192.168.112.${local.vpc_subnet_index}/24"
+  # vpn_type               = "wireguard"
+  # wireguard_service_port = "3399"
 
   # Tunnel for VPN to handle situations where 
   # OpenVPN is blocked or throttled by ISP
   # tunnel_vpn_port_start = "2296"
   # tunnel_vpn_port_end   = "3396"
 
+  vpn_tunnel_all_traffic = "yes"
+
   # Concourse Port
-  concourse_server_port = "8080"
+  # concourse_server_port = "8080"
 
   # Whether to allow SSH access to bastion server
   bastion_allow_public_ssh = true
 
   bastion_host_name = "inceptor"
-  bastion_use_fqdn = "${var.bastion_use_fqdn}"
+  bastion_use_fqdn = var.attach_dns_zone
 
   bastion_use_managed_image             = var.bastion_use_managed_image
   bastion_image_name                    = var.bastion_image_name
@@ -127,11 +136,22 @@ resource "local_file" "default-ssh-key" {
 }
 
 #
-# Limit version of Azure provider to avoid image copy issue
-# https://github.com/terraform-providers/terraform-provider-azurerm/issues/4361
+# Root CA
 #
+
+resource "local_file" "root-ca-cert" {
+  content  = module.bootstrap.root_ca_cert
+  filename = "${path.module}/.${var.region}/root-ca.pem"
+}
+
 provider "azurerm" {
-  version = "< 1.34.0"
+  features {}
+
+  #
+  # Limit version of Azure provider to avoid image copy issue
+  # https://github.com/terraform-providers/terraform-provider-azurerm/issues/4361
+  #
+  # version = "< 1.34.0"
 }
 
 #
@@ -139,8 +159,8 @@ provider "azurerm" {
 #
 terraform {
   backend "azurerm" {
-    resource_group_name  = "default"
-    container_name       = "test"
+    resource_group_name  = "cloud-builder-development"
+    container_name       = "inceptor"
     key                  = "terraform.tfstate"
   }
 }

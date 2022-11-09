@@ -6,6 +6,17 @@ variable "region" {
 }
 
 #
+# MyCS Node IdKey
+#
+variable "mycs_node_private_key" {
+  default = ""
+}
+
+variable "mycs_node_id_key" {
+  default = ""
+}
+
+#
 # SMTP settings for notifications
 #
 
@@ -29,10 +40,6 @@ variable "notification_email" {
 # Bastion Image
 #
 
-variable "bastion_use_fqdn" {
-  type = string
-}
-
 variable "bastion_use_managed_image" {
   type = bool
 }
@@ -46,129 +53,141 @@ variable "bastion_image_storage_account_prefix" {
 }
 
 #
+# Networking
+#
+
+variable "attach_dns_zone" {
+  type = string
+}
+
+variable "configure_admin_network" {
+  type = string
+}
+
+#
 # Distinct CIDR for VPCs by region
 #
 variable "regional_vpc_cidr" {
   default = {
     westus = {
-      vpc_cidr = "10.10.0.0/16"
+      vpc_cidr = "172.20.0.0/22"
     }
     westus2 = {
-      vpc_cidr = "10.11.0.0/16"
+      vpc_cidr = "172.20.4.0/22"
     }
     westcentralus = {
-      vpc_cidr = "10.12.0.0/16"
+      vpc_cidr = "172.20.8.0/22"
     }
     northcentralus = {
-      vpc_cidr = "10.13.0.0/16"
+      vpc_cidr = "172.20.12.0/22"
     }
     centralus = {
-      vpc_cidr = "10.14.0.0/16"
+      vpc_cidr = "172.20.16.0/22"
     }
     southcentralus = {
-      vpc_cidr = "10.15.0.0/16"
+      vpc_cidr = "172.20.20.0/22"
     }
     eastus = {
-      vpc_cidr = "10.16.0.0/16"
+      vpc_cidr = "172.20.24.0/22"
     }
     eastus2 = {
-      vpc_cidr = "10.17.0.0/16"
+      vpc_cidr = "172.20.28.0/22"
     }
     canadacentral = {
-      vpc_cidr = "10.18.0.0/16"
+      vpc_cidr = "172.20.32.0/22"
     }
     canadaeast = {
-      vpc_cidr = "10.19.0.0/16"
+      vpc_cidr = "172.20.36.0/22"
     }
     brazilsouth = {
-      vpc_cidr = "10.20.0.0/16"
+      vpc_cidr = "172.20.40.0/22"
     }
     ukwest = {
-      vpc_cidr = "10.21.0.0/16"
+      vpc_cidr = "172.20.44.0/22"
     }
     uksouth = {
-      vpc_cidr = "10.22.0.0/16"
+      vpc_cidr = "172.20.48.0/22"
     }
     francecentral = {
-      vpc_cidr = "10.23.0.0/16"
+      vpc_cidr = "172.20.52.0/22"
     }
     francesouth = {
-      vpc_cidr = "10.24.0.0/16"
+      vpc_cidr = "172.20.56.0/22"
     }
     westeurope = {
-      vpc_cidr = "10.25.0.0/16"
+      vpc_cidr = "172.20.60.0/22"
     }
     northeurope = {
-      vpc_cidr = "10.26.0.0/16"
+      vpc_cidr = "172.20.64.0/22"
     }
     norwaywest = {
-      vpc_cidr = "10.27.0.0/16"
+      vpc_cidr = "172.20.68.0/22"
     }
     norwayeast = {
-      vpc_cidr = "10.28.0.0/16"
+      vpc_cidr = "172.20.72.0/22"
     }
     switzerlandwest = {
-      vpc_cidr = "10.29.0.0/16"
+      vpc_cidr = "172.20.76.0/22"
     }
     switzerlandnorth = {
-      vpc_cidr = "10.30.0.0/16"
+      vpc_cidr = "172.20.80.0/22"
     }
     germanywestcentral = {
-      vpc_cidr = "10.31.0.0/16"
+      vpc_cidr = "172.20.84.0/22"
     }
     germanynorth = {
-      vpc_cidr = "10.32.0.0/16"
+      vpc_cidr = "172.20.88.0/22"
     }
     southafricawest = {
-      vpc_cidr = "10.33.0.0/16"
+      vpc_cidr = "172.20.92.0/22"
     }
     southafricanorth = {
-      vpc_cidr = "10.34.0.0/16"
+      vpc_cidr = "172.20.96.0/22"
     }
     uaecentral = {
-      vpc_cidr = "10.35.0.0/16"
+      vpc_cidr = "172.20.100.0/22"
     }
     uaenorth = {
-      vpc_cidr = "10.36.0.0/16"
+      vpc_cidr = "172.20.104.0/22"
     }
     westindia = {
-      vpc_cidr = "10.37.0.0/16"
+      vpc_cidr = "172.20.108.0/22"
     }
     centralindia = {
-      vpc_cidr = "10.38.0.0/16"
+      vpc_cidr = "172.20.112.0/22"
     }
     southindia = {
-      vpc_cidr = "10.39.0.0/16"
+      vpc_cidr = "172.20.116.0/22"
     }
     eastasia = {
-      vpc_cidr = "10.40.0.0/16"
+      vpc_cidr = "172.20.120.0/22"
     }
     southeastasia = {
-      vpc_cidr = "10.41.0.0/16"
+      vpc_cidr = "172.20.124.0/22"
     }
     koreacentral = {
-      vpc_cidr = "10.42.0.0/16"
+      vpc_cidr = "172.20.128.0/22"
     }
     koreasouth = {
-      vpc_cidr = "10.43.0.0/16"
+      vpc_cidr = "172.20.132.0/22"
     }
     japanwest = {
-      vpc_cidr = "10.44.0.0/16"
+      vpc_cidr = "172.20.136.0/22"
     }
     japaneast = {
-      vpc_cidr = "10.45.0.0/16"
+      vpc_cidr = "172.20.140.0/22"
     }
     australiacentral = {
-      vpc_cidr = "10.46.0.0/16"
+      vpc_cidr = "172.20.144.0/22"
     }
     australiacentral2 = {
-      vpc_cidr = "10.47.0.0/16"
+      vpc_cidr = "172.20.148.0/22"
     }
     australiaeast = {
-      vpc_cidr = "10.48.0.0/16"
+      vpc_cidr = "172.20.152.0/22"
     }
     australiasoutheast = {
-      vpc_cidr = "10.49.0.0/16"
+      vpc_cidr = "172.20.156.0/22"
     }
   }
 }

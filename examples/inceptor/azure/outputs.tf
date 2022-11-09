@@ -26,10 +26,6 @@ output "bastion_admin_fqdn" {
   value = "${module.bootstrap.bastion_admin_fqdn}"
 }
 
-output "bastion_admin_sshkey" {
-  value = "${module.bootstrap.bastion_admin_sshkey}"
-}
-
 output "bastion_admin_user" {
   value = "${module.bootstrap.bastion_admin_user}"
 }

@@ -2,47 +2,40 @@
 # Inception Bastion instance
 #
 
-resource "azurerm_virtual_machine" "bastion" {
-  name = element(split(".", var.vpc_dns_zone), 0)
+resource "azurerm_linux_virtual_machine" "bastion" {
+  name          = "${var.vpc_name}-${element(split(".", var.vpc_dns_zone), 0)}"
+  computer_name = element(split(".", var.vpc_dns_zone), 0)
 
   location            = azurerm_resource_group.bootstrap.location
   resource_group_name = azurerm_resource_group.bootstrap.name
 
-  vm_size = var.bastion_instance_type
+  size = var.bastion_instance_type
 
-  network_interface_ids = [
-    azurerm_network_interface.bastion-dmz.id,
-    azurerm_network_interface.bastion-admin.id
-  ]
-  primary_network_interface_id = azurerm_network_interface.bastion-dmz.id
+  network_interface_ids = (var.configure_admin_network 
+    ? [
+      azurerm_network_interface.bastion-dmz.id,
+      azurerm_network_interface.bastion-admin.0.id
+    ]
+    : [
+      azurerm_network_interface.bastion-dmz.id,
+    ]
+  )
 
-  delete_os_disk_on_termination = true
-
-  storage_image_reference {
-    id = var.bastion_use_managed_image ? data.azurerm_image.bastion.0.id : azurerm_image.bastion.0.id
+  source_image_id = var.bastion_use_managed_image ? data.azurerm_image.bastion.0.id : azurerm_image.bastion.0.id
+  os_disk {
+    name                 = "${var.vpc_name}-bastion-root"
+    caching              = "ReadWrite"
+    storage_account_type = "Standard_LRS"
+    disk_size_gb         = var.bastion_root_disk_size
   }
-  storage_os_disk {
-    name              = "${var.vpc_name}-bastion-root"
-    caching           = "ReadWrite"
-    create_option     = "FromImage"
-    managed_disk_type = "Standard_LRS"
-    disk_size_gb      = var.bastion_root_disk_size
-  }
-  
-  os_profile {
-    computer_name  = element(split(".", var.vpc_dns_zone), 0)
-    admin_username = var.bastion_admin_user
 
-    custom_data = module.config.bastion_cloud_init_config
+  admin_username = var.bastion_admin_user
+  admin_ssh_key {
+    username   = var.bastion_admin_user
+    public_key = module.config.bastion_openssh_public_key
   }
-  os_profile_linux_config {
-    disable_password_authentication = true
 
-    ssh_keys { 
-      key_data = module.config.bastion_openssh_public_key
-      path     = "/home/${var.bastion_admin_user}/.ssh/authorized_keys"
-    }    
-  }
+  custom_data = module.config.bastion_cloud_init_config
 }
 
 #
@@ -63,7 +56,7 @@ resource "azurerm_managed_disk" "bastion-data" {
 
 resource "azurerm_virtual_machine_data_disk_attachment" "bastion-data" {
   managed_disk_id    = azurerm_managed_disk.bastion-data.id
-  virtual_machine_id = azurerm_virtual_machine.bastion.id
+  virtual_machine_id = azurerm_linux_virtual_machine.bastion.id
 
   lun     = "10"
   caching = "ReadWrite"
@@ -129,13 +122,22 @@ resource "azurerm_storage_container" "bastion-image-storage-container" {
 # Networking
 #
 
+locals {
+  bastion_dmz_itf_ip = cidrhost(azurerm_subnet.dmz.address_prefixes[0], -3)
+  bastion_admin_itf_ip = (
+    var.configure_admin_network
+      ? cidrhost(local.admin_network_cidr_range, -3)
+      : local.bastion_dmz_itf_ip
+  )
+}
+
 resource "azurerm_public_ip" "bastion-public" {
   name = "${var.vpc_name}-bastion-public"
 
   location            = azurerm_resource_group.bootstrap.location
   resource_group_name = azurerm_resource_group.bootstrap.name
 
-  allocation_method   = "Static"
+  allocation_method = var.configure_admin_network ? "Static" : "Dynamic"
 }
 
 resource "azurerm_network_interface" "bastion-dmz" {
@@ -148,15 +150,20 @@ resource "azurerm_network_interface" "bastion-dmz" {
     name                          = "dmz"
     subnet_id                     = azurerm_subnet.dmz.id
     private_ip_address_allocation = "Static"
-    private_ip_address            = cidrhost(azurerm_subnet.dmz.address_prefix, -3)
+    private_ip_address            = local.bastion_dmz_itf_ip
 
     public_ip_address_id = azurerm_public_ip.bastion-public.id
   }
+}
 
+resource "azurerm_network_interface_security_group_association" "bastion-dmz" {
+  network_interface_id      = azurerm_network_interface.bastion-dmz.id
   network_security_group_id = azurerm_network_security_group.bastion-dmz.id
 }
 
 resource "azurerm_network_interface" "bastion-admin" {
+  count = var.configure_admin_network ? 1 : 0
+
   name = "${var.vpc_name}-bastion-admin"
   
   location            = azurerm_resource_group.bootstrap.location
@@ -164,11 +171,16 @@ resource "azurerm_network_interface" "bastion-admin" {
 
   ip_configuration {
     name                          = "dmz"
-    subnet_id                     = azurerm_subnet.admin.id
+    subnet_id                     = local.admin_network_id
     private_ip_address_allocation = "Static"
-    private_ip_address            =  cidrhost(azurerm_subnet.admin.address_prefix, -3)
+    private_ip_address            =  local.bastion_admin_itf_ip
   }
+}
 
+resource "azurerm_network_interface_security_group_association" "bastion-admin" {
+  count = var.configure_admin_network ? 1 : 0
+
+  network_interface_id      = azurerm_network_interface.bastion-admin.0.id
   network_security_group_id = azurerm_network_security_group.bastion-admin.id
 }
 
@@ -197,7 +209,7 @@ resource "azurerm_network_security_rule" "bastion-http" {
   resource_group_name         = azurerm_resource_group.bootstrap.name
 
   access    = "Allow"
-  protocol  = "tcp"
+  protocol  = "Tcp"
   priority  = "500"
   direction = "Inbound"
   
@@ -205,7 +217,7 @@ resource "azurerm_network_security_rule" "bastion-http" {
   source_address_prefix = "0.0.0.0/0"
 
   destination_port_ranges    = ["80", "443"]
-  destination_address_prefix = azurerm_network_interface.bastion-dmz.ip_configuration.0.private_ip_address
+  destination_address_prefix = local.bastion_dmz_itf_ip
 }
 
 resource "azurerm_network_security_rule" "bastion-ssh" {
@@ -217,7 +229,7 @@ resource "azurerm_network_security_rule" "bastion-ssh" {
   resource_group_name         = azurerm_resource_group.bootstrap.name
 
   access    = "Allow"
-  protocol  = "tcp"
+  protocol  = "Tcp"
   priority  = "501"
   direction = "Inbound"
   
@@ -225,7 +237,7 @@ resource "azurerm_network_security_rule" "bastion-ssh" {
   source_address_prefix = "0.0.0.0/0"
 
   destination_port_range     = var.bastion_admin_ssh_port
-  destination_address_prefix = azurerm_network_interface.bastion-dmz.ip_configuration.0.private_ip_address
+  destination_address_prefix = local.bastion_dmz_itf_ip
 }
 
 resource "azurerm_network_security_rule" "bastion-openvpn" {
@@ -245,7 +257,7 @@ resource "azurerm_network_security_rule" "bastion-openvpn" {
   source_address_prefix = "0.0.0.0/0"
 
   destination_port_range     = var.ovpn_service_port
-  destination_address_prefix = azurerm_network_interface.bastion-dmz.ip_configuration.0.private_ip_address
+  destination_address_prefix = local.bastion_dmz_itf_ip
 }
 
 resource "azurerm_network_security_rule" "bastion-ipsecvpn" {
@@ -257,7 +269,7 @@ resource "azurerm_network_security_rule" "bastion-ipsecvpn" {
   resource_group_name         = azurerm_resource_group.bootstrap.name
 
   access    = "Allow"
-  protocol  = "udp"
+  protocol  = "Udp"
   priority  = "503"
   direction = "Inbound"
   
@@ -265,7 +277,7 @@ resource "azurerm_network_security_rule" "bastion-ipsecvpn" {
   source_address_prefix = "0.0.0.0/0"
 
   destination_port_ranges    = ["500", "4500"]
-  destination_address_prefix = azurerm_network_interface.bastion-dmz.ip_configuration.0.private_ip_address
+  destination_address_prefix = local.bastion_dmz_itf_ip
 }
 
 resource "azurerm_network_security_rule" "bastion-vpntunnel" {
@@ -285,7 +297,7 @@ resource "azurerm_network_security_rule" "bastion-vpntunnel" {
   source_address_prefix = "0.0.0.0/0"
 
   destination_port_range     = "${var.tunnel_vpn_port_start}-${var.tunnel_vpn_port_end}"
-  destination_address_prefix = azurerm_network_interface.bastion-dmz.ip_configuration.0.private_ip_address
+  destination_address_prefix = local.bastion_dmz_itf_ip
 }
 
 resource "azurerm_network_security_rule" "bastion-smtp-ext" {
@@ -297,7 +309,7 @@ resource "azurerm_network_security_rule" "bastion-smtp-ext" {
   resource_group_name         = azurerm_resource_group.bootstrap.name
 
   access    = "Allow"
-  protocol  = "tcp"
+  protocol  = "Tcp"
   priority  = "505"
   direction = "Inbound"
 
@@ -305,7 +317,7 @@ resource "azurerm_network_security_rule" "bastion-smtp-ext" {
   source_address_prefix = "0.0.0.0/0"
 
   destination_port_range     = "25"
-  destination_address_prefix = azurerm_network_interface.bastion-dmz.ip_configuration.0.private_ip_address
+  destination_address_prefix = local.bastion_dmz_itf_ip
 }
 
 resource "azurerm_network_security_rule" "bastion-deny-dmz" {
@@ -320,10 +332,10 @@ resource "azurerm_network_security_rule" "bastion-deny-dmz" {
   direction = "Inbound"
 
   source_port_range     = "*"
-  source_address_prefix = azurerm_subnet.dmz.address_prefix
+  source_address_prefix = azurerm_subnet.dmz.address_prefixes[0]
 
   destination_port_range     = "*"
-  destination_address_prefix = azurerm_network_interface.bastion-dmz.ip_configuration.0.private_ip_address
+  destination_address_prefix = local.bastion_dmz_itf_ip
 }
 
 resource "azurerm_network_security_rule" "bastion-smtp-int" {
@@ -335,7 +347,7 @@ resource "azurerm_network_security_rule" "bastion-smtp-int" {
   resource_group_name         = azurerm_resource_group.bootstrap.name
 
   access    = "Allow"
-  protocol  = "tcp"
+  protocol  = "Tcp"
   priority  = "500"
   direction = "Inbound"
 
@@ -343,7 +355,7 @@ resource "azurerm_network_security_rule" "bastion-smtp-int" {
   source_address_prefixes = [var.vpn_network, var.vpc_cidr]
 
   destination_port_range     = "2525"
-  destination_address_prefix = azurerm_network_interface.bastion-admin.ip_configuration.0.private_ip_address
+  destination_address_prefix = local.bastion_admin_itf_ip
 }
 
 resource "azurerm_network_security_rule" "bastion-proxy" {
@@ -355,7 +367,7 @@ resource "azurerm_network_security_rule" "bastion-proxy" {
   resource_group_name         = azurerm_resource_group.bootstrap.name
 
   access    = "Allow"
-  protocol  = "tcp"
+  protocol  = "Tcp"
   priority  = "501"
   direction = "Inbound"
 
@@ -363,7 +375,7 @@ resource "azurerm_network_security_rule" "bastion-proxy" {
   source_address_prefixes = [var.vpn_network, var.vpc_cidr]
 
   destination_port_range     = var.squidproxy_server_port
-  destination_address_prefix = azurerm_network_interface.bastion-admin.ip_configuration.0.private_ip_address
+  destination_address_prefix = local.bastion_admin_itf_ip
 }
 
 resource "azurerm_network_security_rule" "bastion-deny-vpc" {
@@ -381,5 +393,5 @@ resource "azurerm_network_security_rule" "bastion-deny-vpc" {
   source_address_prefix = var.vpc_cidr
 
   destination_port_range     = "*"
-  destination_address_prefix = azurerm_network_interface.bastion-admin.ip_configuration.0.private_ip_address
+  destination_address_prefix = local.bastion_admin_itf_ip
 }

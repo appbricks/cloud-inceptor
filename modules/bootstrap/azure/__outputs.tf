@@ -29,20 +29,22 @@ output "vpc_network" {
   value = azurerm_virtual_network.vpc.id
 }
 
-output "vpc_route_table" {
-  value = azurerm_route_table.vpc.id
-}
-
 output "dmz_subnetwork" {
   value = azurerm_subnet.dmz.id
 }
 
 output "admin_subnetwork" {
-  value = azurerm_subnet.admin.id
+  value = (var.configure_admin_network
+    ? local.admin_network_id
+    : azurerm_subnet.dmz.id
+  )
 }
 
 output "vpc_dns_zone_name" {
-  value = azurerm_dns_zone.vpc-public.name
+  value = (var.attach_dns_zone
+    ? azurerm_dns_zone.vpc-public.0.name
+    : ""
+  )
 }
 
 #
@@ -50,15 +52,18 @@ output "vpc_dns_zone_name" {
 #
 
 output "bastion_instance_id" {
-  value = azurerm_virtual_machine.bastion.id
+  value = azurerm_linux_virtual_machine.bastion.id
 }
 
 output "bastion_public_ip" {
-  value = azurerm_public_ip.bastion-public.ip_address
+  value = azurerm_linux_virtual_machine.bastion.public_ip_address
 }
 
 output "bastion_fqdn" {
-  value = var.vpc_dns_zone
+  value = (var.attach_dns_zone
+    ? var.vpc_dns_zone
+    : ""
+  )
 }
 
 output "bastion_admin_fqdn" {
@@ -82,7 +87,8 @@ output "bastion_admin_password" {
 }
 
 output "bastion_admin_sshkey" {
-  value = module.config.bastion_admin_sshkey
+  value     = module.config.bastion_admin_sshkey
+  sensitive = true
 }
 
 output "bastion_openssh_public_key" {
@@ -92,7 +98,8 @@ output "bastion_openssh_public_key" {
 # The api-key required to adminster the 
 # internal zone managed by powerdns
 output "powerdns_api_key" {
-  value = module.config.powerdns_api_key
+  value     = module.config.powerdns_api_key
+  sensitive = true
 }
 
 #
