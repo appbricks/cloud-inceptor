@@ -17,6 +17,10 @@ output "root_ca_cert" {
 # VPC and network resource attributes
 #
 
+output "vpc_id" {
+  value = var.vpc_name
+}
+
 output "vpc_name" {
   value = var.vpc_name
 }
@@ -25,26 +29,31 @@ output "dmz_network" {
   value = google_compute_network.dmz.self_link
 }
 
-output "dmz_subnetwork" {
-  value = google_compute_subnetwork.dmz.self_link
+output "dmz_subnetworks" {
+  value = [google_compute_subnetwork.dmz.self_link]
 }
 
 output "admin_network" {
   value = local.admin_network_self_link
 }
 
-output "admin_subnetwork" {
-  value = (var.configure_admin_network
+output "admin_subnetworks" {
+  value = [(var.configure_admin_network
     ? google_compute_subnetwork.admin.0.self_link
     : google_compute_subnetwork.dmz.self_link
-  )
+  )]
 }
 
-output "vpc_dns_zone_name" {
-  value = (var.attach_dns_zone
-    ? google_dns_managed_zone.vpc.0.name
-    : ""
-  )
+output "admin_security_group" {
+  value = ""
+}
+
+output "vpc_dns_public_zone_id" {
+  value = var.attach_dns_zone ? google_dns_managed_zone.vpc.0.name : ""
+}
+
+output "vpc_dns_public_zone_name" {
+  value = var.attach_dns_zone ? google_dns_managed_zone.vpc.0.dns_name : ""
 }
 
 #
@@ -57,6 +66,10 @@ output "bastion_instance_id" {
 
 output "bastion_public_ip" {
   value = google_compute_instance.bastion.network_interface.0.access_config.0.nat_ip
+}
+
+output "bastion_admin_ip" {
+  value = local.bastion_admin_itf_ip
 }
 
 output "bastion_fqdn" {
@@ -72,6 +85,10 @@ output "bastion_admin_fqdn" {
       ? google_dns_record_set.vpc-admin.0.name 
       : "N/A"
   )
+}
+
+output "bastion_admin_api_port" {
+  value = var.bastion_admin_api_port
 }
 
 output "bastion_admin_ssh_port" {
@@ -95,8 +112,15 @@ output "bastion_openssh_public_key" {
   value = module.config.bastion_openssh_public_key
 }
 
-# The api-key required to adminster the 
-# internal zone managed by powerdns
+#
+# The url and api-key required to adminster
+# the internal zone managed by powerdns
+#
+
+output "powerdns_url" {
+  value = "http://${local.bastion_admin_itf_ip}:8888"
+}
+
 output "powerdns_api_key" {
   value     = module.config.powerdns_api_key
   sensitive = true
@@ -112,6 +136,10 @@ output "default_openssh_private_key" {
 
 output "default_openssh_public_key" {
   value = tls_private_key.default-ssh-key.public_key_openssh
+}
+
+output "default_ssh_key_pair" {
+  value = ""
 }
 
 # ==== DEBUG OUTPUT ====
