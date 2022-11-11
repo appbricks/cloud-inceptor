@@ -17,7 +17,7 @@ output "root_ca_cert" {
 # VPC and network resource attributes
 #
 
-output "vpc_resource_group" {
+output "vpc_id" {
   value = azurerm_resource_group.bootstrap.name
 }
 
@@ -29,22 +29,27 @@ output "vpc_network" {
   value = azurerm_virtual_network.vpc.id
 }
 
-output "dmz_subnetwork" {
-  value = azurerm_subnet.dmz.id
+output "dmz_subnetworks" {
+  value = [azurerm_subnet.dmz.id]
 }
 
-output "admin_subnetwork" {
-  value = (var.configure_admin_network
+output "admin_subnetworks" {
+  value = [(var.configure_admin_network
     ? local.admin_network_id
     : azurerm_subnet.dmz.id
-  )
+  )]
 }
 
-output "vpc_dns_zone_name" {
-  value = (var.attach_dns_zone
-    ? azurerm_dns_zone.vpc-public.0.name
-    : ""
-  )
+output "admin_security_group" {
+  value = azurerm_network_security_group.admin.name
+}
+
+output "vpc_dns_public_zone_id" {
+  value = var.attach_dns_zone ? azurerm_dns_zone.vpc-public.0.name : ""
+}
+
+output "vpc_dns_public_zone_name" {
+  value = var.attach_dns_zone ? azurerm_dns_zone.vpc-public.0.name : ""
 }
 
 #
@@ -59,9 +64,13 @@ output "bastion_public_ip" {
   value = azurerm_linux_virtual_machine.bastion.public_ip_address
 }
 
+output "bastion_admin_ip" {
+  value = local.bastion_admin_itf_ip
+}
+
 output "bastion_fqdn" {
   value = (var.attach_dns_zone
-    ? var.vpc_dns_zone
+    ? azurerm_dns_a_record.vpc-public.0.name
     : ""
   )
 }
@@ -69,9 +78,13 @@ output "bastion_fqdn" {
 output "bastion_admin_fqdn" {
   value = (
     length(var.bastion_host_name) > 0 && !var.bastion_allow_public_ssh 
-      ? join(".", tolist([var.bastion_host_name, var.vpc_dns_zone])) 
+      ? azurerm_dns_a_record.vpc-admin.0.name
       : "N/A"
   )
+}
+
+output "bastion_admin_api_port" {
+  value = var.bastion_admin_api_port
 }
 
 output "bastion_admin_ssh_port" {
@@ -95,8 +108,15 @@ output "bastion_openssh_public_key" {
   value = module.config.bastion_openssh_public_key
 }
 
-# The api-key required to adminster the 
-# internal zone managed by powerdns
+#
+# The url and api-key required to adminster
+# the internal zone managed by powerdns
+#
+
+output "powerdns_url" {
+  value = "http://${local.bastion_admin_itf_ip}:8888"
+}
+
 output "powerdns_api_key" {
   value     = module.config.powerdns_api_key
   sensitive = true
@@ -112,6 +132,10 @@ output "default_openssh_private_key" {
 
 output "default_openssh_public_key" {
   value = tls_private_key.default-ssh-key.public_key_openssh
+}
+
+output "default_ssh_key_pair" {
+  value = ""
 }
 
 # ==== DEBUG OUTPUT ====
