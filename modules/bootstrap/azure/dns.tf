@@ -12,7 +12,7 @@ data "azurerm_dns_zone" "parent" {
   count = var.attach_dns_zone ? 1 : 0
 
   name                = local.parent_dns_name
-  resource_group_name = var.source_resource_group
+  resource_group_name = data.azurerm_resource_group.source.name
 }
 
 #
@@ -24,7 +24,7 @@ resource "azurerm_dns_ns_record" "vpc" {
   name         = local.vpc_dns_hostname
   zone_name    = data.azurerm_dns_zone.parent.0.name
 
-  resource_group_name = var.source_resource_group
+  resource_group_name = data.azurerm_resource_group.source.name
 
   ttl  = 300
 
@@ -56,7 +56,7 @@ resource "azurerm_dns_a_record" "vpc-public" {
   name      = local.vpc_dns_hostname
   zone_name = data.azurerm_dns_zone.parent.0.name
 
-  resource_group_name = var.source_resource_group
+  resource_group_name = data.azurerm_resource_group.source.name
 
   ttl     = "300"
   records = [azurerm_linux_virtual_machine.bastion.public_ip_address]

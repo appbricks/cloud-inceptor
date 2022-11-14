@@ -61,6 +61,10 @@ resource "azurerm_resource_group" "bootstrap" {
   location = local.storage_region
 }
 
+data "azurerm_resource_group" "source" {
+  name = var.source_resource_group
+}
+
 #
 # The VPC's Storage Account
 #

@@ -71,7 +71,7 @@ data "azurerm_image" "bastion" {
   count = var.bastion_use_managed_image ? 1 : 0
 
   name                = "${var.bastion_image_name}_${var.region}"
-  resource_group_name = var.source_resource_group
+  resource_group_name = data.azurerm_resource_group.source.name
 }
 
 # Create image from given unmanaged disk image blob uri
