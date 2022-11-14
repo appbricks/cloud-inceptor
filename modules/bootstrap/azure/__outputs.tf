@@ -70,7 +70,7 @@ output "bastion_admin_ip" {
 
 output "bastion_fqdn" {
   value = (var.attach_dns_zone
-    ? azurerm_dns_a_record.vpc-public.0.name
+    ? substr(azurerm_dns_a_record.vpc-public.0.fqdn, 0, length(azurerm_dns_a_record.vpc-public.0.fqdn)-1)
     : ""
   )
 }
@@ -78,7 +78,7 @@ output "bastion_fqdn" {
 output "bastion_admin_fqdn" {
   value = (
     length(var.bastion_host_name) > 0 && !var.bastion_allow_public_ssh 
-      ? azurerm_dns_a_record.vpc-admin.0.name
+      ? substr(azurerm_dns_a_record.vpc-admin.0.fqdn, 0, length(azurerm_dns_a_record.vpc-admin.0.fqdn)-1)
       : "N/A"
   )
 }
