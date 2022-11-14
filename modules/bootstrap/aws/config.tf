@@ -151,6 +151,10 @@ locals {
   #
   # https://github.com/appbricks/cloud-inceptor/issues/1
   #
+  # This featue may be discontinued as space nodes should 
+  # be linked via the tailscale net.
+  #
+  #
   wireguard_subnet_ip = (
     var.vpn_type == "wireguard" 
       ? "${cidrhost(var.vpn_network, 1)}/${split("/", var.vpn_network)[1]}"

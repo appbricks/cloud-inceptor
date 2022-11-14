@@ -136,9 +136,26 @@ locals {
         )
       : var.vpn_network
   )
-
-  wireguard_subnet_ip = "${cidrhost(var.vpn_network, 1)}/${split("/", var.vpn_network)[1]}"
-
+  # Wireguard will be configured for use as a mesh between
+  # peered VPC if VPN type to connected client is different.
+  # For such cases wireguard must have network range that
+  # is separate from the vpn range.
+  #
+  # TBD - this does not allow a wireguard client VPN to be 
+  # setup alongside the mesh. To allow a mesh configuration
+  # the mesh setup needs to be separate from the vpn config
+  #
+  # https://github.com/appbricks/cloud-inceptor/issues/1
+  #
+  wireguard_subnet_ip = (
+    var.vpn_type == "wireguard" 
+      ? "${cidrhost(var.vpn_network, 1)}/${split("/", var.vpn_network)[1]}"
+      : "${cidrhost(var.wireguard_mesh_network, var.wireguard_mesh_node)}/${split("/", var.wireguard_mesh_network)[1]}"
+  )
+  # If the bastion has been allocated an elastic IP then 
+  # return that. Otherwise pass an indicator in the field
+  # so the bastion startup script can attempt to introspect
+  # its externally facing Ip.
   bastion_public_ip = (
     var.configure_admin_network
       ? azurerm_public_ip.bastion-public.ip_address

@@ -236,6 +236,14 @@ variable "wireguard_service_port" {
   default = ""
 }
 
+variable "wireguard_mesh_network" {
+  default = "192.168.112.0/24"
+}
+
+variable "wireguard_mesh_node" {
+  default = 1
+}
+
 #
 # UDP port of mycs-node DERP STUN service
 #
