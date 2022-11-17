@@ -27,7 +27,7 @@ module "config" {
   root_ca_key  = var.root_ca_key
   root_ca_cert = var.root_ca_cert
 
-  cert_domain_names = [var.vpc_dns_zone]
+  cert_domain_names = local.cert_domain_names
   
   vpc_name                 = var.vpc_name
   vpc_cidr                 = var.vpc_cidr
@@ -35,7 +35,7 @@ module "config" {
   vpc_internal_dns_zones   = var.vpc_internal_dns_zones
   vpc_internal_dns_records = concat(var.vpc_internal_dns_records, tolist([local.jumpbox_dns_record]))
 
-  bastion_fqdn      = var.vpc_dns_zone
+  bastion_fqdn      = local.bastion_fqdn
   bastion_use_fqdn  = var.bastion_use_fqdn
   bastion_public_ip = local.bastion_public_ip
 
@@ -160,5 +160,18 @@ locals {
     var.configure_admin_network
       ? azurerm_public_ip.bastion-public.ip_address
       : "azure"
+  )
+  bastion_fqdn = (
+    var.attach_dns_zone
+      ? var.vpc_dns_zone
+      : "azure"
+  )
+  cert_domain_names = (
+    var.attach_dns_zone
+      ? [local.bastion_fqdn]
+      : [
+        var.vpc_dns_zone,
+        "*.mycs.appbricks.org",
+      ]
   )
 }

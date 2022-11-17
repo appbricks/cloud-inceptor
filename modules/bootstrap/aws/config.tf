@@ -178,9 +178,9 @@ locals {
     var.attach_dns_zone
       ? [local.bastion_fqdn]
       : [
-        "*.compute-1.amazonaws.com",
-        "*.${var.region}.compute.amazonaws.com",
-        var.vpc_dns_zone
+        var.vpc_dns_zone,
+        # see https://docs.aws.amazon.com/vpc/latest/userguide/vpc-dns.html#vpc-dns-hostnames
+        var.region == "us-east-1" ? "*.compute-1.amazonaws.com" : "*.${var.region}.compute.amazonaws.com",
       ]
   )
 }
