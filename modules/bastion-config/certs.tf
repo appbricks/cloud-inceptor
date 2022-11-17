@@ -56,7 +56,7 @@ resource "tls_cert_request" "bastion" {
   )
 
   subject {
-    common_name         = var.bastion_fqdn
+    common_name         = var.vpc_dns_zone
     organization        = var.company_name
     organizational_unit = var.organization_name
     locality            = var.locality
