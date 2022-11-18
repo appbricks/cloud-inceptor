@@ -71,7 +71,9 @@ output "bastion_admin_ip" {
 output "bastion_fqdn" {
   value = (var.attach_dns_zone
     ? substr(azurerm_dns_a_record.vpc-public.0.fqdn, 0, length(azurerm_dns_a_record.vpc-public.0.fqdn)-1)
-    : ""
+    : var.bastion_use_fqdn
+      ? "${replace(azurerm_linux_virtual_machine.bastion.public_ip_address, ".", "-")}.mycs.appbricks.org"
+      : ""
   )
 }
 

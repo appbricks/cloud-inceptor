@@ -75,7 +75,9 @@ output "bastion_admin_ip" {
 output "bastion_fqdn" {
   value = (var.attach_dns_zone
     ? google_dns_record_set.vpc-public.0.name
-    : ""
+    : var.bastion_use_fqdn
+      ? "${replace(google_compute_instance.bastion.network_interface.0.access_config.0.nat_ip, ".", "-")}.mycs.appbricks.org"
+      : ""
   )
 }
 
