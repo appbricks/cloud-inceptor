@@ -131,6 +131,8 @@ locals {
   )
 }
 
+resource "random_uuid" "bastion-public-dns-label" {}
+
 resource "azurerm_public_ip" "bastion-public" {
   name = "${var.vpc_name}-bastion-public"
 
@@ -138,6 +140,8 @@ resource "azurerm_public_ip" "bastion-public" {
   resource_group_name = azurerm_resource_group.bootstrap.name
 
   allocation_method = var.configure_admin_network ? "Static" : "Dynamic"
+
+  domain_name_label = "s${replace(random_uuid.bastion-public-dns-label.result, "-", "")}"
 }
 
 resource "azurerm_network_interface" "bastion-dmz" {

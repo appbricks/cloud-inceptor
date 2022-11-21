@@ -164,14 +164,7 @@ locals {
   bastion_fqdn = (
     var.attach_dns_zone
       ? var.vpc_dns_zone
-      : "azure"
+      : azurerm_public_ip.bastion-public.fqdn
   )
-  cert_domain_names = (
-    var.attach_dns_zone
-      ? [local.bastion_fqdn]
-      : [
-        var.vpc_dns_zone,
-        "*.mycs.appbricks.org",
-      ]
-  )
+  cert_domain_names = [local.bastion_fqdn]
 }
