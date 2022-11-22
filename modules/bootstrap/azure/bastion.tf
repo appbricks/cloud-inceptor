@@ -244,6 +244,26 @@ resource "azurerm_network_security_rule" "bastion-ssh" {
   destination_address_prefix = local.bastion_dmz_itf_ip
 }
 
+resource "azurerm_network_security_rule" "bastion-wireguard" {
+  count = var.vpn_type == "wireguard" && length(var.wireguard_service_port) > 0 ? [1] : []
+
+  name = "${var.vpc_name}-bastion-wireguard"
+
+  network_security_group_name = azurerm_network_security_group.bastion-dmz.name
+  resource_group_name         = azurerm_resource_group.bootstrap.name
+
+  access    = "Allow"
+  protocol  = "udp"
+  priority  = "502"
+  direction = "Inbound"
+  
+  source_port_range     = "*"
+  source_address_prefix = "0.0.0.0/0"
+
+  destination_port_range     = var.wireguard_service_port
+  destination_address_prefix = local.bastion_dmz_itf_ip
+}
+
 resource "azurerm_network_security_rule" "bastion-openvpn" {
   count = var.vpn_type == "openvpn" && length(var.ovpn_service_port) > 0 ? 1 : 0 
 
@@ -254,7 +274,7 @@ resource "azurerm_network_security_rule" "bastion-openvpn" {
 
   access    = "Allow"
   protocol  = var.ovpn_protocol
-  priority  = "502"
+  priority  = "503"
   direction = "Inbound"
   
   source_port_range     = "*"
@@ -274,7 +294,7 @@ resource "azurerm_network_security_rule" "bastion-ipsecvpn" {
 
   access    = "Allow"
   protocol  = "Udp"
-  priority  = "503"
+  priority  = "504"
   direction = "Inbound"
   
   source_port_range     = "*"
@@ -294,7 +314,7 @@ resource "azurerm_network_security_rule" "bastion-vpntunnel" {
 
   access    = "Allow"
   protocol  = "*"
-  priority  = "504"
+  priority  = "505"
   direction = "Inbound"
   
   source_port_range     = "*"
@@ -314,7 +334,7 @@ resource "azurerm_network_security_rule" "bastion-smtp-ext" {
 
   access    = "Allow"
   protocol  = "Tcp"
-  priority  = "505"
+  priority  = "506"
   direction = "Inbound"
 
   source_port_range     = "*"
