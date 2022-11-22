@@ -245,7 +245,7 @@ resource "azurerm_network_security_rule" "bastion-ssh" {
 }
 
 resource "azurerm_network_security_rule" "bastion-wireguard" {
-  count = var.vpn_type == "wireguard" && length(var.wireguard_service_port) > 0 ? [1] : []
+  count = var.vpn_type == "wireguard" && length(var.wireguard_service_port) > 0 ? 1 : 0
 
   name = "${var.vpc_name}-bastion-wireguard"
 
@@ -253,7 +253,7 @@ resource "azurerm_network_security_rule" "bastion-wireguard" {
   resource_group_name         = azurerm_resource_group.bootstrap.name
 
   access    = "Allow"
-  protocol  = "udp"
+  protocol  = "Udp"
   priority  = "502"
   direction = "Inbound"
   
