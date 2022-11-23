@@ -324,6 +324,26 @@ resource "azurerm_network_security_rule" "bastion-vpntunnel" {
   destination_address_prefix = local.bastion_dmz_itf_ip
 }
 
+resource "azurerm_network_security_rule" "bastion-derp-stun" {
+  count = length(var.derp_stun_port) > 0 == 0 ? 0 : 1
+
+  name = "${var.vpc_name}-bastion-derp-stun"
+
+  network_security_group_name = azurerm_network_security_group.bastion-dmz.name
+  resource_group_name         = azurerm_resource_group.bootstrap.name
+
+  access    = "Allow"
+  protocol  = "Udp"
+  priority  = "506"
+  direction = "Inbound"
+
+  source_port_range     = "*"
+  source_address_prefix = "0.0.0.0/0"
+
+  destination_port_range     = var.derp_stun_port
+  destination_address_prefix = local.bastion_dmz_itf_ip
+}
+
 resource "azurerm_network_security_rule" "bastion-smtp-ext" {
   count = length(var.smtp_relay_host) == 0 ? 0 : 1 
 
@@ -334,7 +354,7 @@ resource "azurerm_network_security_rule" "bastion-smtp-ext" {
 
   access    = "Allow"
   protocol  = "Tcp"
-  priority  = "506"
+  priority  = "507"
   direction = "Inbound"
 
   source_port_range     = "*"
