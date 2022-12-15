@@ -38,10 +38,7 @@ output "admin_network" {
 }
 
 output "admin_subnetworks" {
-  value = [(var.configure_admin_network
-    ? google_compute_subnetwork.admin.0.self_link
-    : google_compute_subnetwork.dmz.self_link
-  )]
+  value = [local.admin_network_self_link]
 }
 
 output "admin_security_group" {

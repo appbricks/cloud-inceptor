@@ -30,7 +30,10 @@ output "dmz_subnetworks" {
 }
 
 output "admin_subnetworks" {
-  value = aws_subnet.admin.*.id
+  value = (var.configure_admin_network 
+    ? aws_subnet.admin.*.id
+    : aws_subnet.dmz.*.id
+  )
 }
 
 output "admin_security_group" {

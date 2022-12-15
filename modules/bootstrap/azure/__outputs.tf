@@ -34,10 +34,7 @@ output "dmz_subnetworks" {
 }
 
 output "admin_subnetworks" {
-  value = [(var.configure_admin_network
-    ? local.admin_network_id
-    : azurerm_subnet.dmz.id
-  )]
+  value = [local.admin_network_id]
 }
 
 output "admin_security_group" {
