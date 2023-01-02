@@ -207,7 +207,7 @@ data "template_file" "bootstrap-pipeline-vars" {
 resource "random_string" "bastion-admin-password" {
   length  = 32
   special = true
-  override_special = "~!@#%^*_+={}[]:,./"
+  override_special = "~!@#%^*_+=[]:,./"
 }
 
 resource "random_string" "powerdns-api-key" {
