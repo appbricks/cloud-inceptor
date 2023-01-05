@@ -71,6 +71,18 @@ mycs:
   event_buffer_size: 1000
   event_publish_timeout: 5000
 
+data:
+  mount_directory: ${var.mycs_app_data_dir}
+
+network:
+
+application:
+  exec_cmd:
+  cmd_arguments:
+  env_arguments:
+  work_directory:
+  stop_timeout:
+
 CONFIG
 }
 
@@ -78,6 +90,8 @@ data "template_file" "mycs-app-install-script" {
   template = file("${path.module}/mycs-app-install.sh")
 
   vars = {
+    mycs_app_version = var.mycs_app_version
+    mycs_app_data_dir = var.mycs_app_data_dir
     app_install_script = var.app_install_script_name
   }
 }

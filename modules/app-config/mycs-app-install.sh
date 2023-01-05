@@ -55,11 +55,22 @@ if [[ ! -e /etc/mycs/mycs-key-NA.pem ]]; then
     # download and install app
     mkdir -p $app_dir
     cd $app_dir
-    curl -L https://mycsdev-deploy-artifacts.s3.amazonaws.com/releases/mycs-node_linux_$binary_arch.zip -o mycs-node.zip
+    if [[ ${mycs_app_version} == dev ]]; then
+      curl -L https://mycsdev-deploy-artifacts.s3.amazonaws.com/releases/mycs-node_linux_$binary_arch.zip -o mycs-node.zip
+    else
+      curl -L https://mycsprod-deploy-artifacts.s3.amazonaws.com/releases/mycs-node-${mycs_app_version}_linux_$binary_arch.zip -o mycs-node.zip
+    fi
     unzip mycs-node.zip
-    rm mycs-node mycs-daemon
+    rm mycs-node mycs-daemon headscale
     cd -
+
     ln -s $app_dir/mycs-app $bin_dir/mycs-app
+    ln -s $app_dir/tailscale $bin_dir/tailscale
+    
+    mkdir -p ${mycs_app_data_dir}
+    chown -R mycs:root ${mycs_app_data_dir}
+    echo "${mycs_app_version}" > /etc/mycs/version
+    chown mycs:root /etc/mycs/version
   fi
 
   if [[ ! -e /etc/systemd/system/mycs-app.service ]]; then
@@ -77,7 +88,7 @@ StartLimitIntervalSec=0
 Type=simple
 Restart=always
 RestartSec=1
-User=mycs
+User=root
 StandardOutput=syslog
 StandardError=syslog
 # Environment=CBS_LOGLEVEL=trace
@@ -92,8 +103,6 @@ WantedBy=multi-user.target
   fi
 
   systemctl daemon-reload
-  systemctl enable mycs-app
-  systemctl start mycs-app
 fi
 
 cd $app_dir
@@ -102,5 +111,10 @@ cd $app_dir
 [[ -e ${app_install_script} ]] \
   && source ${app_install_script}
 cd -
+
+if [[ -e /etc/systemd/system/mycs-app.service ]]; then
+  systemctl enable mycs-app
+  systemctl start mycs-app
+fi
 
 touch $app_dir/.installed

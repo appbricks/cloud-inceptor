@@ -22,6 +22,18 @@ variable "mycs_space_ca_root" {
 }
 
 #
+# MyCS App Properties
+#
+
+variable "mycs_app_version" {
+  default = "dev"
+}
+
+variable "mycs_app_data_dir" {
+  default = "/var/lib/mycs"
+}
+
+#
 # App install
 #
 
