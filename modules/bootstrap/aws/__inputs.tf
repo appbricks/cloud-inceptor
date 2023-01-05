@@ -364,7 +364,7 @@ variable "deploy_jumpbox" {
 }
 
 variable "jumpbox_ami_name" {
-  default = "ubuntu/images/hvm-ssd/ubuntu-focal-20.04-arm64-server-*"
+  default = "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-arm64-server-*"
 }
 
 variable "jumpbox_ami_arch" {
