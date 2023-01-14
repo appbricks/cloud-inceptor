@@ -66,7 +66,7 @@ mycs:
   key_timeout: 300000
   auth_retry_timer: 500
   auth_timeout: 10000
-  idle_shutdown_time: ${var.vpn_idle_shutdown_time}
+  idle_shutdown_time: ${var.app_idle_shutdown_time}
   num_event_workers: 20
   event_buffer_size: 1000
   event_publish_timeout: 5000
@@ -77,11 +77,11 @@ data:
 network:
 
 application:
-  exec_cmd:
-  cmd_arguments:
-  env_arguments:
-  work_directory:
-  stop_timeout:
+  exec_cmd: '${var.app_exec_cmd}'
+  cmd_arguments: '${var.app_cmd_arguments}'
+  env_arguments: '${var.app_env_arguments}'
+  work_directory: '${var.app_stop_timeout}'
+  stop_timeout: '${var.app_work_directory}'
 
 CONFIG
 }

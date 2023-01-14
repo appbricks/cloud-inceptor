@@ -63,8 +63,32 @@ variable "app_install_script_name" {
 #
 # App node configuration
 #
-variable "vpn_idle_shutdown_time" {
+variable "app_idle_shutdown_time" {
   default = 10
+}
+
+variable "app_stop_timeout" {
+  default = 0
+}
+
+#
+# App execution
+#
+
+variable "app_work_directory" {
+  default = ""
+}
+
+variable "app_exec_cmd" {
+  default = ""
+}
+
+variable "app_cmd_arguments" {
+  default = ""
+}
+
+variable "app_env_arguments" {
+  default = ""
 }
 
 #
