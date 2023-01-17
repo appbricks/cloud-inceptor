@@ -84,11 +84,13 @@ variable "app_exec_cmd" {
 }
 
 variable "app_cmd_arguments" {
-  default = ""
+  type = list(string)
+  default = []
 }
 
 variable "app_env_arguments" {
-  default = ""
+  type = list(string)
+  default = []
 }
 
 #

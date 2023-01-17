@@ -78,10 +78,10 @@ network:
 
 application:
   exec_cmd: '${var.app_exec_cmd}'
-  cmd_arguments: '${var.app_cmd_arguments}'
-  env_arguments: '${var.app_env_arguments}'
-  work_directory: '${var.app_stop_timeout}'
-  stop_timeout: '${var.app_work_directory}'
+  cmd_arguments: ${jsonencode(var.app_cmd_arguments)}
+  env_arguments: ${jsonencode(var.app_env_arguments)}
+  work_directory: '${var.app_work_directory}'
+  stop_timeout: ${var.app_stop_timeout}
 
 CONFIG
 }
