@@ -63,7 +63,14 @@ resource "google_compute_instance" "jumpbox" {
 
 write_files:
 - encoding: b64
-  content: ${base64encode(data.template_file.mount-jumpbox-data-volume.rendered)}
+  content: ${base64encode(templatefile(
+    "${path.module}/scripts/mount-volume.sh",
+    {
+      attached_device_name = "sdb"
+      mount_directory      = "/data"
+      world_readable       = "true"
+    }
+  ))}
   path: /root/mount-volume.sh
   permissions: '0744'
 
@@ -125,16 +132,6 @@ resource "google_compute_address" "jumpbox" {
 #
 # Jumpbox data volume
 #
-
-data "template_file" "mount-jumpbox-data-volume" {
-  template = file("${path.module}/scripts/mount-volume.sh")
-
-  vars = {
-    attached_device_name = "sdb"
-    mount_directory      = "/data"
-    world_readable       = "true"
-  }
-}
 
 resource "google_compute_disk" "jumpbox-data" {
   count = length(local.jumpbox_dns) > 0 ? 1 : 0

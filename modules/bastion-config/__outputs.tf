@@ -16,7 +16,7 @@ output "root_ca_cert" {
 # Cloud-Init configuration file setting 
 # up the Bastion instance on first boot
 output "bastion_cloud_init_config" {
-  value = data.template_cloudinit_config.bastion-cloudinit.rendered
+  value = data.cloudinit_config.bastion-cloudinit.rendered
 }
 
 # The password generated for the VPN admin user

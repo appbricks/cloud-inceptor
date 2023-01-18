@@ -8,19 +8,26 @@ resource "tls_private_key" "bastion-ssh-key" {
 }
 
 #
+# Generated Passwords
+#
+
+resource "random_string" "bastion-admin-password" {
+  length  = 32
+  special = true
+  override_special = "~!@#%^*_+=[]:,./"
+}
+
+resource "random_string" "powerdns-api-key" {
+  length           = 32
+  special          = true
+  override_special = "@#%-_=<>:"
+}
+
+#
 # Bastion configuration templates
 #
 
-locals {
-  admin_email = "${var.bastion_admin_user}@${var.vpc_dns_zone}"
-
-  # Create shorter email key if it is too long when 
-  # vpc dns is included, as vpn cert creation limits 
-  # length of string accepted.
-  vpn_email_key = length(local.admin_email) > 40 ? join("@", tolist([var.bastion_admin_user, var.vpc_name])) : local.admin_email
-}
-
-data "template_cloudinit_config" "bastion-cloudinit" {
+data "cloudinit_config" "bastion-cloudinit" {
   gzip          = var.compress_cloudinit
   base64_encode = var.compress_cloudinit
 
@@ -37,7 +44,7 @@ users:
 write_files:
 # Service configuration
 - encoding: gzip+base64
-  content: ${base64gzip(data.template_file.bastion-config.rendered)}
+  content: ${base64gzip(local.bastion_config)}
   path: /usr/local/etc/bastion-config.yml
   permissions: '0744'
 
@@ -66,7 +73,7 @@ write_files:
 
 # Web Server home page
 - encoding: gzip+base64
-  content: ${base64gzip(data.template_file.www-static-index.rendered)}
+  content: ${base64gzip(local.index_html)}
   path: /var/www/html/index.html
   permissions: '0644'
 
@@ -76,7 +83,7 @@ write_files:
   path: /root/bootstrap.yml
   permissions: '0644'
 - encoding: gzip+base64
-  content: ${base64gzip(data.template_file.bootstrap-pipeline-vars.rendered)}
+  content: ${base64gzip(var.bootstrap_pipeline_vars)}
   path: /root/bootstrap-vars.yml
   permissions: '0644'
 
@@ -90,8 +97,16 @@ USER_DATA
   }
 }
 
-data "template_file" "bastion-config" {
-  template = <<CONFIG
+locals {
+  admin_email = "${var.bastion_admin_user}@${var.vpc_dns_zone}"
+
+  # Create shorter email key if it is too long when 
+  # vpc dns is included, as vpn cert creation limits 
+  # length of string accepted.
+  vpn_email_key = length(local.admin_email) > 40 ? join("@", tolist([var.bastion_admin_user, var.vpc_name])) : local.admin_email
+
+  # MyCS config.yml template
+  bastion_config = <<CONFIG
 ---
 mycs:
   node_id_key: '${var.mycs_node_id_key}'
@@ -189,29 +204,13 @@ concourse:
   pipeline_automation_path: '${var.pipeline_automation_path}'
   notification_email: '${var.notification_email}'
 CONFIG
-}
 
-data "template_file" "www-static-index" {
-  template = file("${path.module}/www-static-home/index.html")
-
-  vars = {
-    environment = var.vpc_name
-    bastion_fqdn = var.bastion_fqdn
-  }
-}
-
-data "template_file" "bootstrap-pipeline-vars" {
-  template = var.bootstrap_pipeline_vars
-}
-
-resource "random_string" "bastion-admin-password" {
-  length  = 32
-  special = true
-  override_special = "~!@#%^*_+=[]:,./"
-}
-
-resource "random_string" "powerdns-api-key" {
-  length           = 32
-  special          = true
-  override_special = "@#%-_=<>:"
+  # bastion static home page template
+  index_html = templatefile(
+    "${path.module}/www-static-home/index.html",
+    {
+      environment = var.vpc_name
+      bastion_fqdn = var.bastion_fqdn
+    }
+  )
 }

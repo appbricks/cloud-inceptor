@@ -50,7 +50,14 @@ resource "aws_instance" "jumpbox" {
 
 write_files:
 - encoding: b64
-  content: ${base64encode(data.template_file.mount-volume.rendered)}
+  content: ${base64encode(templatefile(
+    "${path.module}/scripts/mount-volume.sh",
+    {
+      attached_device_name = var.jumpbox_data_disk_device_name
+      mount_directory      = "/data"
+      world_readable       = "true"
+    }
+  ))}
   path: /root/mount-volume.sh
   permissions: '0744'
 
@@ -93,16 +100,6 @@ runcmd:
 - /root/mount-volume.sh
 
 USERDATA
-}
-
-data "template_file" "mount-volume" {
-  template = file("${path.module}/scripts/mount-volume.sh")
-
-  vars = {
-    attached_device_name = var.jumpbox_data_disk_device_name
-    mount_directory      = "/data"
-    world_readable       = "true"
-  }
 }
 
 #

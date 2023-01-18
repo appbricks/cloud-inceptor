@@ -50,10 +50,10 @@ resource "azurerm_linux_virtual_machine" "jumpbox" {
     public_key = tls_private_key.default-ssh-key.public_key_openssh
   }
   
-  custom_data = data.template_cloudinit_config.jumpbox-cloudinit.rendered
+  custom_data = data.cloudinit_config.jumpbox-cloudinit.rendered
 }
 
-data "template_cloudinit_config" "jumpbox-cloudinit" {
+data "cloudinit_config" "jumpbox-cloudinit" {
   gzip          = true
   base64_encode = true
 
@@ -63,7 +63,14 @@ data "template_cloudinit_config" "jumpbox-cloudinit" {
 
 write_files:
 - encoding: b64
-  content: ${base64encode(data.template_file.mount-jumpbox-data-volume.rendered)}
+  content: ${base64encode(templatefile(
+    "${path.module}/scripts/mount-volume.sh",
+    {
+      attached_device_name = "sdc"
+      mount_directory      = "/data"
+      world_readable       = "true"
+    }
+  ))}
   path: /root/mount-volume.sh
   permissions: '0744'
 
@@ -135,16 +142,6 @@ resource "azurerm_network_interface_security_group_association" "jumpbox-admin" 
 #
 # Jumpbox data volume
 #
-
-data "template_file" "mount-jumpbox-data-volume" {
-  template = file("${path.module}/scripts/mount-volume.sh")
-
-  vars = {
-    attached_device_name = "sdc"
-    mount_directory      = "/data"
-    world_readable       = "true"
-  }
-}
 
 resource "azurerm_managed_disk" "jumpbox-data" {
   count = var.deploy_jumpbox ? 1 : 0

@@ -2,7 +2,19 @@
 # App instance configuration template
 #
 
-data "template_cloudinit_config" "app-cloudinit" {
+locals {
+  # templates
+  mycs_app_install_script = templatefile(
+    "${path.module}/mycs-app-install.sh",
+    {
+      mycs_app_version = var.mycs_app_version
+      mycs_app_data_dir = var.mycs_app_data_dir
+      app_install_script = var.app_install_script_name
+    }
+  )
+}
+
+data "cloudinit_config" "app-cloudinit" {
   gzip          = var.compress_cloudinit
   base64_encode = var.compress_cloudinit
 
@@ -13,7 +25,7 @@ data "template_cloudinit_config" "app-cloudinit" {
 write_files:
 # Service configuration
 - encoding: gzip+base64
-  content: ${base64gzip(data.template_file.mycs-app-config.rendered)}
+  content: ${base64gzip(file(local_file.mycs-app-config.filename))}
   path: /etc/mycs/config.yml
   permissions: '0600'
 
@@ -33,7 +45,7 @@ write_files:
   permissions: '0600'
 
 - encoding: gzip+base64
-  content: ${base64gzip(data.template_file.mycs-app-install-script.rendered)}
+  content: ${base64gzip(local.mycs_app_install_script)}
   path: /usr/local/lib/mycs/mycs-app-install.sh
   permissions: '0744'
 
@@ -58,8 +70,8 @@ USER_DATA
   }
 }
 
-data "template_file" "mycs-app-config" {
-  template = <<CONFIG
+resource "local_file" "mycs-app-config" {
+  content = <<CONFIG
 ---
 mycs:
   node_id_key: '${var.mycs_app_id_key}'
@@ -84,14 +96,6 @@ application:
   stop_timeout: ${var.app_stop_timeout}
 
 CONFIG
-}
 
-data "template_file" "mycs-app-install-script" {
-  template = file("${path.module}/mycs-app-install.sh")
-
-  vars = {
-    mycs_app_version = var.mycs_app_version
-    mycs_app_data_dir = var.mycs_app_data_dir
-    app_install_script = var.app_install_script_name
-  }
+  filename = "${path.cwd}/.terraform/tmp/mycs-app-config.yml"
 }

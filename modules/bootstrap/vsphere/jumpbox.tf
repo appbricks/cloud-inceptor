@@ -67,7 +67,7 @@ resource "vsphere_virtual_machine" "jumpbox" {
   }
 
   extra_config = {
-    guestinfo.userdata          = "${data.template_cloudinit_config.jumpbox-cloudinit.rendered}"
+    guestinfo.userdata          = "${data.cloudinit_config.jumpbox-cloudinit.rendered}"
     guestinfo.userdata.encoding = "gzip+base64"
   }
 
@@ -79,7 +79,7 @@ resource "vsphere_virtual_machine" "jumpbox" {
 # Jumpbox Cloud-Init configuration
 #
 
-data "template_cloudinit_config" "jumpbox-cloudinit" {
+data "cloudinit_config" "jumpbox-cloudinit" {
   gzip          = true
   base64_encode = true
 
@@ -102,7 +102,20 @@ system_info:
 
 network:
   config: disabled
-  
+
+write_files:
+- encoding: b64
+  content: ${base64encode(templatefile(
+    "${path.module}/scripts/mount-volume.sh",
+    {
+      attached_device_name = "/dev/sdb"
+      mount_directory      = "/data"
+      world_readable       = "true"
+    }
+  ))}
+  path: /root/mount-volume.sh
+  permissions: '0744'
+
 runcmd:
 - |
   set -x
@@ -126,6 +139,8 @@ runcmd:
   echo "search ${element(var.vpc_internal_dns_zones, 0)}" >> /etc/resolvconf/resolv.conf.d/head
   resolvconf -u
 
+  /root/mount-volume.sh
+
 USER_DATA
   }
 }
@@ -144,16 +159,6 @@ data "vsphere_virtual_machine" "jumpbox-template" {
 #
 # Jumpbox data volume
 #
-
-data "template_file" "mount-jumpbox-data-volume" {
-  template = "${file("${path.module}/scripts/mount-volume.sh")}"
-
-  vars {
-    attached_device_name = "/dev/sdb"
-    mount_directory      = "/data"
-    world_readable       = "true"
-  }
-}
 
 resource "vsphere_virtual_disk" "jumpbox-data-disk" {
   count = "${length(local.jumpbox_dns) > 0 ? 1 : 0}"
