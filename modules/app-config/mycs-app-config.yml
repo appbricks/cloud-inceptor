@@ -1,0 +1,22 @@
+---
+mycs:
+  node_id_key: '${mycs_app_id_key}'
+  key_timeout: 300000
+  auth_retry_timer: 500
+  auth_timeout: 10000
+  idle_shutdown_time: ${app_idle_shutdown_time}
+  num_event_workers: 20
+  event_buffer_size: 1000
+  event_publish_timeout: 5000
+
+data:
+  mount_directory: ${mycs_app_data_dir}
+
+network:
+
+application:
+  exec_cmd: '${app_exec_cmd}'
+  cmd_arguments: ${app_cmd_arguments}
+  env_arguments: ${app_env_arguments}
+  work_directory: '${app_work_directory}'
+  stop_timeout: ${app_stop_timeout}

@@ -3,7 +3,22 @@
 #
 
 locals {
-  # templates
+  # app-config.yml template
+  mycs_app_config = templatefile(
+    "${path.module}/mycs-app-config.yml",
+    {
+      mycs_app_id_key        = var.mycs_app_id_key
+      app_idle_shutdown_time = var.app_idle_shutdown_time
+      mycs_app_data_dir      = var.mycs_app_data_dir
+
+      app_exec_cmd       = var.app_exec_cmd
+      app_cmd_arguments  = jsonencode(var.app_cmd_arguments)
+      app_env_arguments  = jsonencode(var.app_env_arguments)
+      app_work_directory = var.app_work_directory
+      app_stop_timeout   = var.app_stop_timeout
+    }
+  )
+  # app install shell script template
   mycs_app_install_script = templatefile(
     "${path.module}/mycs-app-install.sh",
     {
@@ -25,7 +40,7 @@ data "cloudinit_config" "app-cloudinit" {
 write_files:
 # Service configuration
 - encoding: gzip+base64
-  content: ${base64gzip(file(local_file.mycs-app-config.filename))}
+  content: ${base64gzip(local.mycs_app_config)}
   path: /etc/mycs/config.yml
   permissions: '0600'
 
@@ -68,34 +83,4 @@ runcmd:
 USER_DATA
 
   }
-}
-
-resource "local_file" "mycs-app-config" {
-  content = <<CONFIG
----
-mycs:
-  node_id_key: '${var.mycs_app_id_key}'
-  key_timeout: 300000
-  auth_retry_timer: 500
-  auth_timeout: 10000
-  idle_shutdown_time: ${var.app_idle_shutdown_time}
-  num_event_workers: 20
-  event_buffer_size: 1000
-  event_publish_timeout: 5000
-
-data:
-  mount_directory: ${var.mycs_app_data_dir}
-
-network:
-
-application:
-  exec_cmd: '${var.app_exec_cmd}'
-  cmd_arguments: ${jsonencode(var.app_cmd_arguments)}
-  env_arguments: ${jsonencode(var.app_env_arguments)}
-  work_directory: '${var.app_work_directory}'
-  stop_timeout: ${var.app_stop_timeout}
-
-CONFIG
-
-  filename = "${path.cwd}/.terraform/tmp/mycs-app-config.yml"
 }
