@@ -130,11 +130,11 @@ variable "bastion_use_project_image" {
 }
 
 variable "bastion_image_name" {
-  default = "appbricks-bastion-inceptor"
+  default = "appbricks-bastion_dev"
 }
 
 variable "bastion_image_bucket_prefix" {
-  default = "abimages"
+  default = "mycsimages"
 }
 
 variable "bastion_root_disk_size" {

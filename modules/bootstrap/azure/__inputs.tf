@@ -134,15 +134,15 @@ variable "bastion_use_managed_image" {
 }
 
 variable "bastion_image_name" {
-  default = "appbricks-bastion-inceptor"
+  default = "appbricks-bastion_dev"
 }
 
 variable "bastion_image_storage_account_prefix" {
-  default = "abi"
+  default = "mycs"
 }
 
 variable "bastion_image_container" {
-  default = "release"
+  default = "nodeimage"
 }
 
 variable "bastion_root_disk_size" {
