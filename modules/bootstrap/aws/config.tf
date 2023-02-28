@@ -176,9 +176,13 @@ locals {
   )
   cert_domain_names = (
     var.attach_dns_zone
-      ? [local.bastion_fqdn]
-      : [
-        var.vpc_dns_zone,
+      ? [
+        "*.mycloudspace.io",    // <spaceid>.mycloudspace.io
+        local.bastion_fqdn
+      ] : [
+        "*.mycloudspace.io",    // <spaceid>.mycloudspace.io
+        "*.mycs.appbricks.org", // lookup ip by IP DNS - 1-1-1-1.mycs.appbricks.org
+
         # see https://docs.aws.amazon.com/vpc/latest/userguide/vpc-dns.html#vpc-dns-hostnames
         var.region == "us-east-1" ? "*.compute-1.amazonaws.com" : "*.${var.region}.compute.amazonaws.com",
       ]

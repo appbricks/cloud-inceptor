@@ -166,5 +166,15 @@ locals {
       ? var.vpc_dns_zone
       : azurerm_public_ip.bastion-public.fqdn
   )
-  cert_domain_names = [local.bastion_fqdn]
+  cert_domain_names = (
+    var.attach_dns_zone
+      ? [
+        "*.mycloudspace.io",    // <spaceid>.mycloudspace.io
+        local.bastion_fqdn
+      ] : [
+        "*.mycloudspace.io",    // <spaceid>.mycloudspace.io
+        "*.mycs.appbricks.org", // lookup ip by IP DNS - 1-1-1-1.mycs.appbricks.org
+        local.bastion_fqdn,
+      ]
+  )  
 }

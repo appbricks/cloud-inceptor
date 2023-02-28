@@ -172,10 +172,12 @@ locals {
   )
   cert_domain_names = (
     var.attach_dns_zone
-      ? [local.bastion_fqdn]
-      : [
-        var.vpc_dns_zone,
-        "*.mycs.appbricks.org",
+      ? [
+        "*.mycloudspace.io",    // <spaceid>.mycloudspace.io
+        local.bastion_fqdn
+      ] : [
+        "*.mycloudspace.io",    // <spaceid>.mycloudspace.io
+        "*.mycs.appbricks.org", // lookup ip by IP DNS - 1-1-1-1.mycs.appbricks.org
       ]
   )
 }
