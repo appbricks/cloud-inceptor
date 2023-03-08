@@ -170,11 +170,12 @@ locals {
     var.attach_dns_zone
       ? [
         "*.mycloudspace.io",    // <spaceid>.mycloudspace.io
-        local.bastion_fqdn,
+        var.vpc_dns_zone
       ] : [
         "*.mycloudspace.io",    // <spaceid>.mycloudspace.io
         "*.mycs.appbricks.org", // lookup ip by IP DNS - 1-1-1-1.mycs.appbricks.org
-        local.bastion_fqdn,
+        azurerm_public_ip.bastion-public.fqdn,
+        var.vpc_dns_zone
       ]
   )  
 }

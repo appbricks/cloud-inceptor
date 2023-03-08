@@ -49,6 +49,7 @@ module "config" {
 
   bastion_dmz_itf_ip   = local.bastion_dmz_itf_ip
   bastion_admin_itf_ip = local.bastion_admin_itf_ip
+  bastion_admin_vip    = local.bastion_admin_vip
 
   bastion_nic_config = (
     var.configure_admin_network
@@ -178,13 +179,15 @@ locals {
     var.attach_dns_zone
       ? [
         "*.mycloudspace.io",    // <spaceid>.mycloudspace.io
-        local.bastion_fqdn,
+        var.vpc_dns_zone
       ] : [
         "*.mycloudspace.io",    // <spaceid>.mycloudspace.io
         "*.mycs.appbricks.org", // lookup ip by IP DNS - 1-1-1-1.mycs.appbricks.org
-
+        
         # see https://docs.aws.amazon.com/vpc/latest/userguide/vpc-dns.html#vpc-dns-hostnames
         var.region == "us-east-1" ? "*.compute-1.amazonaws.com" : "*.${var.region}.compute.amazonaws.com",
+
+        var.vpc_dns_zone
       ]
   )
 }
