@@ -49,7 +49,6 @@ module "config" {
 
   bastion_dmz_itf_ip   = local.bastion_dmz_itf_ip
   bastion_admin_itf_ip = local.bastion_admin_itf_ip
-  bastion_admin_vip    = local.bastion_admin_vip
 
   bastion_nic_config = (
     var.configure_admin_network
