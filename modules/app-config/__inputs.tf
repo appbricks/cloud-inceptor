@@ -94,6 +94,18 @@ variable "app_env_arguments" {
 }
 
 #
+# Other App data
+#
+
+variable "app_domain_name" {
+  type = string
+}
+
+variable "app_service_ports" {
+  type = string
+}
+
+#
 # Compress cloud-init data
 #
 variable "compress_cloudinit" {

@@ -16,6 +16,9 @@ locals {
       app_env_arguments  = jsonencode(var.app_env_arguments)
       app_work_directory = var.app_work_directory
       app_stop_timeout   = var.app_stop_timeout
+
+      app_domain_name   = var.app_domain_name
+      app_service_ports = var.app_service_ports
     }
   )
   # app install shell script template
