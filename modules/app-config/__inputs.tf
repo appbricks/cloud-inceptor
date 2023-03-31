@@ -102,7 +102,7 @@ variable "app_domain_name" {
 }
 
 variable "app_service_ports" {
-  type = string
+  default = ""
 }
 
 #
