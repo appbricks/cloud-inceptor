@@ -17,6 +17,7 @@ locals {
       app_work_directory = var.app_work_directory
       app_stop_timeout   = var.app_stop_timeout
 
+      app_description   = var.app_description
       app_domain_name   = var.app_domain_name
       app_service_ports = var.app_service_ports
     }

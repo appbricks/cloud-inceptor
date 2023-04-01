@@ -21,5 +21,6 @@ application:
   work_directory: '${app_work_directory}'
   stop_timeout: ${app_stop_timeout}
 
+  description: ${app_description}
   domain_name: ${app_domain_name}
   service_ports: ${app_service_ports}

@@ -97,6 +97,10 @@ variable "app_env_arguments" {
 # Other App data
 #
 
+variable "app_description" {
+  type = string
+}
+
 variable "app_domain_name" {
   type = string
 }
