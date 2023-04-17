@@ -6,7 +6,7 @@ variable "region" {
 }
 
 variable "time_zone" {
-  default = "America/New_York"
+  default = "Etc/UTC"
 }
 
 #
