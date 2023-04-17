@@ -2,7 +2,7 @@
 # Locale
 #
 variable "time_zone" {
-  type = string
+  default = "Etc/UTC"
 }
 
 #
