@@ -126,6 +126,7 @@ server:
   use_fqdn: ${var.bastion_use_fqdn}
   certify_bastion: ${var.certify_bastion ? "yes" : "no"}
   dmz_itf_ip: '${var.bastion_dmz_itf_ip}'
+  admin_itf_ip: '${var.bastion_admin_itf_ip}'
   lan_interfaces: '${join(",", var.bastion_nic_config)}'
   dns_resolvers: '${length(var.bastion_dns) == 0 ? var.bastion_admin_itf_ip : var.bastion_dns}'
   enable_dhcpd: ${var.enable_bastion_as_dhcpd}
@@ -164,7 +165,7 @@ smtp:
   relay_api_key: '${var.smtp_relay_api_key}'
   internal_smtp_host: '${var.bastion_admin_itf_ip}'
   internal_smtp_port: 2525
-  networks: '172.16.0.0/12 ${var.vpc_cidr} ${var.bastion_public_ip}'
+  networks: '${var.vpc_cidr} ${var.vpn_network} ${var.bastion_public_ip}'
 
 vpn:
   type: '${var.vpn_type}'
