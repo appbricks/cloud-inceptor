@@ -88,7 +88,8 @@ write_files:
   permissions: '0644'
 
 runcmd:
-- sudo -i -- <<INIT
+- |
+  sudo -i -- <<INIT
     [[ -e /usr/local/etc/.init_instance_complete ]] \
       || nohup /usr/local/lib/cloud-inceptor/init_instance 2>&1 | tee /var/log/init_instance.log &
   INIT

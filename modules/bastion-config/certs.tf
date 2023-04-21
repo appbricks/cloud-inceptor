@@ -46,10 +46,8 @@ resource "tls_cert_request" "bastion" {
   dns_names = var.cert_domain_names
 
   ip_addresses = concat(
-    [
-      var.bastion_dmz_itf_ip,
-      var.bastion_admin_itf_ip,
-    ],
+    length(var.bastion_dmz_itf_ip) > 0 ? [var.bastion_dmz_itf_ip]: [],
+    length(var.bastion_admin_itf_ip) > 0 ? [var.bastion_admin_itf_ip]: [],
     length(regexall("^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$", var.bastion_public_ip)) > 0
       ? [ var.bastion_public_ip ]
       : []
