@@ -19,6 +19,11 @@ output "bastion_cloud_init_config" {
   value = data.cloudinit_config.bastion-cloudinit.rendered
 }
 
+# Raw cloud-init config
+output "bastion_cloud_init_config_raw" {
+  value = element(data.cloudinit_config.bastion-cloudinit.part, 1).content
+}
+
 # The password generated for the VPN admin user
 output "bastion_admin_password" {
   value = random_string.bastion-admin-password.result
