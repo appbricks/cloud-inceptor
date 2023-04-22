@@ -154,8 +154,17 @@ variable "bastion_nic_config" {
 #
 # Bastion persistent volumes
 #
-
 variable "data_volume_name" {
+  default = ""
+}
+
+#
+# External shared folder. This is used to pass
+# in the auto mount name of an external folder 
+# such as a folder within the host where the 
+# bastion vm is launched.
+#
+variable "shared_external_folder" {
   default = ""
 }
 

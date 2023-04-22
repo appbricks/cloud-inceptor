@@ -141,6 +141,7 @@ data:
   attached_device_name: ${var.data_volume_name}
   mount_directory: /data
   world_readable: false
+  shared_external_folder: ${var.shared_external_folder}
 
 services:
   node_api_port: 9080
