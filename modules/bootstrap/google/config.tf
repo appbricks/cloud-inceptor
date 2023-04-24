@@ -17,6 +17,7 @@ module "config" {
 
   mycs_node_private_key = var.mycs_node_private_key
   mycs_node_id_key      = var.mycs_node_id_key
+  mycs_node_id          = var.mycs_node_id
 
   company_name      = var.company_name
   organization_name = var.organization_name

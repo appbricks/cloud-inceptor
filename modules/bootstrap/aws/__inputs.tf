@@ -20,6 +20,10 @@ variable "mycs_node_id_key" {
   default = ""
 }
 
+variable "mycs_node_id" {
+  default = ""
+}
+
 #
 # Certificate Subject data for certificate creation
 #
