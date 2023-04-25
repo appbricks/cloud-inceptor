@@ -133,7 +133,7 @@ resource "azurerm_network_interface" "jumpbox-admin" {
 }
 
 resource "azurerm_network_interface_security_group_association" "jumpbox-admin" {
-  count = var.configure_admin_network ? 1 : 0
+  count = var.deploy_jumpbox ? 1 : 0
 
   network_interface_id      = azurerm_network_interface.jumpbox-admin.0.id
   network_security_group_id = azurerm_network_security_group.admin.id
