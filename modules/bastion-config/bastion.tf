@@ -147,7 +147,7 @@ services:
   node_api_port: 9080
   ts_control:
     service_port: 9081
-    ${length(var.derp_stun_port) == 0 ? "stun_addr: ''" : "stun_addr: ${var.bastion_dmz_itf_ip}:${var.derp_stun_port}"}
+    ${length(var.derp_stun_port) == 0 ? "stun_addr: ''" : "stun_addr: ':${var.derp_stun_port}'"}
 
 webserver:
   https_port: ${var.bastion_admin_api_port}
