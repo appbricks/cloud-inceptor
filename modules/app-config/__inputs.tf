@@ -29,8 +29,26 @@ variable "mycs_app_version" {
   default = "dev"
 }
 
+variable "mycs_root_data_dir" {
+  default = "/var/lib/mycs"
+}
+
 variable "mycs_app_data_dir" {
   default = "/var/lib/mycs"
+}
+
+#
+# App network configuration
+#
+
+variable "advertised_external_networks" {
+  type = list(string)
+  default = []
+}
+
+variable "advertised_external_domain_names" {
+  type = list(string)
+  default = []
 }
 
 #

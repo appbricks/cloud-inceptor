@@ -10,9 +10,13 @@ mycs:
   event_publish_timeout: 5000
 
 data:
-  mount_directory: ${mycs_app_data_dir}
+  mount_directory: ${mycs_root_data_dir}
+  mount_app_directory: ${mycs_app_data_dir}
 
 network:
+  space_network:
+    external_routes: ${advertised_external_networks}
+    wan_routes_by_name: ${advertised_external_domain_names}
 
 application:
   exec_cmd: '${app_exec_cmd}'

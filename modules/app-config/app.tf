@@ -9,7 +9,11 @@ locals {
     {
       mycs_app_id_key        = var.mycs_app_id_key
       app_idle_shutdown_time = var.app_idle_shutdown_time
+      mycs_root_data_dir     = var.mycs_root_data_dir
       mycs_app_data_dir      = var.mycs_app_data_dir
+
+      advertised_external_networks = jsonencode(var.advertised_external_networks)
+      advertised_external_domain_names = jsonencode(var.advertised_external_domain_names)
 
       app_exec_cmd       = var.app_exec_cmd
       app_cmd_arguments  = jsonencode(var.app_cmd_arguments)
