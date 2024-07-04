@@ -77,7 +77,6 @@ resource "aws_route_table" "dmz" {
 
 resource "aws_eip" "nat" {
   count = var.bastion_as_nat ? 0 : local.num_azs_to_configure
-  vpc   = true
 
   tags = {
     Name = "${var.vpc_name}: elastic ip for nat ${count.index}"
