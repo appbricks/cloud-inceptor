@@ -140,8 +140,6 @@ resource "aws_eip_association" "bastion" {
 resource "aws_eip" "bastion-public" {
   count = var.configure_admin_network ? 1 : 0
 
-  vpc = true
-
   tags = {
     Name = "${var.vpc_name}: bastion-public"
   }
