@@ -13,17 +13,7 @@ resource "aws_instance" "bastion" {
     volume_type = var.bastion_root_disk_type
   }
 
-  network_interface {
-    network_interface_id = aws_network_interface.bastion-dmz.id
-    device_index         = 0
-  }
-  dynamic "network_interface" {
-    for_each = var.configure_admin_network ? [1] : []
-    content {
-      network_interface_id = aws_network_interface.bastion-admin.0.id
-      device_index         = 1
-    }
-  }
+  primary_network_interface_id = aws_network_interface.bastion-dmz.id
 
   tags = {
     Name = "${var.vpc_name}: bastion"
@@ -52,6 +42,18 @@ resource "aws_volume_attachment" "bastion-data" {
   # AWS but is required by the resource
   # so it is hard coded here
   device_name  = "/dev/xvdf"
+}
+
+#
+# Attach additional network interface for admin network (when configured)
+#
+
+resource "aws_network_interface_attachment" "bastion-admin" {
+  count = var.configure_admin_network ? 1 : 0
+
+  instance_id          = aws_instance.bastion.id
+  network_interface_id = aws_network_interface.bastion-admin.0.id
+  device_index         = 1
 }
 
 #
