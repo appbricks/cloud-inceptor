@@ -83,9 +83,10 @@ resource "azurerm_image" "bastion" {
   resource_group_name = azurerm_resource_group.bootstrap.name
 
   os_disk {
-    os_type  = "Linux"
-    os_state = "Generalized"
-    blob_uri = azurerm_storage_blob.bastion-image-vhd.0.url
+    os_type      = "Linux"
+    os_state     = "Generalized"
+    storage_type = "Standard_LRS"
+    blob_uri     = azurerm_storage_blob.bastion-image-vhd.0.url
   }
 
   lifecycle {
@@ -98,8 +99,7 @@ resource "azurerm_storage_blob" "bastion-image-vhd" {
 
   name = "${var.bastion_image_name}.vhd"
 
-  storage_account_name   = azurerm_storage_account.bootstrap-storage-account.name
-  storage_container_name = azurerm_storage_container.bastion-image-storage-container.0.name
+  storage_container_id = azurerm_storage_container.bastion-image-storage-container.0.id
 
   type       = "Block"
   source_uri = "https://${var.bastion_image_storage_account_prefix}${local.storage_region}.blob.core.windows.net/${var.bastion_image_container}/${var.bastion_image_name}.vhd"
@@ -114,7 +114,7 @@ resource "azurerm_storage_container" "bastion-image-storage-container" {
 
   name = "images"
 
-  storage_account_name  = azurerm_storage_account.bootstrap-storage-account.name
+  storage_account_id    = azurerm_storage_account.bootstrap-storage-account.id
   container_access_type = "private"
 }
 

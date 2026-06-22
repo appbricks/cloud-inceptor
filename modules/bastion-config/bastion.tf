@@ -77,16 +77,6 @@ write_files:
   path: /var/www/html/index.html
   permissions: '0644'
 
-# Bootstrap Pipeline
-- encoding: gzip+base64
-  content: ${base64gzip(file(length(var.bootstrap_pipeline_file) == 0 ? "${path.module}/_placeholder_" : var.bootstrap_pipeline_file))}
-  path: /root/bootstrap.yml
-  permissions: '0644'
-- encoding: gzip+base64
-  content: ${base64gzip(var.bootstrap_pipeline_vars)}
-  path: /root/bootstrap-vars.yml
-  permissions: '0644'
-
 runcmd:
 - |
   sudo -i -- <<INIT
@@ -200,12 +190,17 @@ vpn:
     cn: '${var.vpc_dns_zone}'
   users: '${var.vpn_users}'
 
-concourse:
-  port: ${length(var.concourse_server_port) == 0 ? "" : var.concourse_server_port}
-  password: '${var.concourse_admin_password}'
-  vpc_name: '${var.vpc_name}'
-  pipeline_automation_path: '${var.pipeline_automation_path}'
-  notification_email: '${var.notification_email}'
+vpn_gateway:
+  enabled: ${var.vpn_gateway_enabled ? "yes" : "no"}
+  protocol: '${var.vpn_gateway_protocol}'
+  upstream_host: '${var.vpn_gateway_upstream_host}'
+  upstream_id: '${var.vpn_gateway_upstream_id}'
+  remote_cidr: '${var.vpn_gateway_remote_cidr}'
+  local_cidr: '${var.vpn_gateway_local_cidr}'
+  auth: '${var.vpn_gateway_auth}'
+  psk: '${var.vpn_gateway_psk}'
+  auto: '${var.vpn_gateway_auto}'
+
 CONFIG
 
   # bastion static home page template

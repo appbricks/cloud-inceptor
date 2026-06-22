@@ -110,22 +110,6 @@ module "config" {
   smtp_relay_host    = var.smtp_relay_host
   smtp_relay_port    = var.smtp_relay_port
   smtp_relay_api_key = var.smtp_relay_api_key
-
-  concourse_server_port    = var.concourse_server_port
-  concourse_admin_password = var.concourse_admin_password
-  bootstrap_pipeline_file  = var.bootstrap_pipeline_file
-
-  pipeline_automation_path = var.pipeline_automation_path
-  notification_email       = var.notification_email
-
-  bootstrap_pipeline_vars = <<PIPELINE_VARS
----
-${var.bootstrap_pipeline_vars}
-
-# VPC Variables
-environment: ${var.vpc_name}
-region: ${var.region}
-PIPELINE_VARS
 }
 
 locals {

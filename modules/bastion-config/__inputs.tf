@@ -220,6 +220,47 @@ variable "vpn_users" {
 }
 
 #
+# Optional upstream VPN gateway (site-to-site IPSec).
+# Independent of road-warrior vpn.type.
+#
+variable "vpn_gateway_enabled" {
+  default = false
+}
+
+variable "vpn_gateway_protocol" {
+  default = "ipsec"
+}
+
+variable "vpn_gateway_upstream_host" {
+  default = ""
+}
+
+variable "vpn_gateway_upstream_id" {
+  default = ""
+}
+
+variable "vpn_gateway_remote_cidr" {
+  default = ""
+}
+
+variable "vpn_gateway_local_cidr" {
+  default = ""
+}
+
+variable "vpn_gateway_auth" {
+  default = "psk"
+}
+
+variable "vpn_gateway_psk" {
+  default   = ""
+  sensitive = true
+}
+
+variable "vpn_gateway_auto" {
+  default = "start"
+}
+
+#
 # OpenVPN configuration
 #
 variable "ovpn_service_port" {
@@ -259,38 +300,6 @@ variable "tunnel_vpn_port_start" {
 
 variable "tunnel_vpn_port_end" {
   default = ""
-}
-
-#
-# Bastion inception instance Concourse configuration
-#
-variable "concourse_server_port" {
-  type = string
-}
-
-variable "concourse_admin_password" {
-  type = string
-}
-
-variable "bootstrap_pipeline_file" {
-  type = string
-}
-
-variable "bootstrap_pipeline_vars" {
-  type = string
-}
-
-# Path to cloud inceptor repository provided as input 
-# to concourse tasks. This is required to be able to 
-# locate tasks such as notifications found in that
-# repository.
-variable "pipeline_automation_path" {
-  type = string
-}
-
-# Email to send concourse job notifications to
-variable "notification_email" {
-  type = string
 }
 
 #
