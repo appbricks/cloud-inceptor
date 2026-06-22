@@ -13,7 +13,10 @@ resource "aws_instance" "bastion" {
     volume_type = var.bastion_root_disk_type
   }
 
-  primary_network_interface_id = aws_network_interface.bastion-dmz.id
+  network_interface {
+    network_interface_id = aws_network_interface.bastion-dmz.id
+    device_index         = 0
+  }
 
   tags = {
     Name = "${var.vpc_name}: bastion"

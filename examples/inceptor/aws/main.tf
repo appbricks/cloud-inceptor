@@ -3,7 +3,7 @@ data "aws_region" "default" {
 }
 
 locals {
-  vpc_cidr = var.regional_vpc_cidr[data.aws_region.default.name]["vpc_cidr"]
+  vpc_cidr = var.regional_vpc_cidr[data.aws_region.default.region]["vpc_cidr"]
   vpc_subnet_index = element(regex("\\d{1,3}\\.(\\d{1,3})\\.\\d{1,3}\\.\\d{1,3}\\/\\d+", local.vpc_cidr), 0)
 }
 
@@ -32,21 +32,21 @@ module "bootstrap" {
   #
   # VPC details
   #
-  region = data.aws_region.default.name
+  region = data.aws_region.default.region
 
-  vpc_name = "inceptor-${data.aws_region.default.name}"
+  vpc_name = "inceptor-${data.aws_region.default.region}"
   vpc_cidr = local.vpc_cidr
 
   configure_admin_network = var.configure_admin_network
 
   # DNS Name for VPC will be 'test-<region>.aws.appbricks.io'
-  vpc_dns_zone    = "test-${data.aws_region.default.name}.aws.appbricks.io"
+  vpc_dns_zone    = "test-${data.aws_region.default.region}.aws.appbricks.io"
   attach_dns_zone = var.attach_dns_zone
 
   # Local DNS zone. This could also be the same as the public
   # which will enable setting up a split DNS of the public zone
   # for names to map to external and internal addresses.
-  vpc_internal_dns_zones = ["test-${data.aws_region.default.name}.local"]
+  vpc_internal_dns_zones = ["test-${data.aws_region.default.region}.local"]
 
   # Address space for all VPC regions
   global_internal_cidr = "172.16.0.0/12"
@@ -113,19 +113,19 @@ module "bootstrap" {
 
 resource "local_file" "bastion-ssh-key" {
   content  = module.bootstrap.bastion_admin_sshkey
-  filename = "${path.module}/.${data.aws_region.default.name}/bastion-admin-ssh-key.pem"
+  filename = "${path.module}/.${data.aws_region.default.region}/bastion-admin-ssh-key.pem"
 
   provisioner "local-exec" {
-    command = "chmod 0600 ${path.module}/.${data.aws_region.default.name}/bastion-admin-ssh-key.pem"
+    command = "chmod 0600 ${path.module}/.${data.aws_region.default.region}/bastion-admin-ssh-key.pem"
   }
 }
 
 resource "local_file" "default-ssh-key" {
   content  = module.bootstrap.default_openssh_private_key
-  filename = "${path.module}/.${data.aws_region.default.name}/default-ssh-key.pem"
+  filename = "${path.module}/.${data.aws_region.default.region}/default-ssh-key.pem"
 
   provisioner "local-exec" {
-    command = "chmod 0600 ${path.module}/.${data.aws_region.default.name}/default-ssh-key.pem"
+    command = "chmod 0600 ${path.module}/.${data.aws_region.default.region}/default-ssh-key.pem"
   }
 }
 
@@ -135,7 +135,7 @@ resource "local_file" "default-ssh-key" {
 
 resource "local_file" "root-ca-cert" {
   content  = module.bootstrap.root_ca_cert
-  filename = "${path.module}/.${data.aws_region}/root-ca.pem"
+  filename = "${path.module}/.${data.aws_region.default.region}/root-ca.pem"
 }
 
 #

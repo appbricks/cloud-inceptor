@@ -3,7 +3,7 @@
 #
 
 output "region" {
-  value = data.aws_region.default.name
+  value = data.aws_region.default.region
 }
 
 output "vpc_id" {
