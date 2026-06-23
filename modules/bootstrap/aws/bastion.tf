@@ -13,9 +13,8 @@ resource "aws_instance" "bastion" {
     volume_type = var.bastion_root_disk_type
   }
 
-  network_interface {
+  primary_network_interface {
     network_interface_id = aws_network_interface.bastion-dmz.id
-    device_index         = 0
   }
 
   tags = {
