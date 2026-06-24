@@ -87,7 +87,7 @@ module "bootstrap" {
   bastion_host_name = "inceptor"
   bastion_use_fqdn = var.attach_dns_zone
 
-  bastion_instance_type = "t4g.micro"
+  bastion_instance_type = "t4g.small"
 
   bastion_image_name  = var.bastion_image_name
   bastion_image_owner = var.bastion_image_owner

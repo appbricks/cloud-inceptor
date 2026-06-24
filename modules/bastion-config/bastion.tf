@@ -172,7 +172,7 @@ vpn:
     port: ${var.ovpn_service_port}
     protocol: ${var.ovpn_protocol}
   ipsec:
-    support_legacy_clients: false
+    support_legacy_clients: true
   wireguard:
     itf_name: 'wg0'
     host_ip: '${var.bastion_admin_itf_ip}'
