@@ -35,11 +35,13 @@ output "admin_security_group" {
 }
 
 output "vpc_dns_public_zone_id" {
-  value = ""
+  value = length(module.dns) > 0 ? module.dns[0].vpc_dns_public_zone_id : ""
 }
 
 output "vpc_dns_public_zone_name" {
-  value = var.attach_dns_zone ? var.vpc_dns_zone : ""
+  value = length(module.dns) > 0 ? module.dns[0].vpc_dns_public_zone_name : (
+    var.attach_dns_zone ? var.vpc_dns_zone : ""
+  )
 }
 
 output "vpc_dns_private_zone_id" {
@@ -47,7 +49,7 @@ output "vpc_dns_private_zone_id" {
 }
 
 output "vpc_dns_private_zone_name" {
-  value = var.attach_dns_zone ? var.vpc_dns_zone : ""
+  value = ""
 }
 
 output "bastion_instance_id" {

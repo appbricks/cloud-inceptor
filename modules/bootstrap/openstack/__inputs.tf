@@ -80,6 +80,32 @@ variable "attach_dns_zone" {
   default = false
 }
 
+#
+# External DNS provider for public zone delegation (OpenStack has no native DNS API).
+# Set to aws, google, or azure when attach_dns_zone is true. Leave empty to skip
+# external DNS and configure delegation manually.
+#
+variable "dns_provider" {
+  type        = string
+  default     = ""
+  description = "External DNS provider: aws, google, azure, or empty."
+
+  validation {
+    condition     = contains(["", "aws", "google", "azure"], var.dns_provider)
+    error_message = "dns_provider must be empty, aws, google, or azure."
+  }
+}
+
+variable "dns_parent_zone_name" {
+  default     = ""
+  description = "Parent DNS zone for NS delegation (e.g. ovh.appbricks.io). Defaults from vpc_dns_zone."
+}
+
+variable "dns_azure_resource_group" {
+  default     = ""
+  description = "Azure resource group for parent and delegated DNS zones (required when dns_provider is azure)."
+}
+
 variable "vpc_cidr" {
   default = "172.16.0.0/16"
 }

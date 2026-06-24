@@ -33,9 +33,12 @@ module "bootstrap" {
 
   configure_admin_network = var.configure_admin_network
 
-  # DNS Name for VPC will be 'test-<region>.ovh.appbricks.io'
+  # Public DNS: delegated child zone in AWS Route53 (parent: ovh.appbricks.io)
   vpc_dns_zone    = "test-${lower(var.region)}.ovh.appbricks.io"
   attach_dns_zone = var.attach_dns_zone
+  dns_provider    = "aws"
+
+  dns_parent_zone_name = var.dns_parent_zone_name
 
   # Local DNS zone served by PowerDNS on the bastion
   vpc_internal_dns_zones = ["test-${lower(var.region)}.local"]
@@ -107,11 +110,20 @@ provider "openstack" {
   region = var.region
 }
 
+# Route53 API region (parent zone ovh.appbricks.io lives in AWS)
+provider "aws" {
+  region = var.aws_dns_region
+}
+
 terraform {
   required_providers {
     openstack = {
       source  = "terraform-provider-openstack/openstack"
       version = "~> 2.1.0"
+    }
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 6.0"
     }
   }
 

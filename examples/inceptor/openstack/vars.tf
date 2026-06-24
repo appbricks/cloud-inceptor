@@ -54,6 +54,19 @@ variable "attach_dns_zone" {
   type = string
 }
 
+#
+# External DNS via AWS Route53 for the OpenStack VPC zone
+#
+variable "dns_parent_zone_name" {
+  default     = ""
+  description = "Parent DNS zone for NS delegation. Defaults to ovh.appbricks.io from vpc_dns_zone."
+}
+
+variable "aws_dns_region" {
+  default     = "us-east-1"
+  description = "AWS region for Route53 API (where the parent zone is hosted)."
+}
+
 variable "configure_admin_network" {
   type = string
 }
