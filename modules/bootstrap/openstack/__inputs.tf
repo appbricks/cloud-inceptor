@@ -145,7 +145,7 @@ variable "global_internal_cidr" {
 # Bastion inception instance variables
 #
 variable "bastion_flavor" {
-  default = "b2-7"
+  default = "d2-2"
 }
 
 variable "bastion_image_name_regex" {
@@ -154,7 +154,7 @@ variable "bastion_image_name_regex" {
 }
 
 variable "bastion_root_disk_size" {
-  default     = 100
+  default     = 25
   description = "Root boot volume size in GB (OVH requires >= image virtual size, typically 100)."
 }
 
