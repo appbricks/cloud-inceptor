@@ -31,7 +31,7 @@ variable "notification_email" {
 #
 # Bastion Image (built via bastion-image/build/build-ovh-image.sh)
 #
-variable "bastion_image_name" {
+variable "bastion_image_name_regex" {
   type = string
 }
 

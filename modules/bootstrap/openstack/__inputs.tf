@@ -81,29 +81,23 @@ variable "attach_dns_zone" {
 }
 
 #
-# External DNS provider for public zone delegation (OpenStack has no native DNS API).
-# Set to aws, google, or azure when attach_dns_zone is true. Leave empty to skip
-# external DNS and configure delegation manually.
+# External DNS via AWS Route53 (OpenStack has no native DNS API).
+# Set dns_provider to aws when attach_dns_zone is true.
 #
 variable "dns_provider" {
   type        = string
   default     = ""
-  description = "External DNS provider: aws, google, azure, or empty."
+  description = "External DNS provider. OpenStack bootstrap supports aws or empty."
 
   validation {
-    condition     = contains(["", "aws", "google", "azure"], var.dns_provider)
-    error_message = "dns_provider must be empty, aws, google, or azure."
+    condition     = contains(["", "aws"], var.dns_provider)
+    error_message = "dns_provider must be empty or aws for OpenStack bootstrap."
   }
 }
 
 variable "dns_parent_zone_name" {
   default     = ""
   description = "Parent DNS zone for NS delegation (e.g. ovh.appbricks.io). Defaults from vpc_dns_zone."
-}
-
-variable "dns_azure_resource_group" {
-  default     = ""
-  description = "Azure resource group for parent and delegated DNS zones (required when dns_provider is azure)."
 }
 
 variable "vpc_cidr" {
@@ -134,6 +128,11 @@ variable "admin_cidr" {
   default = []
 }
 
+variable "admin_vlan_id" {
+  default     = 0
+  description = "vRack VLAN ID for the admin LAN. 0 keeps the admin subnet on the main VPC network."
+}
+
 variable "max_azs" {
   default = 1
 }
@@ -149,12 +148,14 @@ variable "bastion_flavor" {
   default = "b2-7"
 }
 
-variable "bastion_image_name" {
-  default = "appbricks-bastion_dev"
+variable "bastion_image_name_regex" {
+  type        = string
+  description = "Regex to select the bastion Glance image (most recent match is used)."
 }
 
 variable "bastion_root_disk_size" {
-  default = 10
+  default     = 100
+  description = "Root boot volume size in GB (OVH requires >= image virtual size, typically 100)."
 }
 
 variable "bastion_data_disk_size" {
@@ -300,7 +301,7 @@ variable "jumpbox_image_name" {
 }
 
 variable "jumpbox_flavor" {
-  default = "b2-7"
+  default = "d2-2"
 }
 
 variable "jumpbox_data_disk_size" {

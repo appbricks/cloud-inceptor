@@ -1,13 +1,13 @@
 #
-# External DNS for OpenStack/OVH deployments (Route53, Cloud DNS, or Azure DNS)
+# External DNS for OpenStack/OVH (AWS Route53 only from this module).
+#
+# Google Cloud DNS and Azure DNS modules live under modules/dns/google and
+# modules/dns/azure; wire them from the root module when needed.
 #
 
 module "dns" {
-  count  = var.attach_dns_zone && var.dns_provider != "" ? 1 : 0
-  source = "../../../modules/dns"
-
-  attach_dns_zone = var.attach_dns_zone
-  dns_provider    = var.dns_provider
+  count  = var.attach_dns_zone && var.dns_provider == "aws" ? 1 : 0
+  source = "../../../modules/dns/aws"
 
   vpc_name     = var.vpc_name
   vpc_dns_zone = var.vpc_dns_zone
@@ -20,6 +20,12 @@ module "dns" {
   smtp_relay_host          = var.smtp_relay_host
 
   parent_dns_zone_name = var.dns_parent_zone_name
+}
 
-  azure_resource_group = var.dns_azure_resource_group
+locals {
+  dns_vpc_dns_public_zone_id = length(module.dns) > 0 ? module.dns[0].vpc_dns_public_zone_id : ""
+
+  dns_vpc_dns_public_zone_name = length(module.dns) > 0 ? module.dns[0].vpc_dns_public_zone_name : (
+    var.attach_dns_zone ? var.vpc_dns_zone : ""
+  )
 }

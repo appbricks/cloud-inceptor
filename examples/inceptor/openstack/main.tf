@@ -63,8 +63,8 @@ module "bootstrap" {
   bastion_host_name = "inceptor"
   bastion_use_fqdn  = var.attach_dns_zone
 
-  bastion_image_name = var.bastion_image_name
-  bastion_flavor      = var.bastion_flavor
+  bastion_image_name_regex = var.bastion_image_name_regex
+  bastion_flavor           = var.bastion_flavor
 
   certify_bastion = false
 
@@ -106,8 +106,13 @@ resource "local_file" "root-ca-cert" {
   filename = "${path.module}/.${var.region}/root-ca.pem"
 }
 
+#
+# Providers
+#
+
 provider "openstack" {
-  region = var.region
+  region       = var.region
+  max_retries  = 10
 }
 
 # Route53 API region (parent zone ovh.appbricks.io lives in AWS)

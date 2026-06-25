@@ -47,7 +47,7 @@ resource "openstack_networking_port_v2" "jumpbox" {
   count = length(local.jumpbox_dns) > 0 ? 1 : 0
 
   name               = "${var.vpc_name}: jumpbox"
-  network_id         = openstack_networking_network_v2.main.id
+  network_id         = var.configure_admin_network ? local.admin_network_id : openstack_networking_network_v2.main.id
   admin_state_up     = true
   security_group_ids = [openstack_networking_secgroup_v2.internal.id]
 
@@ -121,7 +121,7 @@ runcmd:
 USERDATA
 }
 
-resource "openstack_blockstorage_volume_v2" "jumpbox_data" {
+resource "openstack_blockstorage_volume_v3" "jumpbox_data" {
   count = length(local.jumpbox_dns) > 0 ? 1 : 0
 
   name = "${var.vpc_name}: jumpbox-data"
@@ -132,5 +132,5 @@ resource "openstack_compute_volume_attach_v2" "jumpbox_data" {
   count = length(local.jumpbox_dns) > 0 ? 1 : 0
 
   instance_id = openstack_compute_instance_v2.jumpbox[0].id
-  volume_id   = openstack_blockstorage_volume_v2.jumpbox_data[0].id
+  volume_id   = openstack_blockstorage_volume_v3.jumpbox_data[0].id
 }

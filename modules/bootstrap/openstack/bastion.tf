@@ -7,11 +7,13 @@ data "openstack_compute_flavor_v2" "bastion" {
 }
 
 data "openstack_images_image_v2" "bastion" {
-  name        = var.bastion_image_name
+  name_regex  = var.bastion_image_name_regex
   most_recent = true
 }
 
 locals {
+  bastion_image_id = data.openstack_images_image_v2.bastion.id
+
   bastion_dmz_itf_ip = cidrhost(openstack_networking_subnet_v2.dmz.cidr, -3)
   bastion_admin_itf_ip = (
     var.configure_admin_network
@@ -43,8 +45,6 @@ resource "openstack_networking_secgroup_rule_v2" "internal_ingress_tcp" {
   direction         = "ingress"
   ethertype         = "IPv4"
   protocol          = "tcp"
-  port_range_min    = 0
-  port_range_max    = 65535
   remote_group_id   = openstack_networking_secgroup_v2.internal.id
   security_group_id = openstack_networking_secgroup_v2.internal.id
 }
@@ -53,8 +53,6 @@ resource "openstack_networking_secgroup_rule_v2" "internal_ingress_udp" {
   direction         = "ingress"
   ethertype         = "IPv4"
   protocol          = "udp"
-  port_range_min    = 0
-  port_range_max    = 65535
   remote_group_id   = openstack_networking_secgroup_v2.internal.id
   security_group_id = openstack_networking_secgroup_v2.internal.id
 }
@@ -73,8 +71,6 @@ resource "openstack_networking_secgroup_rule_v2" "internal_ingress_bastion_tcp" 
   direction         = "ingress"
   ethertype         = "IPv4"
   protocol          = "tcp"
-  port_range_min    = 0
-  port_range_max    = 65535
   remote_ip_prefix  = "${local.bastion_admin_itf_ip}/32"
   security_group_id = openstack_networking_secgroup_v2.internal.id
 }
@@ -85,8 +81,6 @@ resource "openstack_networking_secgroup_rule_v2" "internal_ingress_bastion_udp" 
   direction         = "ingress"
   ethertype         = "IPv4"
   protocol          = "udp"
-  port_range_min    = 0
-  port_range_max    = 65535
   remote_ip_prefix  = "${local.bastion_admin_itf_ip}/32"
   security_group_id = openstack_networking_secgroup_v2.internal.id
 }
@@ -105,8 +99,6 @@ resource "openstack_networking_secgroup_rule_v2" "internal_egress_tcp" {
   direction         = "egress"
   ethertype         = "IPv4"
   protocol          = "tcp"
-  port_range_min    = 0
-  port_range_max    = 65535
   remote_ip_prefix  = "0.0.0.0/0"
   security_group_id = openstack_networking_secgroup_v2.internal.id
 }
@@ -115,8 +107,6 @@ resource "openstack_networking_secgroup_rule_v2" "internal_egress_udp" {
   direction         = "egress"
   ethertype         = "IPv4"
   protocol          = "udp"
-  port_range_min    = 0
-  port_range_max    = 65535
   remote_ip_prefix  = "0.0.0.0/0"
   security_group_id = openstack_networking_secgroup_v2.internal.id
 }
@@ -276,8 +266,6 @@ resource "openstack_networking_secgroup_rule_v2" "bastion_public_egress_tcp" {
   direction         = "egress"
   ethertype         = "IPv4"
   protocol          = "tcp"
-  port_range_min    = 0
-  port_range_max    = 65535
   remote_ip_prefix  = "0.0.0.0/0"
   security_group_id = openstack_networking_secgroup_v2.bastion_public.id
 }
@@ -286,8 +274,6 @@ resource "openstack_networking_secgroup_rule_v2" "bastion_public_egress_udp" {
   direction         = "egress"
   ethertype         = "IPv4"
   protocol          = "udp"
-  port_range_min    = 0
-  port_range_max    = 65535
   remote_ip_prefix  = "0.0.0.0/0"
   security_group_id = openstack_networking_secgroup_v2.bastion_public.id
 }
@@ -333,8 +319,6 @@ resource "openstack_networking_secgroup_rule_v2" "bastion_private_egress_tcp" {
   direction         = "egress"
   ethertype         = "IPv4"
   protocol          = "tcp"
-  port_range_min    = 0
-  port_range_max    = 65535
   remote_ip_prefix  = var.vpc_cidr
   security_group_id = openstack_networking_secgroup_v2.bastion_private.id
 }
@@ -343,8 +327,6 @@ resource "openstack_networking_secgroup_rule_v2" "bastion_private_egress_udp" {
   direction         = "egress"
   ethertype         = "IPv4"
   protocol          = "udp"
-  port_range_min    = 0
-  port_range_max    = 65535
   remote_ip_prefix  = var.vpc_cidr
   security_group_id = openstack_networking_secgroup_v2.bastion_private.id
 }
@@ -377,7 +359,7 @@ resource "openstack_networking_port_v2" "bastion_admin" {
   count = var.configure_admin_network ? 1 : 0
 
   name               = "${var.vpc_name}: bastion-admin"
-  network_id         = openstack_networking_network_v2.main.id
+  network_id         = local.admin_network_id
   admin_state_up     = true
   security_group_ids = [
     var.bastion_as_nat
@@ -402,13 +384,17 @@ resource "openstack_networking_floatingip_v2" "bastion_public" {
 resource "openstack_networking_floatingip_associate_v2" "bastion_dmz" {
   floating_ip = openstack_networking_floatingip_v2.bastion_public.address
   port_id     = openstack_networking_port_v2.bastion_dmz.id
+
+  depends_on = [
+    openstack_networking_router_interface_v2.dmz,
+  ]
 }
 
 #
 # Bastion compute instance
 #
 
-resource "openstack_blockstorage_volume_v2" "bastion_data" {
+resource "openstack_blockstorage_volume_v3" "bastion_data" {
   name = "${var.vpc_name}: bastion-data"
   size = var.bastion_data_disk_size
 }
@@ -416,9 +402,17 @@ resource "openstack_blockstorage_volume_v2" "bastion_data" {
 resource "openstack_compute_instance_v2" "bastion" {
   name            = "${var.vpc_name}: bastion"
   flavor_id       = data.openstack_compute_flavor_v2.bastion.id
-  image_id        = data.openstack_images_image_v2.bastion.id
   key_pair        = openstack_compute_keypair_v2.default.name
   security_groups = []
+
+  block_device {
+    uuid                  = local.bastion_image_id
+    source_type           = "image"
+    destination_type      = "volume"
+    volume_size           = var.bastion_root_disk_size
+    boot_index            = 0
+    delete_on_termination = true
+  }
 
   network {
     port = openstack_networking_port_v2.bastion_dmz.id
@@ -441,5 +435,5 @@ resource "openstack_compute_instance_v2" "bastion" {
 
 resource "openstack_compute_volume_attach_v2" "bastion_data" {
   instance_id = openstack_compute_instance_v2.bastion.id
-  volume_id   = openstack_blockstorage_volume_v2.bastion_data.id
+  volume_id   = openstack_blockstorage_volume_v3.bastion_data.id
 }

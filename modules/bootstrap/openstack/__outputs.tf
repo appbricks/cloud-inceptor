@@ -35,13 +35,11 @@ output "admin_security_group" {
 }
 
 output "vpc_dns_public_zone_id" {
-  value = length(module.dns) > 0 ? module.dns[0].vpc_dns_public_zone_id : ""
+  value = local.dns_vpc_dns_public_zone_id
 }
 
 output "vpc_dns_public_zone_name" {
-  value = length(module.dns) > 0 ? module.dns[0].vpc_dns_public_zone_name : (
-    var.attach_dns_zone ? var.vpc_dns_zone : ""
-  )
+  value = local.dns_vpc_dns_public_zone_name
 }
 
 output "vpc_dns_private_zone_id" {
