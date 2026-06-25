@@ -129,7 +129,7 @@ variable "admin_cidr" {
 }
 
 variable "admin_vlan_id" {
-  default     = 0
+  default     = -1
   description = "vRack VLAN ID for the admin LAN. 0 keeps the admin subnet on the main VPC network."
 }
 
@@ -155,7 +155,7 @@ variable "bastion_image_name_regex" {
 
 variable "bastion_root_disk_size" {
   default     = 25
-  description = "Root boot volume size in GB (OVH requires >= image virtual size, typically 100)."
+  description = "Root boot volume size in GB."
 }
 
 variable "bastion_data_disk_size" {

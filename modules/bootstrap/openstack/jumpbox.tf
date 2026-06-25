@@ -47,7 +47,7 @@ resource "openstack_networking_port_v2" "jumpbox" {
   count = length(local.jumpbox_dns) > 0 ? 1 : 0
 
   name               = "${var.vpc_name}: jumpbox"
-  network_id         = var.configure_admin_network ? local.admin_network_id : openstack_networking_network_v2.main.id
+  network_id         = var.configure_admin_network ? local.admin_network_id : openstack_networking_network_v2.dmz.id
   admin_state_up     = true
   security_group_ids = [openstack_networking_secgroup_v2.internal.id]
 
@@ -75,13 +75,13 @@ resource "openstack_compute_instance_v2" "jumpbox" {
 write_files:
 - encoding: b64
   content: ${base64encode(templatefile(
-    "${path.module}/scripts/mount-volume.sh",
-    {
-      attached_device_name = var.jumpbox_data_disk_device_name
-      mount_directory      = "/data"
-      world_readable       = "true"
-    }
-  ))}
+  "${path.module}/scripts/mount-volume.sh",
+  {
+    attached_device_name = var.jumpbox_data_disk_device_name
+    mount_directory      = "/data"
+    world_readable       = "true"
+  }
+))}
   path: /root/mount-volume.sh
   permissions: '0744'
 

@@ -11,7 +11,7 @@ output "root_ca_cert" {
 }
 
 output "vpc_id" {
-  value = openstack_networking_network_v2.main.id
+  value = openstack_networking_network_v2.dmz.id
 }
 
 output "vpc_name" {

@@ -50,7 +50,8 @@ module "config" {
         tolist([
           local.bastion_dmz_itf_ip,
           openstack_networking_subnet_v2.dmz.cidr,
-          "0.0.0.0/0"
+          "0.0.0.0/0",
+          cidrhost(openstack_networking_subnet_v2.dmz.cidr, 1)
         ]),
       ),
       join("|",
@@ -67,7 +68,8 @@ module "config" {
         tolist([
           local.bastion_dmz_itf_ip,
           openstack_networking_subnet_v2.dmz.cidr,
-          "0.0.0.0/0"
+          "0.0.0.0/0",
+          cidrhost(openstack_networking_subnet_v2.dmz.cidr, 1)
         ]),
       )
     ]
@@ -75,10 +77,10 @@ module "config" {
 
   data_volume_name = var.bastion_data_disk_device_name
 
-  bastion_admin_api_port   = var.bastion_admin_api_port
-  bastion_admin_ssh_port   = var.bastion_admin_ssh_port
-  bastion_admin_user       = var.bastion_admin_user
-  squidproxy_server_port   = var.squidproxy_server_port
+  bastion_admin_api_port = var.bastion_admin_api_port
+  bastion_admin_ssh_port = var.bastion_admin_ssh_port
+  bastion_admin_user     = var.bastion_admin_user
+  squidproxy_server_port = var.squidproxy_server_port
 
   vpn_type               = var.vpn_type
   vpn_network            = var.vpn_network

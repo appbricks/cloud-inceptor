@@ -345,7 +345,7 @@ resource "openstack_networking_secgroup_rule_v2" "bastion_private_egress_icmp" {
 
 resource "openstack_networking_port_v2" "bastion_dmz" {
   name               = "${var.vpc_name}: bastion-dmz"
-  network_id         = openstack_networking_network_v2.main.id
+  network_id         = openstack_networking_network_v2.dmz.id
   admin_state_up     = true
   security_group_ids = local.bastion_dmz_security_groups
 
@@ -358,9 +358,9 @@ resource "openstack_networking_port_v2" "bastion_dmz" {
 resource "openstack_networking_port_v2" "bastion_admin" {
   count = var.configure_admin_network ? 1 : 0
 
-  name               = "${var.vpc_name}: bastion-admin"
-  network_id         = local.admin_network_id
-  admin_state_up     = true
+  name           = "${var.vpc_name}: bastion-admin"
+  network_id     = local.admin_network_id
+  admin_state_up = true
   security_group_ids = [
     var.bastion_as_nat
     ? openstack_networking_secgroup_v2.internal.id

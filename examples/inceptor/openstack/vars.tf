@@ -36,7 +36,7 @@ variable "bastion_image_name_regex" {
 }
 
 variable "bastion_flavor" {
-  default = "b2-7"
+  default = "d2-2"
 }
 
 #
