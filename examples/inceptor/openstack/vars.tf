@@ -54,6 +54,10 @@ variable "attach_dns_zone" {
   type = string
 }
 
+variable "bastion_dns" {
+  type = string
+}
+
 #
 # External DNS via AWS Route53 for the OpenStack VPC zone
 #

@@ -66,6 +66,8 @@ module "bootstrap" {
   bastion_image_name_regex = var.bastion_image_name_regex
   bastion_flavor           = var.bastion_flavor
 
+  bastion_dns = var.bastion_dns
+
   certify_bastion = false
 
   allow_bastion_icmp = true
