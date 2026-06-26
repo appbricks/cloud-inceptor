@@ -54,6 +54,8 @@ module "bootstrap" {
   # VPN
   vpn_idle_action = "shutdown"
 
+  vpn_idle_shutdown_time = 720 # 12 hours
+
   vpn_users = [
     "user1|P@ssw0rd1",
     "user2|P@ssw0rd2"

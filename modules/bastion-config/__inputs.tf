@@ -249,6 +249,11 @@ variable "vpn_gateway_local_cidr" {
 
 variable "vpn_gateway_auth" {
   default = "psk"
+
+  validation {
+    condition     = contains(["psk", "cert"], var.vpn_gateway_auth)
+    error_message = "vpn_gateway_auth must be psk or cert."
+  }
 }
 
 variable "vpn_gateway_psk" {
@@ -258,6 +263,73 @@ variable "vpn_gateway_psk" {
 
 variable "vpn_gateway_auto" {
   default = "start"
+}
+
+variable "vpn_gateway_routing" {
+  default     = "static"
+  description = "Routing method for upstream tunnel traffic selectors (static/policy)."
+}
+
+variable "vpn_gateway_local_id" {
+  default     = ""
+  description = "Local IKE identity; defaults to bastion certificate CN."
+}
+
+variable "vpn_gateway_local_addr" {
+  default     = ""
+  description = "Local address for IKE; defaults to server DMZ interface IP."
+}
+
+variable "vpn_gateway_ike_encryption" {
+  default = "aes256"
+}
+
+variable "vpn_gateway_ike_integrity" {
+  default = "sha256"
+}
+
+variable "vpn_gateway_ike_dh_group" {
+  default = 14
+}
+
+variable "vpn_gateway_ike_lifetime" {
+  default = 86400
+}
+
+variable "vpn_gateway_ike_proposals" {
+  default     = ""
+  description = "Optional strongSwan IKE proposal string override."
+}
+
+variable "vpn_gateway_ipsec_encryption" {
+  default = "aes256"
+}
+
+variable "vpn_gateway_ipsec_integrity" {
+  default = "sha256"
+}
+
+variable "vpn_gateway_ipsec_dh_group" {
+  default     = 14
+  description = "Phase 2 PFS Diffie-Hellman group (IKE group number, e.g. 14 = modp2048)."
+}
+
+variable "vpn_gateway_ipsec_lifetime" {
+  default = 43200
+}
+
+variable "vpn_gateway_esp_proposals" {
+  default     = ""
+  description = "Optional strongSwan ESP proposal string override."
+}
+
+variable "vpn_gateway_nat_t" {
+  default = true
+}
+
+variable "vpn_gateway_remote_ca" {
+  default     = "upstream_ca.pem"
+  description = "Remote peer CA filename under /data/strongswan/x509ca/ (cert auth)."
 }
 
 #

@@ -202,6 +202,21 @@ vpn_gateway:
   auth: '${var.vpn_gateway_auth}'
   psk: '${var.vpn_gateway_psk}'
   auto: '${var.vpn_gateway_auto}'
+  routing: '${var.vpn_gateway_routing}'
+  local_id: '${var.vpn_gateway_local_id}'
+  local_addr: '${var.vpn_gateway_local_addr}'
+  ike_encryption: '${var.vpn_gateway_ike_encryption}'
+  ike_integrity: '${var.vpn_gateway_ike_integrity}'
+  ike_dh_group: ${var.vpn_gateway_ike_dh_group}
+  ike_lifetime: ${var.vpn_gateway_ike_lifetime}
+  ike_proposals: '${var.vpn_gateway_ike_proposals}'
+  ipsec_encryption: '${var.vpn_gateway_ipsec_encryption}'
+  ipsec_integrity: '${var.vpn_gateway_ipsec_integrity}'
+  ipsec_dh_group: ${var.vpn_gateway_ipsec_dh_group}
+  ipsec_lifetime: ${var.vpn_gateway_ipsec_lifetime}
+  esp_proposals: '${var.vpn_gateway_esp_proposals}'
+  nat_t: ${var.vpn_gateway_nat_t ? "yes" : "no"}
+  remote_ca: '${var.vpn_gateway_remote_ca}'
 
 CONFIG
 

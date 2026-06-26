@@ -403,7 +403,6 @@ resource "openstack_compute_instance_v2" "bastion" {
   name            = "${var.vpc_name}: bastion"
   flavor_id       = data.openstack_compute_flavor_v2.bastion.id
   key_pair        = openstack_compute_keypair_v2.default.name
-  security_groups = []
 
   block_device {
     uuid                  = local.bastion_image_id
