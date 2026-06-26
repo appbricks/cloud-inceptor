@@ -19,9 +19,20 @@ locals {
       var.configure_admin_network
       ? openstack_networking_subnet_v2.admin[0].cidr
       : openstack_networking_subnet_v2.dmz.cidr,
-      10
+      var.configure_admin_network ? 5 : 10
     )
     : ""
+  )
+  jumpbox_subnet_cidr = (
+    var.configure_admin_network
+    ? openstack_networking_subnet_v2.admin[0].cidr
+    : openstack_networking_subnet_v2.dmz.cidr
+  )
+  jumpbox_subnet_prefix = split("/", local.jumpbox_subnet_cidr)[1]
+  jumpbox_default_gateway = (
+    var.configure_admin_network && var.bastion_as_nat
+    ? local.bastion_admin_itf_ip
+    : cidrhost(local.jumpbox_subnet_cidr, 1)
   )
   jumpbox_dns_record = (
     length(local.jumpbox_dns) > 0
@@ -73,6 +84,27 @@ resource "openstack_compute_instance_v2" "jumpbox" {
 #cloud-config
 
 write_files:
+- path: /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg
+  content: |
+    network: {config: disabled}
+- path: /etc/netplan/99-jumpbox.yaml
+  content: |
+    network:
+      version: 2
+      ethernets:
+        jumpbox0:
+          dhcp4: false
+          dhcp6: false
+          addresses:
+          - ${local.jumpbox_ip}/${local.jumpbox_subnet_prefix}
+          routes:
+          - to: default
+            via: ${local.jumpbox_default_gateway}
+          nameservers:
+            addresses: [${local.jumpbox_default_gateway}]
+          match:
+            macaddress: ${lower(openstack_networking_port_v2.jumpbox[0].mac_address)}
+          set-name: jumpbox0
 - encoding: b64
   content: ${base64encode(templatefile(
   "${path.module}/scripts/mount-volume.sh",
@@ -86,6 +118,7 @@ write_files:
   permissions: '0744'
 
 runcmd:
+- netplan apply
 
 # Install Docker
 - |

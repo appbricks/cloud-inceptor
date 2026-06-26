@@ -23,6 +23,18 @@ locals {
     ? openstack_networking_network_v2.admin[0].id
     : openstack_networking_network_v2.dmz.id
   )
+
+  # Reserve the first and last 5 host addresses on the admin subnet for static
+  # assignments (e.g. jumpbox at offset 5, bastion NAT at offset -3).
+  # Neutron DHCP serves the range between them when bastion_as_nat is enabled.
+  admin_dhcp_pool_start = cidrhost(local.admin_cidr_block, 6)
+  admin_dhcp_pool_end   = cidrhost(local.admin_cidr_block, -6)
+  admin_dhcp_pools = var.bastion_as_nat ? [
+    {
+      start = local.admin_dhcp_pool_start
+      end   = local.admin_dhcp_pool_end
+    },
+  ] : []
 }
 
 moved {
@@ -63,6 +75,15 @@ resource "openstack_networking_subnet_v2" "admin" {
   cidr            = local.admin_cidr_block
   ip_version      = 4
   dns_nameservers = []
+  gateway_ip      = var.bastion_as_nat ? local.bastion_admin_itf_ip : null
+
+  dynamic "allocation_pool" {
+    for_each = local.admin_dhcp_pools
+    content {
+      start = allocation_pool.value.start
+      end   = allocation_pool.value.end
+    }
+  }
 }
 
 resource "openstack_networking_router_v2" "main" {

@@ -17,7 +17,7 @@ locals {
   bastion_dmz_itf_ip = cidrhost(openstack_networking_subnet_v2.dmz.cidr, -3)
   bastion_admin_itf_ip = (
     var.configure_admin_network
-    ? cidrhost(openstack_networking_subnet_v2.admin[0].cidr, -3)
+    ? cidrhost(local.admin_cidr_block, -3)
     : local.bastion_dmz_itf_ip
   )
   bastion_dmz_security_groups = concat(
