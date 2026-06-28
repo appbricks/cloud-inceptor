@@ -2,6 +2,16 @@
 # Bootstrap a base environment named "inceptor" on OVHcloud Public Cloud (OpenStack)
 #
 
+locals {
+  openstack_vpc_dns_zone = "test-${lower(var.region)}.ovh.appbricks.io"
+  aws_peer = {
+    region       = "us-east-1"
+    vpc_cidr     = "172.20.8.0/22"
+    bastion_fqdn = "test-us-east-1.aws.appbricks.io"
+    root_ca_file = "${path.module}/../aws/.us-east-1/root-ca.pem"
+  }
+}
+
 module "bootstrap" {
   source = "../../../modules/bootstrap/openstack"
 
@@ -34,7 +44,7 @@ module "bootstrap" {
   configure_admin_network = var.configure_admin_network
 
   # Public DNS: delegated child zone in AWS Route53 (parent: ovh.appbricks.io)
-  vpc_dns_zone    = "test-${lower(var.region)}.ovh.appbricks.io"
+  vpc_dns_zone    = local.openstack_vpc_dns_zone
   attach_dns_zone = var.attach_dns_zone
   dns_provider    = "aws"
 
@@ -59,6 +69,10 @@ module "bootstrap" {
   vpn_type = "ipsec"
 
   vpn_tunnel_all_traffic = "yes"
+
+  # Site-to-site IPsec gateway to AWS inceptor (UK1 -> us-east-1)
+  vpn_gateway_enabled    = true
+  vpn_gateway_peer_cidrs = ["172.20.9.192/26"]
 
   bastion_allow_public_ssh = true
 

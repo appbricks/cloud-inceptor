@@ -36,6 +36,15 @@ output "admin_subnetworks" {
   )
 }
 
+output "lan_subnet_cidrs" {
+  description = "CIDR blocks for bastion LAN subnets (DMZ public-side and admin internal)."
+  value = {
+    vpc   = var.vpc_cidr
+    dmz   = aws_subnet.dmz[*].cidr_block
+    admin = var.configure_admin_network ? aws_subnet.admin[*].cidr_block : aws_subnet.dmz[*].cidr_block
+  }
+}
+
 output "admin_security_group" {
   value = aws_security_group.internal.id
 }

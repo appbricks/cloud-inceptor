@@ -195,32 +195,9 @@ vpn:
 vpn_gateway:
   enabled: ${var.vpn_gateway_enabled ? "yes" : "no"}
   protocol: '${var.vpn_gateway_protocol}'
-  upstream_host: '${var.vpn_gateway_upstream_host}'
-  upstream_id: '${var.vpn_gateway_upstream_id}'
-  remote_cidr: '${var.vpn_gateway_remote_cidr}'
-  local_cidr: '${var.vpn_gateway_local_cidr}'
-  auth: '${var.vpn_gateway_auth}'
-  psk: '${var.vpn_gateway_psk}'
-  auto: '${var.vpn_gateway_auto}'
-  routing: '${var.vpn_gateway_routing}'
-  local_id: '${var.vpn_gateway_local_id}'
-  local_addr: '${var.vpn_gateway_local_addr}'
-  ike_encryption: '${var.vpn_gateway_ike_encryption}'
-  ike_integrity: '${var.vpn_gateway_ike_integrity}'
-  ike_dh_group: ${var.vpn_gateway_ike_dh_group}
-  ike_lifetime: ${var.vpn_gateway_ike_lifetime}
-  ike_proposals: '${var.vpn_gateway_ike_proposals}'
-  ipsec_encryption: '${var.vpn_gateway_ipsec_encryption}'
-  ipsec_integrity: '${var.vpn_gateway_ipsec_integrity}'
-  ipsec_dh_group: ${var.vpn_gateway_ipsec_dh_group}
-  ipsec_lifetime: ${var.vpn_gateway_ipsec_lifetime}
-  esp_proposals: '${var.vpn_gateway_esp_proposals}'
-  nat_t: ${var.vpn_gateway_nat_t ? "yes" : "no"}
-  remote_ca: '${var.vpn_gateway_remote_ca}'
+  local_id: '${var.bastion_fqdn}'
 
 CONFIG
-
-  # bastion static home page template
   index_html = templatefile(
     "${path.module}/www-static-home/index.html",
     {

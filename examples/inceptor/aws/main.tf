@@ -5,6 +5,13 @@ data "aws_region" "default" {
 locals {
   vpc_cidr = var.regional_vpc_cidr[data.aws_region.default.region]["vpc_cidr"]
   vpc_subnet_index = element(regex("\\d{1,3}\\.(\\d{1,3})\\.\\d{1,3}\\.\\d{1,3}\\/\\d+", local.vpc_cidr), 0)
+  aws_vpc_dns_zone = "test-${data.aws_region.default.region}.aws.appbricks.io"
+  openstack_peer = {
+    region       = "UK1"
+    vpc_cidr     = "172.20.64.0/22"
+    bastion_fqdn = "test-uk1.ovh.appbricks.io"
+    root_ca_file = "${path.module}/../openstack/.UK1/root-ca.pem"
+  }
 }
 
 #
@@ -40,7 +47,7 @@ module "bootstrap" {
   configure_admin_network = var.configure_admin_network
 
   # DNS Name for VPC will be 'test-<region>.aws.appbricks.io'
-  vpc_dns_zone    = "test-${data.aws_region.default.region}.aws.appbricks.io"
+  vpc_dns_zone    = local.aws_vpc_dns_zone
   attach_dns_zone = var.attach_dns_zone
 
   # Local DNS zone. This could also be the same as the public
@@ -79,6 +86,10 @@ module "bootstrap" {
   # tunnel_vpn_port_end   = "3396"
 
   vpn_tunnel_all_traffic = "yes"
+
+  # Site-to-site IPsec gateway to OpenStack inceptor (us-east-1 -> UK1)
+  vpn_gateway_enabled    = true
+  vpn_gateway_peer_cidrs = ["172.20.64.128/26"]
 
   # Concourse Port
   # concourse_server_port = "8080"

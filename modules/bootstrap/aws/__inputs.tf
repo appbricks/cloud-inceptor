@@ -257,6 +257,24 @@ variable "vpn_users" {
 }
 
 #
+# Optional upstream VPN gateway (site-to-site IPsec).
+# Peer-specific settings are managed via manage_vpn_gateway_peer at runtime.
+#
+variable "vpn_gateway_enabled" {
+  default = false
+}
+
+variable "vpn_gateway_protocol" {
+  default = "ipsec"
+}
+
+variable "vpn_gateway_peer_cidrs" {
+  type        = list(string)
+  default     = []
+  description = "Remote VPN peer admin CIDRs allowed into the internal security group when bastion_as_nat is true."
+}
+
+#
 # Wireguard configuration
 #
 variable "wireguard_service_port" {

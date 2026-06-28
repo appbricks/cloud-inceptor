@@ -95,6 +95,36 @@ resource "openstack_networking_secgroup_rule_v2" "internal_ingress_bastion_icmp"
   security_group_id = openstack_networking_secgroup_v2.internal.id
 }
 
+resource "openstack_networking_secgroup_rule_v2" "internal_ingress_vpn_peer_tcp" {
+  for_each = var.bastion_as_nat ? toset(var.vpn_gateway_peer_cidrs) : toset([])
+
+  direction         = "ingress"
+  ethertype         = "IPv4"
+  protocol          = "tcp"
+  remote_ip_prefix  = each.value
+  security_group_id = openstack_networking_secgroup_v2.internal.id
+}
+
+resource "openstack_networking_secgroup_rule_v2" "internal_ingress_vpn_peer_udp" {
+  for_each = var.bastion_as_nat ? toset(var.vpn_gateway_peer_cidrs) : toset([])
+
+  direction         = "ingress"
+  ethertype         = "IPv4"
+  protocol          = "udp"
+  remote_ip_prefix  = each.value
+  security_group_id = openstack_networking_secgroup_v2.internal.id
+}
+
+resource "openstack_networking_secgroup_rule_v2" "internal_ingress_vpn_peer_icmp" {
+  for_each = var.bastion_as_nat ? toset(var.vpn_gateway_peer_cidrs) : toset([])
+
+  direction         = "ingress"
+  ethertype         = "IPv4"
+  protocol          = "icmp"
+  remote_ip_prefix  = each.value
+  security_group_id = openstack_networking_secgroup_v2.internal.id
+}
+
 resource "openstack_networking_secgroup_rule_v2" "internal_egress_tcp" {
   direction         = "egress"
   ethertype         = "IPv4"

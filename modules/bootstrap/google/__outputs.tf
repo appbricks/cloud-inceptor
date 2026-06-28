@@ -41,6 +41,15 @@ output "admin_subnetworks" {
   value = [local.admin_network_self_link]
 }
 
+output "lan_subnet_cidrs" {
+  description = "CIDR blocks for bastion LAN subnets (DMZ public-side and admin internal)."
+  value = {
+    vpc   = var.vpc_cidr
+    dmz   = [google_compute_subnetwork.dmz.ip_cidr_range]
+    admin = var.configure_admin_network ? [google_compute_subnetwork.admin[0].ip_cidr_range] : [google_compute_subnetwork.dmz.ip_cidr_range]
+  }
+}
+
 output "admin_security_group" {
   value = ""
 }

@@ -62,7 +62,14 @@ module "config" {
             ]),
           ),
           join("|", 
-            tolist([
+            var.bastion_as_nat
+            ? tolist([
+              local.bastion_admin_itf_ip, 
+              aws_subnet.admin.0.cidr_block,
+              "",
+              ""
+            ])
+            : tolist([
               local.bastion_admin_itf_ip, 
               aws_subnet.admin.0.cidr_block,
               length(var.global_internal_cidr) == 0 ? var.vpc_cidr : var.global_internal_cidr,
@@ -110,6 +117,9 @@ module "config" {
   smtp_relay_host    = var.smtp_relay_host
   smtp_relay_port    = var.smtp_relay_port
   smtp_relay_api_key = var.smtp_relay_api_key
+
+  vpn_gateway_enabled  = var.vpn_gateway_enabled
+  vpn_gateway_protocol = var.vpn_gateway_protocol
 }
 
 locals {

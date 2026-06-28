@@ -37,6 +37,15 @@ output "admin_subnetworks" {
   value = [local.admin_network_id]
 }
 
+output "lan_subnet_cidrs" {
+  description = "CIDR blocks for bastion LAN subnets (DMZ public-side and admin internal)."
+  value = {
+    vpc   = var.vpc_cidr
+    dmz   = azurerm_subnet.dmz.address_prefixes
+    admin = var.configure_admin_network ? azurerm_subnet.admin[0].address_prefixes : azurerm_subnet.dmz.address_prefixes
+  }
+}
+
 output "admin_security_group" {
   value = azurerm_network_security_group.admin.name
 }

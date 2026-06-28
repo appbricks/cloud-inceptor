@@ -14,6 +14,11 @@ output "vpc_name" {
   value = module.bootstrap.vpc_name
 }
 
+output "lan_subnet_cidrs" {
+  description = "CIDR blocks for bastion LAN subnets (DMZ and admin)."
+  value       = module.bootstrap.lan_subnet_cidrs
+}
+
 output "bastion_instance_id" {
   value = module.bootstrap.bastion_instance_id
 }
