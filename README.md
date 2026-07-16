@@ -1,3 +1,5 @@
+> The code in this repository has been moved to https://github.com/novassist-ai/mycs-node.
+
 # Cloud Builder Automation Appliance
 
 ## Overview
